@@ -17,4 +17,12 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
       },
     );
   }
+
+  @override
+  Future<DataState> banned() {
+    return handleResponse(
+      () => _scheduleApiService.banned(),
+      (json) => null,
+    );
+  }
 }

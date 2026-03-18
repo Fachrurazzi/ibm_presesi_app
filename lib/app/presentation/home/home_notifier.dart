@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/module/entity/schedule.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_this_month.dart';
+import 'package:ibm_presensi_app/app/module/use_case/schedule_banned.dart';
 import 'package:ibm_presensi_app/app/module/use_case/schedule_get.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
@@ -14,9 +15,10 @@ class HomeNotifier extends AppProvider {
   final AttendanceGetTodayUseCase _attendanceGetTodayUseCase;
   final AttendanceGetMonthUseCase _attendanceGetMonthUseCase;
   final ScheduleGetUseCase _scheduleGetUseCase;
+  final ScheduleBannedUseCase _scheduleBannedUseCase;
 
   HomeNotifier(this._attendanceGetTodayUseCase, this._attendanceGetMonthUseCase,
-      this._scheduleGetUseCase) {
+      this._scheduleGetUseCase, this._scheduleBannedUseCase) {
     init();
   }
 
@@ -62,10 +64,7 @@ class HomeNotifier extends AppProvider {
       _isPhysicDevice = iOSInfo.isPhysicalDevice;
     }
 
-    if (!_isPhysicDevice) {
-      errorMessage =
-          'Anda terdeteksi melakukan kecurangan. Aplikasi hanya bisa berjalan menggunakan perangkat android dan ios (tidak termasuk emulator)';
-    }
+    if (!_isPhysicDevice) _sendBanned();
     hideLoading();
   }
 
@@ -104,6 +103,20 @@ class HomeNotifier extends AppProvider {
 
     if (response.success) {
       _schedule = response.data!;
+    } else {
+      errorMessage = response.message;
+    }
+
+    hideLoading();
+  }
+
+  _sendBanned() async {
+    showLoading();
+
+    final response = await _scheduleBannedUseCase();
+
+    if (response.success) {
+      _getSchedule();
     } else {
       errorMessage = response.message;
     }

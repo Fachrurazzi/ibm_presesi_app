@@ -3,4 +3,5 @@ import 'package:ibm_presensi_app/core/network/data_state.dart';
 
 abstract class ScheduleRepository {
   Future<DataState<ScheduleEntity>> get();
+  Future<DataState> banned();
 }

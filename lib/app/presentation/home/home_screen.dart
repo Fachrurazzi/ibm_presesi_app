@@ -152,7 +152,8 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                   borderRadius: BorderRadius.circular(10),
                   color: GlobalHelper.getColorSchema(context).onPrimary,
                 ),
-                child: Text((notifier.schedule!.isWfa) ? "WFA" : 'WFO'),
+                child:
+                    Text((notifier.schedule?.isWfa ?? false) ? "WFA" : 'WFO'),
               ),
             ],
           ),
@@ -396,13 +397,13 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
     // TODO: implement checkVariableAfterUi
   }
 
-  @override
-  void checkVariableBeforeUi(BuildContext context) {
-    if (!notifier.isPhysicDevice) {
-      alternatifErrorButton =
-          FilledButton(onPressed: () => {exit(0)}, child: const Text('Tutup'));
-    } else {
-      alternatifErrorButton = null;
-    }
-  }
+  // @override
+  // void checkVariableBeforeUi(BuildContext context) {
+  //   if (!notifier.isPhysicDevice) {
+  //     alternatifErrorButton =
+  //         FilledButton(onPressed: () => {exit(0)}, child: const Text('Tutup'));
+  //   } else {
+  //     alternatifErrorButton = null;
+  //   }
+  // }
 }

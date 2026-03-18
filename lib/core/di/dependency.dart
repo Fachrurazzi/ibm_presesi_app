@@ -13,6 +13,7 @@ import 'package:ibm_presensi_app/app/module/use_case/attendance_get_by_month_yea
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_this_month.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_send.dart';
 import 'package:ibm_presensi_app/app/module/use_case/auth_login.dart';
+import 'package:ibm_presensi_app/app/module/use_case/schedule_banned.dart';
 import 'package:ibm_presensi_app/app/module/use_case/schedule_get.dart';
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
@@ -58,6 +59,7 @@ Future<void> initDependency() async {
   sl.registerSingleton<AttendanceSendUseCase>(AttendanceSendUseCase(sl()));
   sl.registerSingleton<AttendanceGetByMonthYear>(
       AttendanceGetByMonthYear(sl()));
+  sl.registerSingleton<ScheduleBannedUseCase>(ScheduleBannedUseCase(sl()));
 
   //provider
   sl.registerFactoryParam<LoginNotifier, void, void>(
@@ -65,11 +67,11 @@ Future<void> initDependency() async {
   );
 
   sl.registerFactoryParam<HomeNotifier, void, void>(
-    (param1, param2) => HomeNotifier(sl(), sl(), sl()),
+    (param1, param2) => HomeNotifier(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactoryParam<MapNotifier, void, void>(
-    (param1, param2) => MapNotifier(sl(), sl()),
+    (param1, param2) => MapNotifier(sl(), sl(), sl()),
   );
 
   sl.registerFactoryParam<DetailAttendanceNotifier, void, void>(
