@@ -9,11 +9,15 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
   ScheduleRepositoryImpl(this._scheduleApiService);
 
   @override
-  Future<DataState<ScheduleEntity>> get() {
+  Future<DataState<ScheduleEntity?>> get() {
     return handleResponse(
       () => _scheduleApiService.get(),
       (json) {
-        return ScheduleEntity.fromJson(json);
+        if (json != null) {
+          return ScheduleEntity.fromJson(json);
+        } else {
+          return null;
+        }
       },
     );
   }

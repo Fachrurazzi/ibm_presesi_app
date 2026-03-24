@@ -101,41 +101,57 @@ class MapNotifier extends AppProvider {
   _checkSchedule() async {
     final now = DateTime.now();
     final startTimeShift = _schedule!.shift.startTime.split(":");
-    final dateTimeShift = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        int.parse(startTimeShift[0]),
-        int.parse(startTimeShift[1]),
-        int.parse(startTimeShift[2]));
+
+    // FIX: Ambil jam dan menit.
+    // Cek dulu apakah data "detik" dikirim oleh API, kalau tidak ada, anggap 0.
+    int hours = int.parse(startTimeShift[0]);
+    int minutes = int.parse(startTimeShift[1]);
+    int seconds = startTimeShift.length > 2 ? int.parse(startTimeShift[2]) : 0;
+
+    final dateTimeShift =
+        DateTime(now.year, now.month, now.day, hours, minutes, seconds);
 
     if (DateTimeHelper.getDifference(a: now, b: dateTimeShift) >
         const Duration(minutes: 30)) {
       errorMessage =
-          'Kehadiran dapat di buat paling cepat 30 menit sebelum jam kerja di mulai';
+          'Kehadiran dapat dibuat paling cepat 30 menit sebelum jam kerja dimulai';
     }
   }
 
   checkLocationPermission() async {
+    showLoading();
     _isGrantedLocation = await LocationHelper.isGrantedLocationPermission();
+    hideLoading();
 
-    if (!_isGrantedLocation && !isDispose) {
-      checkLocationPermission();
-    } else {
+    if (_isGrantedLocation) {
       errorMessage = '';
       init();
+    } else {
+      notifyListeners(); // Hilangkan pemanggilan checkLocationPermission() lagi di sini!
     }
   }
 
   checkLocationService() async {
+    showLoading();
     _isEnabledLocation = await LocationHelper.isEnabledLocationService();
+    hideLoading();
 
-    if (!_isEnabledLocation && !isDispose) {
-      checkLocationService();
-    } else {
+    if (_isEnabledLocation) {
       errorMessage = '';
       init();
+    } else {
+      notifyListeners(); // Hilangkan pemanggilan checkLocationService() lagi di sini!
     }
+  }
+
+  // Wajib tambahkan ini agar GPS mati saat user keluar dari layar Map (Hemat Baterai)
+  @override
+  void dispose() {
+    try {
+      _streamCurrentLocation.cancel();
+    } catch (e) {}
+    _mapController.dispose();
+    super.dispose();
   }
 
   mapIsReady() async {

@@ -21,159 +21,187 @@ class DetailAttendanceScreen
   @override
   Widget bodyBuild(BuildContext context) {
     return SafeArea(
-        child: SingleChildScrollView(
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: DropdownMenu<int>(
-                  expandedInsets: const EdgeInsets.symmetric(horizontal: 1),
-                  label: const Text('Bulan'),
-                  dropdownMenuEntries: notifier.monthListDropdown,
-                  initialSelection: 1,
-                  controller: notifier.monthController,
-                ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // --- 1. Bagian Filter (Card Style) ---
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withOpacity(0.3),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade300),
               ),
-              Expanded(
-                child: DropdownMenu<int>(
-                  expandedInsets: const EdgeInsets.symmetric(horizontal: 1),
-                  label: const Text('Tahun'),
-                  dropdownMenuEntries: notifier.yearListDropdown,
-                  initialSelection: 2026,
-                  controller: notifier.yearController,
-                ),
-              ),
-              IconButton(
-                  onPressed: () => _onPressSearch(),
-                  icon: const Icon(Icons.search))
-            ],
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          const SizedBox(height: 5),
-          Container(
-            height: 2,
-            color: GlobalHelper.getColorSchema(context).primary,
-          ),
-          const SizedBox(height: 2),
-          Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    'Tgl',
-                    style: GlobalHelper.getTextStyle(
-                      context: context,
-                      appTextStyle: AppTextStyle.TITLE_SMALL,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: DropdownMenu<int>(
+                      expandedInsets: EdgeInsets.zero,
+                      label: const Text('Bulan'),
+                      dropdownMenuEntries: notifier.monthListDropdown,
+                      initialSelection:
+                          DateTime.now().month, // Auto pilih bulan saat ini
+                      controller: notifier.monthController,
+                      inputDecorationTheme: InputDecorationTheme(
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Center(
-                  child: Text(
-                    'Masuk',
-                    style: GlobalHelper.getTextStyle(
-                      context: context,
-                      appTextStyle: AppTextStyle.TITLE_SMALL,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownMenu<int>(
+                      expandedInsets: EdgeInsets.zero,
+                      label: const Text('Tahun'),
+                      dropdownMenuEntries: notifier.yearListDropdown,
+                      initialSelection: 2026,
+                      controller: notifier.yearController,
+                      inputDecorationTheme: InputDecorationTheme(
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Center(
-                  child: Text(
-                    'Keluar',
-                    style: GlobalHelper.getTextStyle(
-                      context: context,
-                      appTextStyle: AppTextStyle.TITLE_SMALL,
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
-                  ),
-                ),
+                    onPressed: () => _onPressSearch(),
+                    child: const Icon(Icons.search),
+                  )
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Container(
-            height: 2,
-            color: GlobalHelper.getColorSchema(context).primary,
-          ),
-          ListView.separated(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              final item = notifier.listAttendance[index];
-              return _itemThisMonth(context, item);
-            },
-            separatorBuilder: (context, index) => Container(
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              height: 1,
-              color: GlobalHelper.getColorSchema(context).surface,
             ),
-            itemCount: notifier.listAttendance.length,
-          ),
-        ],
+            const SizedBox(height: 24),
+
+            // --- 2. Header Tabel ---
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                      flex: 1,
+                      child: Center(
+                          child: Text('Tanggal',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold)))),
+                  Expanded(
+                      flex: 2,
+                      child: Center(
+                          child: Text('Masuk',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold)))),
+                  Expanded(
+                      flex: 2,
+                      child: Center(
+                          child: Text('Keluar',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold)))),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // --- 3. List Kehadiran ---
+            if (notifier.listAttendance.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: Text("Tidak ada data kehadiran di bulan ini.",
+                    style: TextStyle(color: Colors.grey)),
+              )
+            else
+              ListView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: notifier.listAttendance.length,
+                itemBuilder: (context, index) {
+                  final item = notifier.listAttendance[index];
+                  return _itemThisMonth(context, item);
+                },
+              ),
+          ],
+        ),
       ),
-    ));
+    );
   }
 
-  Container _itemThisMonth(BuildContext context, AttendanceEntity item) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 1,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: GlobalHelper.getColorSchema(context).primary,
-              ),
-              child: Text(
-                DateTimeHelper.formatDateTimeFromString(
-                    dateTimeString: item.date!, format: 'dd\nMMM'),
-                style: GlobalHelper.getTextStyle(
-                  context: context,
-                  appTextStyle: AppTextStyle.LABEL_LARGE,
-                )?.copyWith(
-                  color: GlobalHelper.getColorSchema(context).onPrimary,
+  Widget _itemThisMonth(BuildContext context, AttendanceEntity item) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  color: Theme.of(context).colorScheme.primaryContainer,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Center(
-              child: Text(
-                item.startTime,
-                style: GlobalHelper.getTextStyle(
-                  context: context,
-                  appTextStyle: AppTextStyle.BODY_MEDIUM,
+                child: Text(
+                  DateTimeHelper.formatDateTimeFromString(
+                      dateTimeString: item.date!, format: 'dd\nMMM'),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Center(
-              child: Text(
-                item.endTime,
-                style: GlobalHelper.getTextStyle(
-                  context: context,
-                  appTextStyle: AppTextStyle.BODY_MEDIUM,
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Text(
+                  item.startTime,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ),
-          ),
-        ],
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Text(
+                  item.endTime,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.grey),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

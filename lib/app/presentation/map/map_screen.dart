@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/material/app_bar.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:ibm_presensi_app/app/presentation/home/home_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/map/map_notifier.dart';
 import 'package:ibm_presensi_app/core/helper/global_helper.dart';
 import 'package:ibm_presensi_app/core/helper/location_helper.dart';
@@ -178,7 +179,12 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
   @override
   void checkVariableAfterUi(BuildContext context) {
     if (notifier.isSuccess) {
-      Navigator.pop(context);
+      // FIX: Jangan cuma di-pop, tapi sapu bersih rute dan buka HomeScreen yang fresh!
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false,
+      );
     }
   }
 }

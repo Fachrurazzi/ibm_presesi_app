@@ -55,10 +55,13 @@ class LoginNotifier extends AppProvider {
     final response = await _authLoginUseCase(param: param);
 
     if (response.success) {
+      // FIX: Langsung ubah status login jika API merespons sukses
+      _isLoged = true;
     } else {
       snackbarMessage = response.message;
     }
-    _checkAuth();
-    hideLoading();
+
+    await _checkAuth();
+    hideLoading(); // Ini akan memicu UI update dan mengeksekusi perpindahan layar
   }
 }

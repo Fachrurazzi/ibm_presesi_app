@@ -1,10 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/src/material/app_bar.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_screen.dart';
+import 'package:ibm_presensi_app/app/presentation/face_recognition/face_recognition_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/login/login_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/map/map_screen.dart';
@@ -37,78 +36,91 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   }
 
   Container _headerLayout(BuildContext context) {
+    // Logic untuk ucapan selamat sesuai waktu
+    final hour = DateTime.now().hour;
+    String greeting = 'Selamat Pagi,';
+    if (hour >= 11 && hour <= 14) {
+      greeting = 'Selamat Siang,';
+    } else if (hour > 14 && hour <= 18) {
+      greeting = 'Selamat Sore,';
+    } else if (hour > 18) {
+      greeting = 'Selamat Malam,';
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor:
-                GlobalHelper.getColorSchema(context).primaryContainer,
-            radius: 30,
-            child: const Icon(Icons.person, size: 40),
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5))
+              ],
+            ),
+            child: CircleAvatar(
+              backgroundColor:
+                  GlobalHelper.getColorSchema(context).primaryContainer,
+              radius: 35,
+              // Tampilkan foto dari internet jika URL-nya ada
+              backgroundImage: (notifier.photoUrl != null)
+                  ? NetworkImage(notifier.photoUrl!)
+                  : null,
+              // Tampilkan ikon default jika URL-nya kosong
+              child: (notifier.photoUrl == null)
+                  ? Icon(Icons.person,
+                      size: 40,
+                      color: GlobalHelper.getColorSchema(context).primary)
+                  : null,
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  greeting,
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
                 Text(
                   notifier.name,
                   style: GlobalHelper.getTextStyle(
                     context: context,
                     appTextStyle: AppTextStyle.HEADLINE_SMALL,
                   )?.copyWith(fontWeight: FontWeight.bold),
-                  overflow:
-                      TextOverflow.ellipsis, // Tambahkan ini juga buat Nama
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Row(
+                const SizedBox(height: 8),
+                (notifier.isLeaves)
+                    ? const SizedBox()
+                    : Row(
                         children: [
-                          const Icon(Icons.location_city, size: 18),
-                          const SizedBox(width: 5),
-                          // PERBAIKAN DI SINI: Bungkus Text dengan Expanded
+                          const Icon(Icons.location_on,
+                              size: 16, color: Colors.redAccent),
+                          const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               notifier.schedule?.office.name ?? "-",
-                              style: const TextStyle(fontSize: 12),
-                              overflow: TextOverflow
-                                  .ellipsis, // Munculkan "..." jika kepanjangan
-                              maxLines: 1, // Paksa satu baris saja
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10), // Beri jarak antar kolom
-                    Expanded(
-                      child: Row(
-                        children: [
-                          const Icon(Icons.access_time, size: 18),
-                          const SizedBox(width: 5),
-                          // PERBAIKAN DI SINI: Bungkus Text dengan Expanded
-                          Expanded(
-                            child: Text(
-                              notifier.schedule?.shift.name ?? "-",
-                              style: const TextStyle(fontSize: 12),
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w500),
                               overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
           IconButton(
-              onPressed: () => _onPressLogout(context),
-              icon: const Icon(Icons.logout)),
+            onPressed: () => _onPressLogout(context),
+            icon: const Icon(Icons.logout, color: Colors.red),
+            tooltip: 'Keluar',
+          ),
         ],
       ),
     );
@@ -146,15 +158,17 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                 ),
               ),
               const Expanded(child: SizedBox()),
-              Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: GlobalHelper.getColorSchema(context).onPrimary,
-                ),
-                child:
-                    Text((notifier.schedule?.isWfa ?? false) ? "WFA" : 'WFO'),
-              ),
+              (notifier.isLeaves)
+                  ? const SizedBox()
+                  : Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: GlobalHelper.getColorSchema(context).onPrimary,
+                      ),
+                      child: Text(
+                          (notifier.schedule?.isWfa ?? false) ? "WFA" : 'WFO'),
+                    ),
             ],
           ),
           const SizedBox(height: 20),
@@ -167,17 +181,58 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
             ],
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.maxFinite,
-            child: FilledButton(
-              onPressed: () => _onPressCreateAttendance(context),
-              style: FilledButton.styleFrom(
-                backgroundColor: GlobalHelper.getColorSchema(context).onPrimary,
-                foregroundColor: GlobalHelper.getColorSchema(context).primary,
-              ),
-              child: const Text("Buat Kehadiran"),
-            ),
-          ),
+
+          // --- BAGIAN REVISI UI CUTI YANG LEBIH ELEGAN ---
+          (notifier.isLeaves)
+              ? Container(
+                  width: double.maxFinite,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white
+                        .withOpacity(0.2), // Latar belakang transparan elegan
+                    borderRadius: BorderRadius.circular(
+                        100), // Bulat seperti FilledButton
+                    border: Border.all(
+                      color: GlobalHelper.getColorSchema(context)
+                          .onPrimary
+                          .withOpacity(0.5),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.beach_access, // Ikon payung pantai (cuti/libur)
+                        color: GlobalHelper.getColorSchema(context).onPrimary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Anda sedang dalam masa cuti',
+                        style: GlobalHelper.getTextStyle(
+                          context: context,
+                          appTextStyle: AppTextStyle.LABEL_LARGE,
+                        )?.copyWith(
+                          color: GlobalHelper.getColorSchema(context).onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : SizedBox(
+                  width: double.maxFinite,
+                  child: FilledButton(
+                    onPressed: () => _onPressCreateAttendance(context),
+                    style: FilledButton.styleFrom(
+                      backgroundColor:
+                          GlobalHelper.getColorSchema(context).onPrimary,
+                      foregroundColor:
+                          GlobalHelper.getColorSchema(context).primary,
+                    ),
+                    child: const Text("Buat Kehadiran"),
+                  ),
+                ),
         ],
       ),
     );
@@ -364,13 +419,11 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
     );
   }
 
-  void _onPressCreateAttendance(BuildContext context) async {
-    await Navigator.push(
+  void _onPressCreateAttendance(BuildContext context) {
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => MapScreen()),
+      MaterialPageRoute(builder: (context) => FaceRecognitionScreen()),
     );
-
-    notifier.init();
   }
 
   _onPressLogout(BuildContext context) async {
@@ -393,17 +446,5 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   }
 
   @override
-  void checkVariableAfterUi(BuildContext context) {
-    // TODO: implement checkVariableAfterUi
-  }
-
-  // @override
-  // void checkVariableBeforeUi(BuildContext context) {
-  //   if (!notifier.isPhysicDevice) {
-  //     alternatifErrorButton =
-  //         FilledButton(onPressed: () => {exit(0)}, child: const Text('Tutup'));
-  //   } else {
-  //     alternatifErrorButton = null;
-  //   }
-  // }
+  void checkVariableAfterUi(BuildContext context) {}
 }

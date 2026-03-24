@@ -6,6 +6,7 @@ import 'package:ibm_presensi_app/core/widget/error_app_widget.dart';
 import 'package:ibm_presensi_app/core/widget/loading_app_widget.dart';
 import 'package:provider/provider.dart';
 
+// ignore: must_be_immutable
 abstract class AppWidget<T extends AppProvider, P1, P2>
     extends StatelessWidget {
   AppWidget({super.key, this.param1, this.param2});
@@ -21,7 +22,17 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<T>(
-      create: (context) => sl(param1: param1, param2: param2),
+      create: (context) {
+        // Inisialisasi Provider dari GetIt (sl)
+        final instance = sl<T>(param1: param1, param2: param2);
+
+        // Pindahkan callback UI ke sini agar hanya dieksekusi 1X saat layar dibuat
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          checkVariableAfterUi(context);
+        });
+
+        return instance;
+      },
       builder: (context, child) => _build(context),
     );
   }
@@ -30,7 +41,8 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
     notifier = Provider.of<T>(context);
     checkVariableBeforeUi(context);
 
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    // Kita kembalikan pendengar UI ke sini agar mendeteksi saat user berhasil login
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (notifier.snackbarMessage.isNotEmpty) {
         DialogHelper.showSnackbar(
           context: context,
@@ -39,6 +51,7 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
         notifier.snackbarMessage = '';
       }
 
+      // INI KUNCINYA: Akan mengeksekusi navigasi (push/pop) jika syaratnya terpenuhi
       checkVariableAfterUi(context);
     });
 
@@ -50,8 +63,8 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
               ? ErrorAppWidget(
                   description: notifier.errorMessage,
                   onPressDefaultButton: () {
-                    notifier.init();
                     notifier.errorMessage = '';
+                    notifier.init();
                   },
                   alternatifButton: _alternatifErrorButton,
                 )
