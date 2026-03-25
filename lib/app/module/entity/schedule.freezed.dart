@@ -14,75 +14,43 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-Schedule _$ScheduleFromJson(Map<String, dynamic> json) {
-  return ScheduleEntity.fromJson(json);
+ScheduleEntity _$ScheduleEntityFromJson(Map<String, dynamic> json) {
+  return _ScheduleEntity.fromJson(json);
 }
 
 /// @nodoc
-mixin _$Schedule {
+mixin _$ScheduleEntity {
+// Tambahkan field lain yang ada di database Laravel jika diperlukan (misal: id, user_id)
   @JsonKey(name: 'is_wfa')
   bool get isWfa => throw _privateConstructorUsedError;
   OfficeEntity get office => throw _privateConstructorUsedError;
   ShiftEntity get shift => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'is_wfa') bool isWfa,
-            OfficeEntity office, ShiftEntity shift)
-        entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'is_wfa') bool isWfa, OfficeEntity office,
-            ShiftEntity shift)?
-        entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'is_wfa') bool isWfa, OfficeEntity office,
-            ShiftEntity shift)?
-        entity,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(ScheduleEntity value) entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(ScheduleEntity value)? entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(ScheduleEntity value)? entity,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $ScheduleCopyWith<Schedule> get copyWith =>
+  $ScheduleEntityCopyWith<ScheduleEntity> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $ScheduleCopyWith<$Res> {
-  factory $ScheduleCopyWith(Schedule value, $Res Function(Schedule) then) =
-      _$ScheduleCopyWithImpl<$Res, Schedule>;
+abstract class $ScheduleEntityCopyWith<$Res> {
+  factory $ScheduleEntityCopyWith(
+          ScheduleEntity value, $Res Function(ScheduleEntity) then) =
+      _$ScheduleEntityCopyWithImpl<$Res, ScheduleEntity>;
   @useResult
   $Res call(
       {@JsonKey(name: 'is_wfa') bool isWfa,
       OfficeEntity office,
       ShiftEntity shift});
+
+  $OfficeEntityCopyWith<$Res> get office;
+  $ShiftEntityCopyWith<$Res> get shift;
 }
 
 /// @nodoc
-class _$ScheduleCopyWithImpl<$Res, $Val extends Schedule>
-    implements $ScheduleCopyWith<$Res> {
-  _$ScheduleCopyWithImpl(this._value, this._then);
+class _$ScheduleEntityCopyWithImpl<$Res, $Val extends ScheduleEntity>
+    implements $ScheduleEntityCopyWith<$Res> {
+  _$ScheduleEntityCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -93,29 +61,45 @@ class _$ScheduleCopyWithImpl<$Res, $Val extends Schedule>
   @override
   $Res call({
     Object? isWfa = null,
-    Object? office = freezed,
-    Object? shift = freezed,
+    Object? office = null,
+    Object? shift = null,
   }) {
     return _then(_value.copyWith(
       isWfa: null == isWfa
           ? _value.isWfa
           : isWfa // ignore: cast_nullable_to_non_nullable
               as bool,
-      office: freezed == office
+      office: null == office
           ? _value.office
           : office // ignore: cast_nullable_to_non_nullable
               as OfficeEntity,
-      shift: freezed == shift
+      shift: null == shift
           ? _value.shift
           : shift // ignore: cast_nullable_to_non_nullable
               as ShiftEntity,
     ) as $Val);
   }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $OfficeEntityCopyWith<$Res> get office {
+    return $OfficeEntityCopyWith<$Res>(_value.office, (value) {
+      return _then(_value.copyWith(office: value) as $Val);
+    });
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $ShiftEntityCopyWith<$Res> get shift {
+    return $ShiftEntityCopyWith<$Res>(_value.shift, (value) {
+      return _then(_value.copyWith(shift: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
 abstract class _$$ScheduleEntityImplCopyWith<$Res>
-    implements $ScheduleCopyWith<$Res> {
+    implements $ScheduleEntityCopyWith<$Res> {
   factory _$$ScheduleEntityImplCopyWith(_$ScheduleEntityImpl value,
           $Res Function(_$ScheduleEntityImpl) then) =
       __$$ScheduleEntityImplCopyWithImpl<$Res>;
@@ -125,11 +109,16 @@ abstract class _$$ScheduleEntityImplCopyWith<$Res>
       {@JsonKey(name: 'is_wfa') bool isWfa,
       OfficeEntity office,
       ShiftEntity shift});
+
+  @override
+  $OfficeEntityCopyWith<$Res> get office;
+  @override
+  $ShiftEntityCopyWith<$Res> get shift;
 }
 
 /// @nodoc
 class __$$ScheduleEntityImplCopyWithImpl<$Res>
-    extends _$ScheduleCopyWithImpl<$Res, _$ScheduleEntityImpl>
+    extends _$ScheduleEntityCopyWithImpl<$Res, _$ScheduleEntityImpl>
     implements _$$ScheduleEntityImplCopyWith<$Res> {
   __$$ScheduleEntityImplCopyWithImpl(
       _$ScheduleEntityImpl _value, $Res Function(_$ScheduleEntityImpl) _then)
@@ -139,19 +128,19 @@ class __$$ScheduleEntityImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? isWfa = null,
-    Object? office = freezed,
-    Object? shift = freezed,
+    Object? office = null,
+    Object? shift = null,
   }) {
     return _then(_$ScheduleEntityImpl(
       isWfa: null == isWfa
           ? _value.isWfa
           : isWfa // ignore: cast_nullable_to_non_nullable
               as bool,
-      office: freezed == office
+      office: null == office
           ? _value.office
           : office // ignore: cast_nullable_to_non_nullable
               as OfficeEntity,
-      shift: freezed == shift
+      shift: null == shift
           ? _value.shift
           : shift // ignore: cast_nullable_to_non_nullable
               as ShiftEntity,
@@ -161,8 +150,8 @@ class __$$ScheduleEntityImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$ScheduleEntityImpl implements ScheduleEntity {
-  _$ScheduleEntityImpl(
+class _$ScheduleEntityImpl implements _ScheduleEntity {
+  const _$ScheduleEntityImpl(
       {@JsonKey(name: 'is_wfa') required this.isWfa,
       required this.office,
       required this.shift});
@@ -170,6 +159,7 @@ class _$ScheduleEntityImpl implements ScheduleEntity {
   factory _$ScheduleEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$ScheduleEntityImplFromJson(json);
 
+// Tambahkan field lain yang ada di database Laravel jika diperlukan (misal: id, user_id)
   @override
   @JsonKey(name: 'is_wfa')
   final bool isWfa;
@@ -180,7 +170,7 @@ class _$ScheduleEntityImpl implements ScheduleEntity {
 
   @override
   String toString() {
-    return 'Schedule.entity(isWfa: $isWfa, office: $office, shift: $shift)';
+    return 'ScheduleEntity(isWfa: $isWfa, office: $office, shift: $shift)';
   }
 
   @override
@@ -189,17 +179,13 @@ class _$ScheduleEntityImpl implements ScheduleEntity {
         (other.runtimeType == runtimeType &&
             other is _$ScheduleEntityImpl &&
             (identical(other.isWfa, isWfa) || other.isWfa == isWfa) &&
-            const DeepCollectionEquality().equals(other.office, office) &&
-            const DeepCollectionEquality().equals(other.shift, shift));
+            (identical(other.office, office) || other.office == office) &&
+            (identical(other.shift, shift) || other.shift == shift));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      isWfa,
-      const DeepCollectionEquality().hash(office),
-      const DeepCollectionEquality().hash(shift));
+  int get hashCode => Object.hash(runtimeType, isWfa, office, shift);
 
   @JsonKey(ignore: true)
   @override
@@ -209,68 +195,6 @@ class _$ScheduleEntityImpl implements ScheduleEntity {
           this, _$identity);
 
   @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'is_wfa') bool isWfa,
-            OfficeEntity office, ShiftEntity shift)
-        entity,
-  }) {
-    return entity(isWfa, office, shift);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'is_wfa') bool isWfa, OfficeEntity office,
-            ShiftEntity shift)?
-        entity,
-  }) {
-    return entity?.call(isWfa, office, shift);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'is_wfa') bool isWfa, OfficeEntity office,
-            ShiftEntity shift)?
-        entity,
-    required TResult orElse(),
-  }) {
-    if (entity != null) {
-      return entity(isWfa, office, shift);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(ScheduleEntity value) entity,
-  }) {
-    return entity(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(ScheduleEntity value)? entity,
-  }) {
-    return entity?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(ScheduleEntity value)? entity,
-    required TResult orElse(),
-  }) {
-    if (entity != null) {
-      return entity(this);
-    }
-    return orElse();
-  }
-
-  @override
   Map<String, dynamic> toJson() {
     return _$$ScheduleEntityImplToJson(
       this,
@@ -278,16 +202,16 @@ class _$ScheduleEntityImpl implements ScheduleEntity {
   }
 }
 
-abstract class ScheduleEntity implements Schedule {
-  factory ScheduleEntity(
+abstract class _ScheduleEntity implements ScheduleEntity {
+  const factory _ScheduleEntity(
       {@JsonKey(name: 'is_wfa') required final bool isWfa,
       required final OfficeEntity office,
       required final ShiftEntity shift}) = _$ScheduleEntityImpl;
 
-  factory ScheduleEntity.fromJson(Map<String, dynamic> json) =
+  factory _ScheduleEntity.fromJson(Map<String, dynamic> json) =
       _$ScheduleEntityImpl.fromJson;
 
-  @override
+  @override // Tambahkan field lain yang ada di database Laravel jika diperlukan (misal: id, user_id)
   @JsonKey(name: 'is_wfa')
   bool get isWfa;
   @override
@@ -300,71 +224,37 @@ abstract class ScheduleEntity implements Schedule {
       throw _privateConstructorUsedError;
 }
 
-Office _$OfficeFromJson(Map<String, dynamic> json) {
-  return OfficeEntity.fromJson(json);
+OfficeEntity _$OfficeEntityFromJson(Map<String, dynamic> json) {
+  return _OfficeEntity.fromJson(json);
 }
 
 /// @nodoc
-mixin _$Office {
+mixin _$OfficeEntity {
+// Tambahkan id jika diperlukan
   String get name => throw _privateConstructorUsedError;
   double get latitude => throw _privateConstructorUsedError;
   double get longitude => throw _privateConstructorUsedError;
   double get radius => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(
-            String name, double latitude, double longitude, double radius)
-        entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(
-            String name, double latitude, double longitude, double radius)?
-        entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(
-            String name, double latitude, double longitude, double radius)?
-        entity,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(OfficeEntity value) entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(OfficeEntity value)? entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(OfficeEntity value)? entity,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $OfficeCopyWith<Office> get copyWith => throw _privateConstructorUsedError;
+  $OfficeEntityCopyWith<OfficeEntity> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $OfficeCopyWith<$Res> {
-  factory $OfficeCopyWith(Office value, $Res Function(Office) then) =
-      _$OfficeCopyWithImpl<$Res, Office>;
+abstract class $OfficeEntityCopyWith<$Res> {
+  factory $OfficeEntityCopyWith(
+          OfficeEntity value, $Res Function(OfficeEntity) then) =
+      _$OfficeEntityCopyWithImpl<$Res, OfficeEntity>;
   @useResult
   $Res call({String name, double latitude, double longitude, double radius});
 }
 
 /// @nodoc
-class _$OfficeCopyWithImpl<$Res, $Val extends Office>
-    implements $OfficeCopyWith<$Res> {
-  _$OfficeCopyWithImpl(this._value, this._then);
+class _$OfficeEntityCopyWithImpl<$Res, $Val extends OfficeEntity>
+    implements $OfficeEntityCopyWith<$Res> {
+  _$OfficeEntityCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -402,7 +292,7 @@ class _$OfficeCopyWithImpl<$Res, $Val extends Office>
 
 /// @nodoc
 abstract class _$$OfficeEntityImplCopyWith<$Res>
-    implements $OfficeCopyWith<$Res> {
+    implements $OfficeEntityCopyWith<$Res> {
   factory _$$OfficeEntityImplCopyWith(
           _$OfficeEntityImpl value, $Res Function(_$OfficeEntityImpl) then) =
       __$$OfficeEntityImplCopyWithImpl<$Res>;
@@ -413,7 +303,7 @@ abstract class _$$OfficeEntityImplCopyWith<$Res>
 
 /// @nodoc
 class __$$OfficeEntityImplCopyWithImpl<$Res>
-    extends _$OfficeCopyWithImpl<$Res, _$OfficeEntityImpl>
+    extends _$OfficeEntityCopyWithImpl<$Res, _$OfficeEntityImpl>
     implements _$$OfficeEntityImplCopyWith<$Res> {
   __$$OfficeEntityImplCopyWithImpl(
       _$OfficeEntityImpl _value, $Res Function(_$OfficeEntityImpl) _then)
@@ -450,8 +340,8 @@ class __$$OfficeEntityImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$OfficeEntityImpl implements OfficeEntity {
-  _$OfficeEntityImpl(
+class _$OfficeEntityImpl implements _OfficeEntity {
+  const _$OfficeEntityImpl(
       {required this.name,
       required this.latitude,
       required this.longitude,
@@ -460,6 +350,7 @@ class _$OfficeEntityImpl implements OfficeEntity {
   factory _$OfficeEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$OfficeEntityImplFromJson(json);
 
+// Tambahkan id jika diperlukan
   @override
   final String name;
   @override
@@ -471,7 +362,7 @@ class _$OfficeEntityImpl implements OfficeEntity {
 
   @override
   String toString() {
-    return 'Office.entity(name: $name, latitude: $latitude, longitude: $longitude, radius: $radius)';
+    return 'OfficeEntity(name: $name, latitude: $latitude, longitude: $longitude, radius: $radius)';
   }
 
   @override
@@ -499,68 +390,6 @@ class _$OfficeEntityImpl implements OfficeEntity {
       __$$OfficeEntityImplCopyWithImpl<_$OfficeEntityImpl>(this, _$identity);
 
   @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(
-            String name, double latitude, double longitude, double radius)
-        entity,
-  }) {
-    return entity(name, latitude, longitude, radius);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(
-            String name, double latitude, double longitude, double radius)?
-        entity,
-  }) {
-    return entity?.call(name, latitude, longitude, radius);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(
-            String name, double latitude, double longitude, double radius)?
-        entity,
-    required TResult orElse(),
-  }) {
-    if (entity != null) {
-      return entity(name, latitude, longitude, radius);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(OfficeEntity value) entity,
-  }) {
-    return entity(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(OfficeEntity value)? entity,
-  }) {
-    return entity?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(OfficeEntity value)? entity,
-    required TResult orElse(),
-  }) {
-    if (entity != null) {
-      return entity(this);
-    }
-    return orElse();
-  }
-
-  @override
   Map<String, dynamic> toJson() {
     return _$$OfficeEntityImplToJson(
       this,
@@ -568,17 +397,17 @@ class _$OfficeEntityImpl implements OfficeEntity {
   }
 }
 
-abstract class OfficeEntity implements Office {
-  factory OfficeEntity(
+abstract class _OfficeEntity implements OfficeEntity {
+  const factory _OfficeEntity(
       {required final String name,
       required final double latitude,
       required final double longitude,
       required final double radius}) = _$OfficeEntityImpl;
 
-  factory OfficeEntity.fromJson(Map<String, dynamic> json) =
+  factory _OfficeEntity.fromJson(Map<String, dynamic> json) =
       _$OfficeEntityImpl.fromJson;
 
-  @override
+  @override // Tambahkan id jika diperlukan
   String get name;
   @override
   double get latitude;
@@ -592,68 +421,30 @@ abstract class OfficeEntity implements Office {
       throw _privateConstructorUsedError;
 }
 
-Shift _$ShiftFromJson(Map<String, dynamic> json) {
-  return ShiftEntity.fromJson(json);
+ShiftEntity _$ShiftEntityFromJson(Map<String, dynamic> json) {
+  return _ShiftEntity.fromJson(json);
 }
 
 /// @nodoc
-mixin _$Shift {
+mixin _$ShiftEntity {
+// Tambahkan id jika diperlukan
   String get name => throw _privateConstructorUsedError;
   @JsonKey(name: 'start_time')
   String get startTime => throw _privateConstructorUsedError;
   @JsonKey(name: 'end_time')
   String get endTime => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(
-            String name,
-            @JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime)
-        entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(
-            String name,
-            @JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime)?
-        entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String name, @JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime)?
-        entity,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(ShiftEntity value) entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(ShiftEntity value)? entity,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(ShiftEntity value)? entity,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $ShiftCopyWith<Shift> get copyWith => throw _privateConstructorUsedError;
+  $ShiftEntityCopyWith<ShiftEntity> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $ShiftCopyWith<$Res> {
-  factory $ShiftCopyWith(Shift value, $Res Function(Shift) then) =
-      _$ShiftCopyWithImpl<$Res, Shift>;
+abstract class $ShiftEntityCopyWith<$Res> {
+  factory $ShiftEntityCopyWith(
+          ShiftEntity value, $Res Function(ShiftEntity) then) =
+      _$ShiftEntityCopyWithImpl<$Res, ShiftEntity>;
   @useResult
   $Res call(
       {String name,
@@ -662,9 +453,9 @@ abstract class $ShiftCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$ShiftCopyWithImpl<$Res, $Val extends Shift>
-    implements $ShiftCopyWith<$Res> {
-  _$ShiftCopyWithImpl(this._value, this._then);
+class _$ShiftEntityCopyWithImpl<$Res, $Val extends ShiftEntity>
+    implements $ShiftEntityCopyWith<$Res> {
+  _$ShiftEntityCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -697,7 +488,7 @@ class _$ShiftCopyWithImpl<$Res, $Val extends Shift>
 
 /// @nodoc
 abstract class _$$ShiftEntityImplCopyWith<$Res>
-    implements $ShiftCopyWith<$Res> {
+    implements $ShiftEntityCopyWith<$Res> {
   factory _$$ShiftEntityImplCopyWith(
           _$ShiftEntityImpl value, $Res Function(_$ShiftEntityImpl) then) =
       __$$ShiftEntityImplCopyWithImpl<$Res>;
@@ -711,7 +502,7 @@ abstract class _$$ShiftEntityImplCopyWith<$Res>
 
 /// @nodoc
 class __$$ShiftEntityImplCopyWithImpl<$Res>
-    extends _$ShiftCopyWithImpl<$Res, _$ShiftEntityImpl>
+    extends _$ShiftEntityCopyWithImpl<$Res, _$ShiftEntityImpl>
     implements _$$ShiftEntityImplCopyWith<$Res> {
   __$$ShiftEntityImplCopyWithImpl(
       _$ShiftEntityImpl _value, $Res Function(_$ShiftEntityImpl) _then)
@@ -743,8 +534,8 @@ class __$$ShiftEntityImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$ShiftEntityImpl implements ShiftEntity {
-  _$ShiftEntityImpl(
+class _$ShiftEntityImpl implements _ShiftEntity {
+  const _$ShiftEntityImpl(
       {required this.name,
       @JsonKey(name: 'start_time') required this.startTime,
       @JsonKey(name: 'end_time') required this.endTime});
@@ -752,6 +543,7 @@ class _$ShiftEntityImpl implements ShiftEntity {
   factory _$ShiftEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$ShiftEntityImplFromJson(json);
 
+// Tambahkan id jika diperlukan
   @override
   final String name;
   @override
@@ -763,7 +555,7 @@ class _$ShiftEntityImpl implements ShiftEntity {
 
   @override
   String toString() {
-    return 'Shift.entity(name: $name, startTime: $startTime, endTime: $endTime)';
+    return 'ShiftEntity(name: $name, startTime: $startTime, endTime: $endTime)';
   }
 
   @override
@@ -788,72 +580,6 @@ class _$ShiftEntityImpl implements ShiftEntity {
       __$$ShiftEntityImplCopyWithImpl<_$ShiftEntityImpl>(this, _$identity);
 
   @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(
-            String name,
-            @JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime)
-        entity,
-  }) {
-    return entity(name, startTime, endTime);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(
-            String name,
-            @JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime)?
-        entity,
-  }) {
-    return entity?.call(name, startTime, endTime);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String name, @JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime)?
-        entity,
-    required TResult orElse(),
-  }) {
-    if (entity != null) {
-      return entity(name, startTime, endTime);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(ShiftEntity value) entity,
-  }) {
-    return entity(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(ShiftEntity value)? entity,
-  }) {
-    return entity?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(ShiftEntity value)? entity,
-    required TResult orElse(),
-  }) {
-    if (entity != null) {
-      return entity(this);
-    }
-    return orElse();
-  }
-
-  @override
   Map<String, dynamic> toJson() {
     return _$$ShiftEntityImplToJson(
       this,
@@ -861,17 +587,17 @@ class _$ShiftEntityImpl implements ShiftEntity {
   }
 }
 
-abstract class ShiftEntity implements Shift {
-  factory ShiftEntity(
+abstract class _ShiftEntity implements ShiftEntity {
+  const factory _ShiftEntity(
           {required final String name,
           @JsonKey(name: 'start_time') required final String startTime,
           @JsonKey(name: 'end_time') required final String endTime}) =
       _$ShiftEntityImpl;
 
-  factory ShiftEntity.fromJson(Map<String, dynamic> json) =
+  factory _ShiftEntity.fromJson(Map<String, dynamic> json) =
       _$ShiftEntityImpl.fromJson;
 
-  @override
+  @override // Tambahkan id jika diperlukan
   String get name;
   @override
   @JsonKey(name: 'start_time')

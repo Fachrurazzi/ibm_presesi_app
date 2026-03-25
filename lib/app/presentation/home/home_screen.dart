@@ -6,8 +6,8 @@ import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_atten
 import 'package:ibm_presensi_app/app/presentation/face_recognition/face_recognition_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/login/login_screen.dart';
-import 'package:ibm_presensi_app/app/presentation/map/map_screen.dart';
 import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
+import 'package:ibm_presensi_app/core/helper/dialog_helper.dart';
 import 'package:ibm_presensi_app/core/helper/global_helper.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/widget/app_widget.dart';
@@ -36,7 +36,6 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   }
 
   Container _headerLayout(BuildContext context) {
-    // Logic untuk ucapan selamat sesuai waktu
     final hour = DateTime.now().hour;
     String greeting = 'Selamat Pagi,';
     if (hour >= 11 && hour <= 14) {
@@ -66,11 +65,9 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
               backgroundColor:
                   GlobalHelper.getColorSchema(context).primaryContainer,
               radius: 35,
-              // Tampilkan foto dari internet jika URL-nya ada
               backgroundImage: (notifier.photoUrl != null)
                   ? NetworkImage(notifier.photoUrl!)
                   : null,
-              // Tampilkan ikon default jika URL-nya kosong
               child: (notifier.photoUrl == null)
                   ? Icon(Icons.person,
                       size: 40,
@@ -116,6 +113,14 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
               ],
             ),
           ),
+          // --- TOMBOL EDIT NOTIFIKASI ---
+          IconButton(
+            onPressed: () => _onPressEditNotification(context),
+            icon: Icon(Icons.notifications_active,
+                color: GlobalHelper.getColorSchema(context).primary),
+            tooltip: 'Pengaturan Notifikasi',
+          ),
+          // --- TOMBOL LOGOUT ---
           IconButton(
             onPressed: () => _onPressLogout(context),
             icon: const Icon(Icons.logout, color: Colors.red),
@@ -181,17 +186,13 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
             ],
           ),
           const SizedBox(height: 20),
-
-          // --- BAGIAN REVISI UI CUTI YANG LEBIH ELEGAN ---
           (notifier.isLeaves)
               ? Container(
                   width: double.maxFinite,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white
-                        .withOpacity(0.2), // Latar belakang transparan elegan
-                    borderRadius: BorderRadius.circular(
-                        100), // Bulat seperti FilledButton
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(100),
                     border: Border.all(
                       color: GlobalHelper.getColorSchema(context)
                           .onPrimary
@@ -202,7 +203,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.beach_access, // Ikon payung pantai (cuti/libur)
+                        Icons.beach_access,
                         color: GlobalHelper.getColorSchema(context).onPrimary,
                         size: 20,
                       ),
@@ -419,11 +420,32 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
     );
   }
 
+  // --- SEMUA LOGIKA TOMBOL & AKSI ---
+
   void _onPressCreateAttendance(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => FaceRecognitionScreen()),
     );
+  }
+
+  _onPressEditNotification(BuildContext context) async {
+    DialogHelper.showBottomDialog(
+      context: context,
+      title: "Pengingat Absen (Sebelum Shift)",
+      content: DropdownMenu<int>(
+        initialSelection: notifier.timeNotification,
+        onSelected: (value) => _onSaveEditNotification(context, value!),
+        dropdownMenuEntries: notifier.listEditNotification,
+        width: MediaQuery.of(context).size.width -
+            40, // Biar full width di bottom sheet
+      ),
+    );
+  }
+
+  _onSaveEditNotification(BuildContext context, int param) {
+    Navigator.pop(context); // Tutup dialog
+    notifier.saveNotificationSetting(param); // Panggil fungsi di notifier
   }
 
   _onPressLogout(BuildContext context) async {
@@ -446,5 +468,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   }
 
   @override
-  void checkVariableAfterUi(BuildContext context) {}
+  void checkVariableAfterUi(BuildContext context) {
+    // Fungsi ini bawaan AppWidget. Bisa dikosongkan jika tidak ada aksi setelah UI dirender.
+  }
 }

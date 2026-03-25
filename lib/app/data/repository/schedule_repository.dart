@@ -1,6 +1,8 @@
 import 'package:ibm_presensi_app/app/data/source/schedule_api_service.dart';
 import 'package:ibm_presensi_app/app/module/entity/schedule.dart';
 import 'package:ibm_presensi_app/app/module/repository/schedule_repository.dart';
+import 'package:ibm_presensi_app/core/constant/constant.dart';
+import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/network/data_state.dart';
 
 class ScheduleRepositoryImpl extends ScheduleRepository {
@@ -14,7 +16,13 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
       () => _scheduleApiService.get(),
       (json) {
         if (json != null) {
-          return ScheduleEntity.fromJson(json);
+          final data = ScheduleEntity.fromJson(json);
+          SharedPreferencesHelper.setString(
+              PREF_START_SHIFT, data.shift.startTime);
+          SharedPreferencesHelper.setString(PREF_END_SHIFT, data.shift.endTime);
+
+          // 👇 INI DIA KUNCI JAWABANNYA! KEMBALIKAN DATANYA! 👇
+          return data;
         } else {
           return null;
         }

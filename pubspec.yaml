@@ -46,8 +46,8 @@ dependencies:
   flutter_face_api: ^6.2.2
   flutter_face_core_basic: ^6.2.1
   path_provider: ^2.1.3
-  flutter_local_notification: ^17.2.2
-  flutter_timezone: ^1.0.0 
+  flutter_local_notifications: ^17.2.2
+  flutter_timezone: ^1.0.0
 
 dev_dependencies:
   flutter_test:

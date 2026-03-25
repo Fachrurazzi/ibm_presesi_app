@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:ibm_presensi_app/app/data/model/attendance.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/module/repository/attendance_repository.dart';
 import 'package:ibm_presensi_app/core/network/data_state.dart';

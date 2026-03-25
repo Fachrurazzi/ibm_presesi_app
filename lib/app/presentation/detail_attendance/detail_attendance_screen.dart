@@ -4,7 +4,6 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_notifier.dart';
 import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
-import 'package:ibm_presensi_app/core/helper/global_helper.dart';
 import 'package:ibm_presensi_app/core/widget/app_widget.dart';
 
 class DetailAttendanceScreen
