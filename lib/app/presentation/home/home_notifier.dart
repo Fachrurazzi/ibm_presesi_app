@@ -66,7 +66,7 @@ class HomeNotifier extends AppProvider {
   bool get isLeaves => _isLeaves;
 
   @override
-  void init() async {
+  Future<void> init() async {
     await _getUserDetail();
     // await _getDeviceInfo();
     await _getNotificationPermission();

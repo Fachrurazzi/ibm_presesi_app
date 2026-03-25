@@ -23,13 +23,16 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   @override
   Widget bodyBuild(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            _headerLayout(context),
-            _todayLayout(context),
-            _thisMonthLayout(context),
-          ],
+      child: RefreshIndicator(
+        onRefresh: () => notifier.init(),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _headerLayout(context),
+              _todayLayout(context),
+              _thisMonthLayout(context),
+            ],
+          ),
         ),
       ),
     );
