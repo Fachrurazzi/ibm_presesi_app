@@ -24,221 +24,147 @@ class MapNotifier extends AppProvider {
 
   bool _isSuccess = false;
   bool _isEnableSubmitButton = false;
-
-  final MapController _mapController = MapController.withPosition(
-    initPosition: GeoPoint(
-      latitude: -3.327125293662906,
-      longitude: 114.59248004148391,
-    ),
-  );
-
   ScheduleEntity? _schedule;
   late CircleOSM _circle;
   bool _isGrantedLocation = false;
   bool _isEnabledLocation = false;
-  late StreamSubscription<Position> _streamCurrentLocation;
+  StreamSubscription<Position>? _streamCurrentLocation;
   GeoPoint? _currentLocation;
 
+  // Getters
   bool get isSuccess => _isSuccess;
   bool get isEnableSubmitButton => _isEnableSubmitButton;
-
-  MapController get mapController => _mapController;
-
   ScheduleEntity? get schedule => _schedule;
-
   bool get isGrantedLocation => _isGrantedLocation;
   bool get isEnabledLocation => _isEnabledLocation;
+  GeoPoint? get currentLocation => _currentLocation;
+
+  final MapController mapController = MapController.withPosition(
+    initPosition: GeoPoint(latitude: -3.327125, longitude: 114.592480),
+  );
 
   @override
   void init() async {
     await _getEnabledAndPermission();
-    await _getSchedule();
-    if (errorMessage.isEmpty) await _checkSchedule();
+    if (errorMessage.isEmpty) await _getSchedule();
+    if (errorMessage.isEmpty) _checkTimeLimit();
   }
 
-  _getEnabledAndPermission() async {
+  Future<void> _getEnabledAndPermission() async {
     showLoading();
-
     _isGrantedLocation = await LocationHelper.isGrantedLocationPermission();
-
     if (_isGrantedLocation) {
       _isEnabledLocation = await LocationHelper.isEnabledLocationService();
-
-      if (!_isEnabledLocation) {
-        errorMessage = 'Harap mengaktifkan GPS';
-      }
+      if (!_isEnabledLocation) errorMessage = 'Harap mengaktifkan GPS';
     } else {
-      errorMessage = 'Harap menyetujui permission';
+      errorMessage = 'Harap menyetujui izin lokasi';
     }
-
     hideLoading();
   }
 
-  _getSchedule() async {
+  Future<void> _getSchedule() async {
     showLoading();
-
     final response = await _scheduleGetUseCase();
-
     if (response.success) {
       _schedule = response.data!;
       _circle = CircleOSM(
-        key: 'Center-Point',
+        key: 'office-area',
         centerPoint: GeoPoint(
             latitude: _schedule!.office.latitude,
             longitude: _schedule!.office.longitude),
         radius: _schedule!.office.radius,
-        color: Colors.red.withOpacity(0.5),
+        color: Colors.blue.withOpacity(0.3),
         strokeWidth: 2,
-        borderColor: Colors.red,
+        borderColor: Colors.blue,
       );
     } else {
       errorMessage = response.message;
     }
-
     hideLoading();
   }
 
-  _checkSchedule() async {
+  void _checkTimeLimit() {
+    if (_schedule == null) return;
     final now = DateTime.now();
-    final startTimeShift = _schedule!.shift.startTime.split(":");
+    final parts = _schedule!.shift.startTime.split(":");
+    final shiftTime = DateTime(
+        now.year, now.month, now.day, int.parse(parts[0]), int.parse(parts[1]));
 
-    // FIX: Ambil jam dan menit.
-    // Cek dulu apakah data "detik" dikirim oleh API, kalau tidak ada, anggap 0.
-    int hours = int.parse(startTimeShift[0]);
-    int minutes = int.parse(startTimeShift[1]);
-    int seconds = startTimeShift.length > 2 ? int.parse(startTimeShift[2]) : 0;
-
-    final dateTimeShift =
-        DateTime(now.year, now.month, now.day, hours, minutes, seconds);
-
-    if (DateTimeHelper.getDifference(a: now, b: dateTimeShift) >
-        const Duration(minutes: 30)) {
-      errorMessage =
-          'Kehadiran dapat dibuat paling cepat 30 menit sebelum jam kerja dimulai';
+    if (now.isBefore(shiftTime.subtract(const Duration(minutes: 30)))) {
+      errorMessage = 'Absen dibuka 30 menit sebelum shift dimulai.';
     }
   }
 
-  checkLocationPermission() async {
-    showLoading();
-    _isGrantedLocation = await LocationHelper.isGrantedLocationPermission();
-    hideLoading();
-
-    if (_isGrantedLocation) {
-      errorMessage = '';
-      init();
-    } else {
-      notifyListeners(); // Hilangkan pemanggilan checkLocationPermission() lagi di sini!
-    }
-  }
-
-  checkLocationService() async {
-    showLoading();
-    _isEnabledLocation = await LocationHelper.isEnabledLocationService();
-    hideLoading();
-
-    if (_isEnabledLocation) {
-      errorMessage = '';
-      init();
-    } else {
-      notifyListeners(); // Hilangkan pemanggilan checkLocationService() lagi di sini!
-    }
-  }
-
-  // Wajib tambahkan ini agar GPS mati saat user keluar dari layar Map (Hemat Baterai)
-  @override
-  void dispose() {
-    try {
-      _streamCurrentLocation.cancel();
-    } catch (e) {}
-    _mapController.dispose();
-    super.dispose();
-  }
-
-  mapIsReady() async {
-    _openStreamCurrentLocation();
+  void mapIsReady() async {
     await mapController.drawCircle(_circle);
+    _startTracking();
   }
 
-  _openStreamCurrentLocation() async {
-    _streamCurrentLocation = Geolocator.getPositionStream().listen(
-      (position) {
-        if (position.isMocked) {
-          _closeStreamCurrentLocation();
-          _sendBanned();
-        } else {
-          if (!isDispose && !isLoading) {
-            if (_currentLocation != null) {
-              _mapController.removeMarker(_currentLocation!);
-            }
-            _currentLocation = GeoPoint(
-                latitude: position.latitude, longitude: position.longitude);
-            _mapController.addMarker(_currentLocation!,
-                markerIcon: const MarkerIcon(
-                  icon: Icon(
-                    Icons.account_circle,
-                    color: Colors.red,
-                    size: 30,
-                  ),
-                ));
-            _mapController.moveTo(_currentLocation!, animate: true);
-            _validationSubmitButton();
-          } else {
-            _closeStreamCurrentLocation();
-          }
-        }
-      },
-    );
-  }
-
-  _closeStreamCurrentLocation() {
-    _streamCurrentLocation.cancel();
-  }
-
-  _validationSubmitButton() {
-    if (_schedule!.isWfa) {
-      if (!_isEnableSubmitButton) {
-        _isEnableSubmitButton = true;
-        notifyListeners();
+  void _startTracking() {
+    _streamCurrentLocation = Geolocator.getPositionStream(
+            locationSettings:
+                const LocationSettings(accuracy: LocationAccuracy.high))
+        .listen((position) {
+      if (position.isMocked) {
+        _sendBanned();
+        return;
       }
+
+      if (!isDispose) {
+        if (_currentLocation != null)
+          mapController.removeMarker(_currentLocation!);
+
+        _currentLocation = GeoPoint(
+            latitude: position.latitude, longitude: position.longitude);
+        mapController.addMarker(_currentLocation!,
+            markerIcon: const MarkerIcon(
+                icon: Icon(Icons.person_pin_circle,
+                    color: Colors.red, size: 48)));
+
+        mapController.moveTo(_currentLocation!, animate: true);
+        _validateLocation();
+      }
+    });
+  }
+
+  void _validateLocation() {
+    if (_schedule?.isWfa ?? false) {
+      _isEnableSubmitButton = true;
     } else {
-      final inCircle =
+      _isEnableSubmitButton =
           LocationHelper.isLocationInCircle(_circle, _currentLocation!);
-      if (inCircle != _isEnableSubmitButton) {
-        _isEnableSubmitButton = inCircle;
-        notifyListeners();
-      }
     }
+    notifyListeners();
   }
 
-  send() async {
+  Future<void> send() async {
+    if (_currentLocation == null) return;
     showLoading();
-
     final response = await _attendanceSendUseCase(
         param: AttendanceParamEntity(
       latitude: _currentLocation!.latitude,
       longitude: _currentLocation!.longitude,
     ));
-
     if (response.success) {
       _isSuccess = true;
     } else {
       snackbarMessage = response.message;
     }
-
     hideLoading();
   }
 
-  _sendBanned() async {
+  Future<void> _sendBanned() async {
+    _streamCurrentLocation?.cancel();
     showLoading();
-
-    final response = await _scheduleBannedUseCase();
-
-    if (response.success) {
-      _getSchedule();
-    } else {
-      errorMessage = response.message;
-    }
-
+    await _scheduleBannedUseCase();
     hideLoading();
+    errorMessage = "Fake GPS Terdeteksi! Akun Anda ditangguhkan.";
+  }
+
+  @override
+  void dispose() {
+    _streamCurrentLocation?.cancel();
+    mapController.dispose();
+    super.dispose();
   }
 }

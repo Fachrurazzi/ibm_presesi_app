@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
@@ -23,229 +22,143 @@ class HomeNotifier extends AppProvider {
   final PhotoGetUrlUseCase _photoGetUrlUseCase;
 
   HomeNotifier(
-      this._attendanceGetTodayUseCase,
-      this._attendanceGetMonthUseCase,
-      this._scheduleGetUseCase,
-      this._scheduleBannedUseCase,
-      this._photoGetUrlUseCase) {
+    this._attendanceGetTodayUseCase,
+    this._attendanceGetMonthUseCase,
+    this._scheduleGetUseCase,
+    this._scheduleBannedUseCase,
+    this._photoGetUrlUseCase,
+  ) {
     init();
   }
 
-  bool _isGrantedNotificationPermission = false;
-  int _timeNotification = 5;
-  final List<DropdownMenuEntry<int>> _listEditNotification = [
-    const DropdownMenuEntry<int>(value: 5, label: '5 menit'),
-    const DropdownMenuEntry<int>(value: 15, label: '15 menit'),
-    const DropdownMenuEntry<int>(value: 30, label: '30 menit')
-  ];
+  // State Variables
   String _name = '';
-  bool _isPhysicDevice = true; // default false
+  String? _photoUrl;
+  final bool _isPhysicDevice = true;
+  bool _isLeaves = false;
+  int _timeNotification = 5;
   AttendanceEntity? _attendanceToday;
   List<AttendanceEntity> _listAttendanceThisMonth = [];
   ScheduleEntity? _schedule;
-  bool _isLeaves = false;
 
-  bool get isGrantedNotification => _isGrantedNotificationPermission;
-  List<DropdownMenuEntry<int>> get listEditNotification =>
-      _listEditNotification;
-  int get timeNotification => _timeNotification;
-  String? _photoUrl;
-  String? get photoUrl => _photoUrl;
-
+  // Getters
   String get name => _name;
-
-  bool get isPhysicDevice => _isPhysicDevice;
-
+  String? get photoUrl => _photoUrl;
+  bool get isLeaves => _isLeaves;
+  int get timeNotification => _timeNotification;
   AttendanceEntity? get attendanceToday => _attendanceToday;
-
   List<AttendanceEntity> get listAttendanceThisMonth =>
       _listAttendanceThisMonth;
-
   ScheduleEntity? get schedule => _schedule;
 
-  bool get isLeaves => _isLeaves;
+  final List<DropdownMenuEntry<int>> listEditNotification = [
+    const DropdownMenuEntry<int>(value: 5, label: '5 Menit'),
+    const DropdownMenuEntry<int>(value: 15, label: '15 Menit'),
+    const DropdownMenuEntry<int>(value: 30, label: '30 Menit'),
+  ];
 
   @override
   Future<void> init() async {
-    await _getUserDetail();
-    // await _getDeviceInfo();
-    await _getNotificationPermission();
-    if (errorMessage.isEmpty) await _getPhotoUrl();
-
-    if (errorMessage.isEmpty) await _getAttendanceToday();
-    if (errorMessage.isEmpty) await _getAttendanceThisMonth();
-    if (errorMessage.isEmpty) await _getSchedule();
-  }
-
-  _getUserDetail() async {
     showLoading();
+
+    // 1. Ambil data dasar dulu
     _name = await SharedPreferencesHelper.getString(PREF_NAME);
     _timeNotification =
         await SharedPreferencesHelper.getInt(PREF_NOTIF_SETTING) ?? 5;
+
+    // 2. Jalankan sisanya secara paralel agar cepat
+    await Future.wait([
+      _getPhotoUrl(),
+      _getAttendanceToday(),
+      _getAttendanceThisMonth(),
+      _getSchedule(),
+      _getNotificationPermission(),
+      // _getDeviceInfo(), // Buka jika ingin proteksi emulator
+    ]);
+
     hideLoading();
   }
 
-  _getPhotoUrl() async {
-    showLoading();
+  Future<void> _getPhotoUrl() async {
     final response = await _photoGetUrlUseCase();
-    if (response.success) {
-      _photoUrl = response.data;
-    } else {
-      _photoUrl = null;
-    }
-    hideLoading();
+    _photoUrl = response.success ? response.data : null;
   }
 
-  _getDeviceInfo() async {
-    showLoading();
-    if (Platform.isAndroid) {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      _isPhysicDevice = androidInfo.isPhysicalDevice;
-    } else if (Platform.isIOS) {
-      final iOSInfo = await DeviceInfoPlugin().iosInfo;
-      _isPhysicDevice = iOSInfo.isPhysicalDevice;
-    }
-
-    if (!_isPhysicDevice) _sendBanned();
-    hideLoading();
-  }
-
-  _getNotificationPermission() async {
-    _isGrantedNotificationPermission =
-        await NotificationHelper.isPermissionGranted();
-    if (!_isGrantedNotificationPermission) {
-      await NotificationHelper.requestPermission();
-      // await Future.delayed(const Duration(seconds: 5));
-      // _getNotificationPermission();
-    }
-  }
-
-  _getAttendanceToday() async {
-    showLoading();
-
+  Future<void> _getAttendanceToday() async {
     final response = await _attendanceGetTodayUseCase();
-
     if (response.success) {
       _attendanceToday = response.data;
     } else {
       errorMessage = response.message;
     }
-
-    hideLoading();
   }
 
-  _getAttendanceThisMonth() async {
-    showLoading();
-
+  Future<void> _getAttendanceThisMonth() async {
     final response = await _attendanceGetMonthUseCase();
-
     if (response.success) {
-      _listAttendanceThisMonth = response.data!;
-    } else {
-      errorMessage = response.message;
+      _listAttendanceThisMonth = response.data ?? [];
     }
-
-    hideLoading();
   }
 
-  _getSchedule() async {
-    showLoading();
+  Future<void> _getSchedule() async {
     _isLeaves = false;
-
     final response = await _scheduleGetUseCase();
 
-    // Jika HTTP 200 (Sukses)
     if (response.success) {
       if (response.data != null) {
-        _schedule = response.data!;
+        _schedule = response.data;
         _setNotification();
       }
-    } else {
-      // Jika HTTP 403 atau error lainnya (ErrorState)
-      // KITA CEGAT PESAN ERROR-NYA DI SINI
-      if (response.message.toLowerCase().contains('cuti')) {
-        _isLeaves = true;
-        // errorMessage dibiarkan kosong agar UI tidak menampilkan layar merah
-      } else {
-        errorMessage = response.message;
-      }
-    }
-
-    hideLoading();
-  }
-
-  _sendBanned() async {
-    showLoading();
-
-    final response = await _scheduleBannedUseCase();
-
-    if (response.success) {
-      _getSchedule();
+    } else if (response.message.toLowerCase().contains('cuti')) {
+      _isLeaves = true;
     } else {
       errorMessage = response.message;
     }
-
-    hideLoading();
   }
 
-  _setNotification() async {
-    showLoading();
+  Future<void> _getNotificationPermission() async {
+    bool granted = await NotificationHelper.isPermissionGranted();
+    if (!granted) await NotificationHelper.requestPermission();
+  }
 
+  Future<void> _setNotification() async {
     await NotificationHelper.cancelAll();
 
     final startShift =
         await SharedPreferencesHelper.getString(PREF_START_SHIFT);
     final endShift = await SharedPreferencesHelper.getString(PREF_END_SHIFT);
 
-    if (startShift.isEmpty || endShift.isEmpty) {
-      hideLoading();
-      return;
-    }
+    if (startShift.isEmpty || endShift.isEmpty) return;
 
-    final prefTimeNotif =
-        await SharedPreferencesHelper.getInt(PREF_NOTIF_SETTING);
-
-    if (prefTimeNotif == null) {
-      SharedPreferencesHelper.setInt(PREF_NOTIF_SETTING, _timeNotification);
-    } else {
-      _timeNotification = prefTimeNotif;
-    }
-
-    DateTime startShiftDateTime = DateTimeHelper.parseDateTime(
-        dateTimeString: startShift, format: 'HH:mm');
-
-    DateTime endShiftDateTime =
-        DateTimeHelper.parseDateTime(dateTimeString: endShift, format: 'HH:mm');
-
-    startShiftDateTime =
-        startShiftDateTime.subtract(Duration(minutes: _timeNotification));
-    endShiftDateTime =
-        endShiftDateTime.subtract(Duration(minutes: _timeNotification));
+    DateTime startDt = DateTimeHelper.parseDateTime(
+            dateTimeString: startShift, format: 'HH:mm')
+        .subtract(Duration(minutes: _timeNotification));
+    DateTime endDt =
+        DateTimeHelper.parseDateTime(dateTimeString: endShift, format: 'HH:mm')
+            .subtract(Duration(minutes: _timeNotification));
 
     await NotificationHelper.scheduleNotification(
-        id: 'start'.hashCode,
-        title: 'Pengingat!',
-        body: 'Jangan lupa untuk buat kehadiran masuk',
-        hour: startShiftDateTime.hour,
-        minutes: startShiftDateTime.minute);
+      id: 'start'.hashCode,
+      title: 'Pengingat Masuk',
+      body: 'Waktunya melakukan presensi masuk',
+      hour: startDt.hour,
+      minutes: startDt.minute,
+    );
 
     await NotificationHelper.scheduleNotification(
-        id: 'end'.hashCode,
-        title: 'Pengingat!',
-        body: 'Jangan lupa untuk buat kehadiran keluar',
-        hour: endShiftDateTime.hour,
-        minutes: endShiftDateTime.minute);
-
-    hideLoading();
+      id: 'end'.hashCode,
+      title: 'Pengingat Pulang',
+      body: 'Jangan lupa presensi keluar sebelum pulang',
+      hour: endDt.hour,
+      minutes: endDt.minute,
+    );
   }
 
-  saveNotificationSetting(int param) async {
+  Future<void> saveNotificationSetting(int param) async {
     showLoading();
-
     await SharedPreferencesHelper.setInt(PREF_NOTIF_SETTING, param);
     _timeNotification = param;
-    _setNotification();
-
+    await _setNotification();
     hideLoading();
   }
 }

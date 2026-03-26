@@ -22,56 +22,66 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<T>(
-      create: (context) {
-        // Inisialisasi Provider dari GetIt (sl)
-        final instance = sl<T>(param1: param1, param2: param2);
+      create: (context) => sl<T>(param1: param1, param2: param2),
+      child: Consumer<T>(
+        // Menggunakan Consumer agar lebih reaktif dan rapi
+        builder: (context, value, child) {
+          notifier = value;
 
-        // Pindahkan callback UI ke sini agar hanya dieksekusi 1X saat layar dibuat
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          checkVariableAfterUi(context);
-        });
+          // PINDAHKAN LOGIKA SIDE-EFFECT KE SINI
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            print(
+                "DEBUG: Frame Selesai - Mengecek snackbar & navigasi..."); // CEK DISINI
+            if (context.mounted) {
+              // 1. Handle Snackbar
+              if (notifier.snackbarMessage.isNotEmpty) {
+                DialogHelper.showSnackbar(
+                  context: context,
+                  text: notifier.snackbarMessage,
+                );
+                notifier.snackbarMessage = '';
+              }
 
-        return instance;
-      },
-      builder: (context, child) => _build(context),
+              // 2. Handle Navigation & Redirect
+              checkVariableAfterUi(context);
+            }
+          });
+
+          return _layout(context);
+        },
+      ),
     );
   }
 
-  Widget _build(BuildContext context) {
-    notifier = Provider.of<T>(context);
+  Widget _layout(BuildContext context) {
     checkVariableBeforeUi(context);
-
-    // Kita kembalikan pendengar UI ke sini agar mendeteksi saat user berhasil login
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (notifier.snackbarMessage.isNotEmpty) {
-        DialogHelper.showSnackbar(
-          context: context,
-          text: notifier.snackbarMessage,
-        );
-        notifier.snackbarMessage = '';
-      }
-
-      // INI KUNCINYA: Akan mengeksekusi navigasi (push/pop) jika syaratnya terpenuhi
-      checkVariableAfterUi(context);
-    });
 
     return Scaffold(
       appBar: appBarBuild(context),
-      body: (notifier.isLoading)
-          ? const LoadingAppWidget()
-          : (notifier.errorMessage.isNotEmpty)
-              ? ErrorAppWidget(
-                  description: notifier.errorMessage,
-                  onPressDefaultButton: () {
-                    notifier.errorMessage = '';
-                    notifier.init();
-                  },
-                  alternatifButton: _alternatifErrorButton,
-                )
-              : bodyBuild(context),
+      body: _buildBody(context),
     );
   }
 
+  Widget _buildBody(BuildContext context) {
+    if (notifier.isLoading) {
+      return const LoadingAppWidget();
+    }
+
+    if (notifier.errorMessage.isNotEmpty) {
+      return ErrorAppWidget(
+        description: notifier.errorMessage,
+        onPressDefaultButton: () {
+          notifier.errorMessage = '';
+          notifier.init();
+        },
+        alternatifButton: _alternatifErrorButton,
+      );
+    }
+
+    return bodyBuild(context);
+  }
+
+  // Method yang bisa di-override
   void checkVariableBeforeUi(BuildContext context) {}
   void checkVariableAfterUi(BuildContext context) {}
   AppBar? appBarBuild(BuildContext context) => null;

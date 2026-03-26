@@ -13,17 +13,12 @@ class LoginNotifier extends AppProvider {
   }
 
   bool _isLoged = false;
-
   bool get isLoged => _isLoged;
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  TextEditingController get emailController => _emailController;
-  TextEditingController get passwordController => _passwordController;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   bool _isShowPassword = false;
-
   bool get isShowPassword => _isShowPassword;
 
   set isShowPassword(bool param) {
@@ -36,32 +31,42 @@ class LoginNotifier extends AppProvider {
     _checkAuth();
   }
 
-  _checkAuth() async {
+  // Dispose controllers to prevent memory leaks
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkAuth() async {
     showLoading();
-
     final String? auth = await SharedPreferencesHelper.getString(PREF_AUTH);
-
-    if (auth?.isNotEmpty ?? false) _isLoged = true;
-
+    if (auth?.isNotEmpty ?? false) {
+      _isLoged = true;
+    }
     hideLoading();
   }
 
-  login() async {
-    showLoading();
+  Future<void> login() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      snackbarMessage = "Email dan password tidak boleh kosong";
+      return;
+    }
 
+    showLoading();
     final param = AuthEntity(
-        email: _emailController.text, password: _passwordController.text);
+        email: emailController.text, password: passwordController.text);
 
     final response = await _authLoginUseCase(param: param);
 
     if (response.success) {
-      // FIX: Langsung ubah status login jika API merespons sukses
       _isLoged = true;
+      // Simpan session di sini jika belum dilakukan di UseCase
     } else {
       snackbarMessage = response.message;
     }
 
-    await _checkAuth();
-    hideLoading(); // Ini akan memicu UI update dan mengeksekusi perpindahan layar
+    hideLoading();
   }
 }

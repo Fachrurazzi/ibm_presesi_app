@@ -10,10 +10,10 @@ class DetailAttendanceNotifier extends AppProvider {
     init();
   }
 
-  final TextEditingController _monthController = TextEditingController();
-  final TextEditingController _yearController = TextEditingController();
+  final monthController = TextEditingController();
+  final yearController = TextEditingController();
 
-  final List<DropdownMenuEntry<int>> _monthListDropdown = [
+  final List<DropdownMenuEntry<int>> monthListDropdown = [
     const DropdownMenuEntry(value: 1, label: 'Januari'),
     const DropdownMenuEntry(value: 2, label: 'Februari'),
     const DropdownMenuEntry(value: 3, label: 'Maret'),
@@ -28,43 +28,56 @@ class DetailAttendanceNotifier extends AppProvider {
     const DropdownMenuEntry(value: 12, label: 'Desember'),
   ];
 
-  final List<DropdownMenuEntry<int>> _yearListDropdown = [
-    const DropdownMenuEntry(value: 2026, label: '2026')
+  final List<DropdownMenuEntry<int>> yearListDropdown = [
+    const DropdownMenuEntry(value: 2026, label: '2026'),
+    const DropdownMenuEntry(value: 2025, label: '2025'),
   ];
 
   List<AttendanceEntity> _listAttendance = [];
-
-  TextEditingController get monthController => _monthController;
-  TextEditingController get yearController => _yearController;
-
-  List<DropdownMenuEntry<int>> get monthListDropdown => _monthListDropdown;
-  List<DropdownMenuEntry<int>> get yearListDropdown => _yearListDropdown;
   List<AttendanceEntity> get listAttendance => _listAttendance;
 
   @override
   void init() {
-    // TODO: implement init
+    // Bisa tambahkan search() otomatis di sini jika ingin langsung tampil
   }
 
-  search() async {
+  @override
+  void dispose() {
+    monthController.dispose();
+    yearController.dispose();
+    super.dispose();
+  }
+
+  Future<void> search() async {
+    // Validasi input
+    if (monthController.text.isEmpty || yearController.text.isEmpty) {
+      snackbarMessage = "Pilih bulan dan tahun terlebih dahulu";
+      return;
+    }
+
     showLoading();
-    final month = _monthListDropdown
-        .where((element) => element.label == _monthController.text)
-        .first
-        .value;
 
-    final year = _yearListDropdown
-        .where((element) => element.label == _yearController.text)
-        .first
-        .value;
+    try {
+      final month = monthListDropdown
+          .firstWhere((e) => e.label == monthController.text)
+          .value;
+      final year = yearListDropdown
+          .firstWhere((e) => e.label == yearController.text)
+          .value;
 
-    final response = await _attendanceGetByMonthYear(
-        param: AttendanceParamGetEntity(month: month, year: year));
+      final response = await _attendanceGetByMonthYear(
+          param: AttendanceParamGetEntity(month: month, year: year));
 
-    if (response.success) {
-      _listAttendance = response.data!;
-    } else {
-      errorMessage = response.message;
+      if (response.success) {
+        _listAttendance = response.data ?? [];
+        if (_listAttendance.isEmpty) {
+          snackbarMessage = "Tidak ada data ditemukan";
+        }
+      } else {
+        errorMessage = response.message;
+      }
+    } catch (e) {
+      snackbarMessage = "Terjadi kesalahan saat memproses data";
     }
 
     hideLoading();

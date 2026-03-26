@@ -10,175 +10,235 @@ class FaceRecognitionScreen
 
   @override
   void checkVariableAfterUi(BuildContext context) {
-    // Navigasi otomatis jika wajah cocok >= 70% atau pendaftaran sukses (100%)
-    if (notifier.percentMatch >= 70) {
-      // Menggunakan PostFrameCallback agar tidak error "navigating while building"
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (notifier.percentMatch >= 75) {
+      // Standar keamanan 75%
+      Future.delayed(const Duration(milliseconds: 800), () {
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MapScreen(),
-          ),
-        );
+            context, MaterialPageRoute(builder: (_) => MapScreen()));
       });
     }
   }
 
   @override
-  AppBar? appBarBuild(BuildContext context) {
-    return AppBar(
-      title: const Text("Validasi Wajah"),
-      centerTitle: true,
-    );
-  }
-
-  @override
   Widget bodyBuild(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // --- 1. Bagian Bingkai & Gambar Wajah ---
-              Container(
-                height: 180,
-                width: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: GlobalHelper.getColorSchema(context).primary,
-                    width: 4,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 15,
-                        offset: const Offset(0, 10))
-                  ],
-                ),
-                child: ClipOval(
-                  child: (notifier.isLoading && notifier.currentImage == null)
-                      ? const Center(child: CircularProgressIndicator())
-                      : (notifier.currentImage != null)
-                          ? SizedBox(
-                              height: 180,
-                              width: 180,
-                              child: FittedBox(
-                                fit: BoxFit.cover,
-                                child: notifier.currentImage!,
-                              ),
-                            )
-                          : (notifier.basePhotoWidget != null)
-                              ? SizedBox(
-                                  height: 180,
-                                  width: 180,
-                                  child: FittedBox(
-                                    fit: BoxFit.cover,
-                                    child: notifier.basePhotoWidget!,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.face_retouching_natural,
-                                  size: 100,
-                                  color: Colors.grey,
-                                ),
-                ),
-              ),
-              const SizedBox(height: 40),
+    final theme = Theme.of(context);
 
-              // --- 2. Bagian Teks Status Dinamis ---
-              _buildStatusText(context),
-
-              const SizedBox(height: 40),
-
-              // --- 3. Bagian Tombol Aksi ---
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton.icon(
-                  onPressed:
-                      notifier.isLoading ? null : () => _onPressOpenCamera(),
-                  icon: notifier.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.camera_alt),
-                  label: Text(
-                    // Ubah teks tombol sesuai mode
-                    notifier.isLoading
-                        ? 'Memproses...'
-                        : (notifier.isRegistrationMode
-                            ? 'Daftarkan Wajah'
-                            : 'Buka Kamera'),
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              )
-            ],
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Background Gradient Dekoratif
+          Positioned(
+            top: -100,
+            right: -50,
+            child: CircleAvatar(
+                radius: 150,
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.05)),
           ),
-        ),
+
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  _buildHeader(context),
+                  const Spacer(),
+                  _buildFaceFrame(context),
+                  const SizedBox(height: 40),
+                  _buildStatusIndicator(context),
+                  const Spacer(),
+                  _buildActionButton(context),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Helper function untuk merapikan logika teks
-  Widget _buildStatusText(BuildContext context) {
-    if (notifier.isLoading && notifier.currentImage == null) {
-      return Text(
-        'Menyiapkan data wajah...',
-        style: GlobalHelper.getTextStyle(
-            context: context, appTextStyle: AppTextStyle.TITLE_MEDIUM),
-      );
-    }
-
-    if (notifier.currentImage == null) {
-      // Pesan khusus jika dalam mode pendaftaran
-      return Text(
-        notifier.isRegistrationMode
-            ? 'Anda belum memiliki foto!\nSilakan ambil foto untuk didaftarkan.'
-            : 'Silakan hadapkan wajah ke kamera',
-        style: GlobalHelper.getTextStyle(
-                context: context, appTextStyle: AppTextStyle.TITLE_MEDIUM)
-            ?.copyWith(
-          color: notifier.isRegistrationMode ? Colors.orange.shade800 : null,
-          fontWeight: notifier.isRegistrationMode ? FontWeight.bold : null,
+  Widget _buildHeader(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          notifier.isRegistrationMode
+              ? "Registrasi Biometrik"
+              : "Verifikasi Identitas",
+          style: Theme.of(context)
+              .textTheme
+              .headlineSmall
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
-        textAlign: TextAlign.center,
-      );
-    }
-
-    if (notifier.percentMatch < 0.0) {
-      return Text(
-        notifier.isRegistrationMode
-            ? 'Gagal menyimpan wajah ke server.'
-            : 'Akses Ditolak!\nWajah tidak cocok dengan pemilik akun.',
-        style: GlobalHelper.getTextStyle(
-                context: context, appTextStyle: AppTextStyle.TITLE_MEDIUM)
-            ?.copyWith(color: Colors.red, fontWeight: FontWeight.bold),
-        textAlign: TextAlign.center,
-      );
-    }
-
-    return Text(
-      notifier.isRegistrationMode
-          ? 'Pendaftaran Berhasil!'
-          : 'Tingkat Kemiripan: ${notifier.percentMatch.toStringAsFixed(1)}%',
-      style: GlobalHelper.getTextStyle(
-              context: context, appTextStyle: AppTextStyle.HEADLINE_SMALL)
-          ?.copyWith(color: Colors.green, fontWeight: FontWeight.bold),
-      textAlign: TextAlign.center,
+        const SizedBox(height: 8),
+        Text(
+          notifier.isRegistrationMode
+              ? "Ambil foto selfie Anda untuk mendaftarkan wajah ke sistem"
+              : "Pastikan pencahayaan cukup agar wajah terdeteksi dengan baik",
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.grey, fontSize: 13),
+        ),
+      ],
     );
   }
 
-  void _onPressOpenCamera() {
-    notifier.getCurrentPhoto();
+  Widget _buildFaceFrame(BuildContext context) {
+    final theme = Theme.of(context);
+    bool isError = notifier.percentMatch < 0;
+    bool isSuccess = notifier.percentMatch >= 75;
+
+    Color borderColor = isError
+        ? Colors.red
+        : isSuccess
+            ? Colors.green
+            : theme.colorScheme.primary;
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Outer Glow
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
+          width: 240,
+          height: 240,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                  color: borderColor.withOpacity(0.2),
+                  blurRadius: 40,
+                  spreadRadius: 10)
+            ],
+          ),
+        ),
+
+        // Frame Foto
+        Container(
+          width: 220,
+          height: 220,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: borderColor, width: 4),
+            color: Colors.white,
+          ),
+          child: ClipOval(
+            child: _getImageContent(context),
+          ),
+        ),
+
+        // Scanner Line Animation (Hanya muncul saat loading atau iddle)
+        if (!isSuccess && !isError) const _ScannerAnimation(),
+      ],
+    );
+  }
+
+  Widget _getImageContent(BuildContext context) {
+    if (notifier.currentImage != null) return notifier.currentImage!;
+    if (notifier.basePhotoWidget != null) return notifier.basePhotoWidget!;
+    return Icon(Icons.face_unlock_rounded,
+        size: 100, color: Colors.grey.shade300);
+  }
+
+  Widget _buildStatusIndicator(BuildContext context) {
+    if (notifier.isLoading) return const CircularProgressIndicator();
+
+    if (notifier.percentMatch > 0) {
+      bool isSuccess = notifier.percentMatch >= 75;
+      return Column(
+        children: [
+          Icon(isSuccess ? Icons.check_circle : Icons.error,
+              color: isSuccess ? Colors.green : Colors.red, size: 40),
+          const SizedBox(height: 12),
+          Text(
+            isSuccess ? "Wajah Dikenali!" : "Wajah Tidak Cocok",
+            style: TextStyle(
+                color: isSuccess ? Colors.green : Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 18),
+          ),
+          if (!notifier.isRegistrationMode)
+            Text("Kemiripan: ${notifier.percentMatch}%",
+                style: const TextStyle(color: Colors.grey)),
+        ],
+      );
+    }
+
+    return const Text("Silakan mulai pemindaian wajah",
+        style: TextStyle(color: Colors.grey));
+  }
+
+  Widget _buildActionButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: FilledButton.icon(
+        onPressed: notifier.isLoading ? null : () => notifier.getCurrentPhoto(),
+        style: FilledButton.styleFrom(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        icon: const Icon(Icons.camera_front_rounded),
+        label: Text(notifier.isRegistrationMode
+            ? "Ambil Foto Selfie"
+            : "Mulai Validasi"),
+      ),
+    );
+  }
+
+  @override
+  AppBar? appBarBuild(BuildContext context) => null;
+}
+
+// Widget Animasi Scanner Garis
+class _ScannerAnimation extends StatefulWidget {
+  const _ScannerAnimation();
+  @override
+  State<_ScannerAnimation> createState() => _ScannerAnimationState();
+}
+
+class _ScannerAnimationState extends State<_ScannerAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  @override
+  void initState() {
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2))
+          ..repeat(reverse: true);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Positioned(
+          top: 40 + (140 * _controller.value),
+          child: Container(
+            width: 180,
+            height: 2,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                    color: Theme.of(context).colorScheme.primary,
+                    blurRadius: 10,
+                    spreadRadius: 2)
+              ],
+              gradient: LinearGradient(colors: [
+                Colors.transparent,
+                Theme.of(context).colorScheme.primary,
+                Colors.transparent
+              ]),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

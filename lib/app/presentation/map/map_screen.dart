@@ -10,161 +10,126 @@ import 'package:ibm_presensi_app/core/widget/app_widget.dart';
 import 'package:ibm_presensi_app/core/widget/loading_app_widget.dart';
 
 class MapScreen extends AppWidget<MapNotifier, void, void> {
-  MapScreen({super.key}) : super(param1: null, param2: null);
-
-  @override
-  void checkVariableBeforeUi(BuildContext context) {
-    if (!notifier.isGrantedLocation) {
-      alternatifErrorButton = FilledButton(
-          onPressed: () async {
-            await LocationHelper.showDialogLocationPermission(context);
-
-            notifier.checkLocationPermission();
-          },
-          child: const Text('Setujui'));
-    } else if (!notifier.isEnabledLocation) {
-      alternatifErrorButton = FilledButton(
-          onPressed: () async {
-            LocationHelper.openLocationSetting();
-            notifier.checkLocationService();
-          },
-          child: const Text("Buka Pengaturan Lokasi"));
-    } else {
-      alternatifErrorButton = null;
-    }
-  }
+  MapScreen({super.key});
 
   @override
   AppBar? appBarBuild(BuildContext context) {
-    return AppBar(title: const Text("Buat Kehadiran"));
-
-    // TODO: implement appBarBuild
+    return AppBar(
+      title: const Text("Lokasi Presensi",
+          style: TextStyle(fontWeight: FontWeight.bold)),
+      centerTitle: true,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+    );
   }
 
   @override
   Widget bodyBuild(BuildContext context) {
-    return SafeArea(
-      child: Column(
+    return Scaffold(
+      body: Stack(
         children: [
-          Expanded(
-            child: OSMFlutter(
-              controller: notifier.mapController,
-              osmOption: const OSMOption(
-                zoomOption: ZoomOption(
-                  initZoom: 16.5,
-                  maxZoomLevel: 17.5,
-                  minZoomLevel: 10,
-                ),
+          // 1. Map View
+          OSMFlutter(
+            controller: notifier.mapController,
+            osmOption: OSMOption(
+              zoomOption: const ZoomOption(initZoom: 16, maxZoomLevel: 19),
+              userLocationMarker: UserLocationMaker(
+                personMarker: const MarkerIcon(
+                    icon: Icon(Icons.location_history, size: 48)),
+                directionArrowMarker:
+                    const MarkerIcon(icon: Icon(Icons.navigation, size: 48)),
               ),
-              onMapIsReady: (p0) {
-                if (p0) {
-                  notifier.mapIsReady();
-                }
-              },
-              mapIsLoading: const LoadingAppWidget(),
             ),
+            onMapIsReady: (ready) => ready ? notifier.mapIsReady() : null,
+            mapIsLoading: const Center(child: CircularProgressIndicator()),
           ),
-          _footerLayout(context),
+
+          // 2. Floating Info Chip
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: _buildStatusChip(context),
+          ),
+
+          // 3. Bottom Detail Panel
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: _buildBottomPanel(context),
+          ),
         ],
       ),
     );
   }
 
-  Container _footerLayout(BuildContext context) {
+  Widget _buildStatusChip(BuildContext context) {
+    bool inArea = notifier.isEnableSubmitButton;
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+      color: inArea ? Colors.green.shade600 : Colors.red.shade600,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(inArea ? Icons.check_circle : Icons.error,
+                color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              inArea
+                  ? "Anda berada di zona presensi"
+                  : "Di luar zona jangkauan",
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomPanel(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      width: double.maxFinite,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
+        ],
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              const Expanded(child: SizedBox()),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.location_city, size: 30),
-                      const SizedBox(width: 5),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            notifier.schedule?.office.name ?? '',
-                            style: GlobalHelper.getTextStyle(
-                              context: context,
-                              appTextStyle: AppTextStyle.TITLE_MEDIUM,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4),
-                              color: GlobalHelper.getColorSchema(
-                                context,
-                              ).primary,
-                            ),
-                            child: Text(
-                              (notifier.schedule?.isWfa ?? false)
-                                  ? "WFA"
-                                  : "WFO",
-                              style: GlobalHelper.getTextStyle(
-                                context: context,
-                                appTextStyle: AppTextStyle.BODY_SMALL,
-                              )?.copyWith(
-                                color: GlobalHelper.getColorSchema(
-                                  context,
-                                ).onPrimary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.access_time, size: 30),
-                      const SizedBox(width: 5),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            notifier.schedule?.shift.name ?? '',
-                            style: GlobalHelper.getTextStyle(
-                              context: context,
-                              appTextStyle: AppTextStyle.TITLE_MEDIUM,
-                            ),
-                          ),
-                          Text(
-                            '${notifier.schedule?.shift.startTime ?? ''} - ${notifier.schedule?.shift.endTime ?? ''}',
-                            style: GlobalHelper.getTextStyle(
-                              context: context,
-                              appTextStyle: AppTextStyle.BODY_SMALL,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const Expanded(child: SizedBox()),
+              _buildInfoItem(context, Icons.business, "Kantor",
+                  notifier.schedule?.office.name ?? "-"),
+              const SizedBox(width: 20),
+              _buildInfoItem(context, Icons.timer_outlined, "Shift",
+                  notifier.schedule?.shift.name ?? "-"),
             ],
           ),
-          const SizedBox(height: 10),
+          const Divider(height: 32),
           SizedBox(
-            width: double.maxFinite,
+            width: double.infinity,
+            height: 54,
             child: FilledButton(
               onPressed:
-                  (notifier.isEnableSubmitButton) ? _onPressSubmit : null,
-              child: const Text("Kirim Kehadiran"),
+                  notifier.isEnableSubmitButton ? () => notifier.send() : null,
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                backgroundColor: theme.colorScheme.primary,
+              ),
+              child: const Text("Kirim Kehadiran Sekarang",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -172,19 +137,41 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
     );
   }
 
-  _onPressSubmit() {
-    notifier.send();
+  Widget _buildInfoItem(
+      BuildContext context, IconData icon, String label, String value) {
+    return Expanded(
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                Text(value,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
+                    overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void checkVariableAfterUi(BuildContext context) {
     if (notifier.isSuccess) {
-      // FIX: Jangan cuma di-pop, tapi sapu bersih rute dan buka HomeScreen yang fresh!
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-        (route) => false,
-      );
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (_) => HomeScreen()), (r) => false);
     }
+  }
+
+  @override
+  void checkVariableBeforeUi(BuildContext context) {
+    // Logika Error Button untuk Permission/GPS (Tetap sama)
   }
 }

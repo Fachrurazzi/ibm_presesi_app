@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
@@ -24,7 +23,9 @@ class AppInterceptor extends Interceptor {
     Response response,
     ResponseInterceptorHandler handler,
   ) {
-    if (response.statusCode != HttpStatus.ok) {
+    // MODIFIKASI: Izinkan status 200 (OK) dan 201 (Created)
+    if (response.statusCode != HttpStatus.ok &&
+        response.statusCode != HttpStatus.created) {
       return handler.resolve(
         Response(data: response.data, requestOptions: response.requestOptions),
       );

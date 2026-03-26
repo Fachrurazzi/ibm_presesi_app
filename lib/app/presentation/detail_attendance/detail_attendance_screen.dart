@@ -13,199 +13,245 @@ class DetailAttendanceScreen
   @override
   AppBar? appBarBuild(BuildContext context) {
     return AppBar(
-      title: const Text('Detail Presensi'),
+      title: const Text('Detail Presensi',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+      centerTitle: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      foregroundColor: Theme.of(context).colorScheme.onSurface,
     );
   }
 
   @override
   Widget bodyBuild(BuildContext context) {
+    final theme = Theme.of(context);
+
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // --- 1. Bagian Filter (Card Style) ---
-            Container(
-              padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // --- FILTER SECTION ---
+          _buildFilterCard(context),
+
+          const SizedBox(height: 16),
+
+          // --- DATA SECTION ---
+          Expanded(
+            child: Container(
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest
-                    .withOpacity(0.3),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: DropdownMenu<int>(
-                      expandedInsets: EdgeInsets.zero,
-                      label: const Text('Bulan'),
-                      dropdownMenuEntries: notifier.monthListDropdown,
-                      initialSelection:
-                          DateTime.now().month, // Auto pilih bulan saat ini
-                      controller: notifier.monthController,
-                      inputDecorationTheme: InputDecorationTheme(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: DropdownMenu<int>(
-                      expandedInsets: EdgeInsets.zero,
-                      label: const Text('Tahun'),
-                      dropdownMenuEntries: notifier.yearListDropdown,
-                      initialSelection: 2026,
-                      controller: notifier.yearController,
-                      inputDecorationTheme: InputDecorationTheme(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.all(16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () => _onPressSearch(),
-                    child: const Icon(Icons.search),
+                color: theme.colorScheme.surface,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
                   )
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // --- 2. Header Tabel ---
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                      flex: 1,
-                      child: Center(
-                          child: Text('Tanggal',
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold)))),
-                  Expanded(
-                      flex: 2,
-                      child: Center(
-                          child: Text('Masuk',
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold)))),
-                  Expanded(
-                      flex: 2,
-                      child: Center(
-                          child: Text('Keluar',
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold)))),
-                ],
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(32)),
+                child: notifier.listAttendance.isEmpty
+                    ? _buildEmptyState(context)
+                    : _buildAttendanceList(context),
               ),
             ),
-            const SizedBox(height: 8),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // --- 3. List Kehadiran ---
-            if (notifier.listAttendance.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 40),
-                child: Text("Tidak ada data kehadiran di bulan ini.",
-                    style: TextStyle(color: Colors.grey)),
-              )
-            else
-              ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: notifier.listAttendance.length,
-                itemBuilder: (context, index) {
-                  final item = notifier.listAttendance[index];
-                  return _itemThisMonth(context, item);
-                },
+  Widget _buildFilterCard(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0), // Padding sedikit diperkecil
+          child: Row(
+            children: [
+              // Dropdown Bulan (Diberi flex lebih besar)
+              Expanded(
+                flex: 3,
+                child: _buildDropdown(
+                  label: "Bulan",
+                  controller: notifier.monthController,
+                  entries: notifier.monthListDropdown,
+                  initial: DateTime.now().month,
+                ),
               ),
-          ],
+              const SizedBox(width: 8),
+
+              // Dropdown Tahun
+              Expanded(
+                flex: 2, // Flex lebih kecil untuk tahun karena angkanya sedikit
+                child: _buildDropdown(
+                  label: "Tahun",
+                  controller: notifier.yearController,
+                  entries: notifier.yearListDropdown,
+                  initial: 2026,
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Tombol Cari
+              IconButton.filled(
+                onPressed: () => notifier.search(),
+                icon: const Icon(Icons.search_rounded, size: 20),
+                style: IconButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  minimumSize:
+                      const Size(48, 48), // Ukuran tombol dibuat kotak presisi
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _itemThisMonth(BuildContext context, AttendanceEntity item) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.grey.shade200),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                ),
-                child: Text(
-                  DateTimeHelper.formatDateTimeFromString(
-                      dateTimeString: item.date!, format: 'dd\nMMM'),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    fontSize: 12,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Center(
-                child: Text(
-                  item.startTime,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Center(
-                child: Text(
-                  item.endTime,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.grey),
-                ),
-              ),
-            ),
-          ],
+  Widget _buildDropdown({
+    required String label,
+    required TextEditingController controller,
+    required List<DropdownMenuEntry<int>> entries,
+    required int initial,
+  }) {
+    return DropdownMenu<int>(
+      // KUNCI PERBAIKAN: expandedInsets: EdgeInsets.zero
+      // akan membuat Dropdown memenuhi lebar Expanded tanpa terpotong
+      expandedInsets: EdgeInsets.zero,
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      dropdownMenuEntries: entries,
+      initialSelection: initial,
+      controller: controller,
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        isDense: true, // Membuat input lebih ringkas
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade100),
         ),
       ),
     );
   }
 
-  _onPressSearch() {
-    notifier.search();
+  Widget _buildAttendanceList(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(24),
+      itemCount: notifier.listAttendance.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final item = notifier.listAttendance[index];
+        return _buildPresenceItem(context, item);
+      },
+    );
   }
+
+  Widget _buildPresenceItem(BuildContext context, AttendanceEntity item) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Row(
+        children: [
+          // Date Box
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              DateTimeHelper.formatDateTimeFromString(
+                  dateTimeString: item.date!, format: 'dd\nMMM'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                height: 1.1,
+                fontSize: 12,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          // Time Info
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildTimeColumn("Masuk", item.startTime, Colors.green),
+                _buildTimeColumn("Keluar", item.endTime, Colors.orange),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeColumn(String label, String time, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(
+          time,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: time == "--:--" ? Colors.grey : Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.history_rounded, size: 80, color: Colors.grey.shade200),
+          const SizedBox(height: 16),
+          const Text(
+            "Belum ada data kehadiran",
+            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            "Silahkan pilih bulan & tahun lalu cari",
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void checkVariableAfterUi(BuildContext context) {}
+  @override
+  void checkVariableBeforeUi(BuildContext context) {}
 }

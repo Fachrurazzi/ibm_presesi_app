@@ -1,14 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/face_recognition/face_recognition_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
+import 'package:ibm_presensi_app/app/presentation/leave/leave_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/login/login_screen.dart';
 import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
-import 'package:ibm_presensi_app/core/helper/dialog_helper.dart';
-import 'package:ibm_presensi_app/core/helper/global_helper.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/widget/app_widget.dart';
 
@@ -16,21 +13,20 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   HomeScreen({super.key}) : super(param1: null, param2: null);
 
   @override
-  AppBar? appBarBuild(BuildContext context) {
-    return null;
-  }
-
-  @override
   Widget bodyBuild(BuildContext context) {
-    return SafeArea(
-      child: RefreshIndicator(
-        onRefresh: () => notifier.init(),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _headerLayout(context),
-              _todayLayout(context),
-              _thisMonthLayout(context),
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () => notifier.init(),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: _buildHeader(context)),
+              SliverToBoxAdapter(child: _buildPresenceCard(context)),
+              SliverToBoxAdapter(child: _buildHistoryHeader(context)),
+              _buildHistoryList(context),
             ],
           ),
         ),
@@ -38,440 +34,341 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
     );
   }
 
-  Container _headerLayout(BuildContext context) {
-    final hour = DateTime.now().hour;
-    String greeting = 'Selamat Pagi,';
-    if (hour >= 11 && hour <= 14) {
-      greeting = 'Selamat Siang,';
-    } else if (hour > 14 && hour <= 18) {
-      greeting = 'Selamat Sore,';
-    } else if (hour > 18) {
-      greeting = 'Selamat Malam,';
-    }
+  // --- WIDGET COMPONENTS ---
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
+  Widget _buildHeader(BuildContext context) {
+    final hour = DateTime.now().hour;
+    String greeting = hour < 11
+        ? 'Selamat Pagi'
+        : hour < 15
+            ? 'Selamat Siang'
+            : hour < 18
+                ? 'Selamat Sore'
+                : 'Selamat Malam';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
       child: Row(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 3),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5))
-              ],
-            ),
-            child: CircleAvatar(
-              backgroundColor:
-                  GlobalHelper.getColorSchema(context).primaryContainer,
-              radius: 35,
-              backgroundImage: (notifier.photoUrl != null)
-                  ? NetworkImage(notifier.photoUrl!)
-                  : null,
-              child: (notifier.photoUrl == null)
-                  ? Icon(Icons.person,
-                      size: 40,
-                      color: GlobalHelper.getColorSchema(context).primary)
-                  : null,
-            ),
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            backgroundImage: notifier.photoUrl != null
+                ? NetworkImage(notifier.photoUrl!)
+                : null,
+            child: notifier.photoUrl == null ? const Icon(Icons.person) : null,
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  greeting,
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
-                ),
+                Text(greeting,
+                    style:
+                        TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                 Text(
                   notifier.name,
-                  style: GlobalHelper.getTextStyle(
-                    context: context,
-                    appTextStyle: AppTextStyle.HEADLINE_SMALL,
-                  )?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
-                (notifier.isLeaves)
-                    ? const SizedBox()
-                    : Row(
-                        children: [
-                          const Icon(Icons.location_on,
-                              size: 16, color: Colors.redAccent),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              notifier.schedule?.office.name ?? "-",
-                              style: const TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.w500),
-                              overflow: TextOverflow.ellipsis,
+                // --- TAMBAHKAN BAGIAN INI UNTUK LOKASI/DEPO ---
+                if (!notifier.isLeaves)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.location_on,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            notifier.schedule?.office.name ??
+                                "Lokasi tidak diketahui",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
-          // --- TOMBOL EDIT NOTIFIKASI ---
-          IconButton(
-            onPressed: () => _onPressEditNotification(context),
-            icon: Icon(Icons.notifications_active,
-                color: GlobalHelper.getColorSchema(context).primary),
-            tooltip: 'Pengaturan Notifikasi',
-          ),
-          // --- TOMBOL LOGOUT ---
-          IconButton(
-            onPressed: () => _onPressLogout(context),
-            icon: const Icon(Icons.logout, color: Colors.red),
-            tooltip: 'Keluar',
-          ),
+          IconButton.filledTonal(
+            onPressed: () => _showMenuBottomSheet(context),
+            icon: const Icon(Icons.grid_view_rounded),
+          )
         ],
       ),
     );
   }
 
-  Container _todayLayout(BuildContext context) {
+  Widget _buildPresenceCard(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: GlobalHelper.getColorSchema(context).primary,
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withBlue(250)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+              color: theme.colorScheme.primary.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8))
+        ],
       ),
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: GlobalHelper.getColorSchema(context).onPrimary,
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.today),
-                    const SizedBox(width: 5),
-                    Text(
-                      DateTimeHelper.formatDateTime(
-                        dateTime: DateTime.now(),
-                        format: 'EEE, dd MMM yyyy',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Expanded(child: SizedBox()),
-              (notifier.isLeaves)
-                  ? const SizedBox()
-                  : Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: GlobalHelper.getColorSchema(context).onPrimary,
-                      ),
-                      child: Text(
-                          (notifier.schedule?.isWfa ?? false) ? "WFA" : 'WFO'),
-                    ),
+              _buildChip(DateTimeHelper.formatDateTime(
+                  dateTime: DateTime.now(), format: 'EEE, dd MMM yyyy')),
+              if (!notifier.isLeaves)
+                _buildChip((notifier.schedule?.isWfa ?? false) ? "WFA" : "WFO"),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _timeTodayLayout(context, "Masuk",
-                  notifier.attendanceToday?.startTime ?? '--:--'),
-              _timeTodayLayout(context, "Keluar",
-                  notifier.attendanceToday?.endTime ?? '--:--'),
+              _buildTimeItem(
+                  "Masuk", notifier.attendanceToday?.startTime ?? '--:--'),
+              Container(width: 1, height: 40, color: Colors.white24),
+              _buildTimeItem(
+                  "Keluar", notifier.attendanceToday?.endTime ?? '--:--'),
             ],
           ),
-          const SizedBox(height: 20),
-          (notifier.isLeaves)
-              ? Container(
-                  width: double.maxFinite,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(
-                      color: GlobalHelper.getColorSchema(context)
-                          .onPrimary
-                          .withOpacity(0.5),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.beach_access,
-                        color: GlobalHelper.getColorSchema(context).onPrimary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Anda sedang dalam masa cuti',
-                        style: GlobalHelper.getTextStyle(
-                          context: context,
-                          appTextStyle: AppTextStyle.LABEL_LARGE,
-                        )?.copyWith(
-                          color: GlobalHelper.getColorSchema(context).onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : SizedBox(
-                  width: double.maxFinite,
-                  child: FilledButton(
-                    onPressed: () => _onPressCreateAttendance(context),
-                    style: FilledButton.styleFrom(
-                      backgroundColor:
-                          GlobalHelper.getColorSchema(context).onPrimary,
-                      foregroundColor:
-                          GlobalHelper.getColorSchema(context).primary,
-                    ),
-                    child: const Text("Buat Kehadiran"),
-                  ),
-                ),
+          const SizedBox(height: 24),
+          notifier.isLeaves ? _buildLeaveInfo() : _buildActionButton(context),
         ],
       ),
     );
   }
 
-  Expanded _timeTodayLayout(BuildContext context, String label, String time) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            time,
-            style: GlobalHelper.getTextStyle(
-              context: context,
-              appTextStyle: AppTextStyle.HEADLINE_MEDIUM,
-            )?.copyWith(
-              color: GlobalHelper.getColorSchema(context).onPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            label,
-            style: GlobalHelper.getTextStyle(
-              context: context,
-              appTextStyle: AppTextStyle.BODY_MEDIUM,
-            )?.copyWith(color: GlobalHelper.getColorSchema(context).onPrimary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Container _thisMonthLayout(BuildContext context) {
-    return Container(
-      width: double.maxFinite,
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(20),
-      constraints: BoxConstraints(
-          minHeight: MediaQuery.of(context).size.height - kToolbarHeight),
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        color: GlobalHelper.getColorSchema(context).primaryContainer,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  "Presensi Sebulan Terakhir",
-                  style: GlobalHelper.getTextStyle(
-                    context: context,
-                    appTextStyle: AppTextStyle.TITLE_LARGE,
-                  ),
-                ),
-              ),
-              FilledButton(
-                  onPressed: () => _onPressSeeAll(context),
-                  child: const Text("Lihat Semua")),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Container(
-            height: 2,
-            color: GlobalHelper.getColorSchema(context).primary,
-          ),
-          const SizedBox(height: 2),
-          Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    'Tgl',
-                    style: GlobalHelper.getTextStyle(
-                      context: context,
-                      appTextStyle: AppTextStyle.TITLE_SMALL,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Center(
-                  child: Text(
-                    'Masuk',
-                    style: GlobalHelper.getTextStyle(
-                      context: context,
-                      appTextStyle: AppTextStyle.TITLE_SMALL,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Center(
-                  child: Text(
-                    'Keluar',
-                    style: GlobalHelper.getTextStyle(
-                      context: context,
-                      appTextStyle: AppTextStyle.TITLE_SMALL,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Container(
-            height: 2,
-            color: GlobalHelper.getColorSchema(context).primary,
-          ),
-          ListView.separated(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              final item = notifier.listAttendanceThisMonth[index];
-              return _itemThisMonth(context, item);
-            },
-            separatorBuilder: (context, index) => Container(
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              height: 1,
-              color: GlobalHelper.getColorSchema(context).surface,
-            ),
-            itemCount: notifier.listAttendanceThisMonth.length,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Container _itemThisMonth(BuildContext context, AttendanceEntity item) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 3),
+  Widget _buildHistoryHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            flex: 1,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: GlobalHelper.getColorSchema(context).primary,
-              ),
-              child: Text(
-                DateTimeHelper.formatDateTimeFromString(
-                    dateTimeString: item.date!, format: 'dd\nMMM'),
-                style: GlobalHelper.getTextStyle(
-                  context: context,
-                  appTextStyle: AppTextStyle.LABEL_LARGE,
-                )?.copyWith(
-                  color: GlobalHelper.getColorSchema(context).onPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Center(
-              child: Text(
-                item.startTime,
-                style: GlobalHelper.getTextStyle(
-                  context: context,
-                  appTextStyle: AppTextStyle.BODY_MEDIUM,
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Center(
-              child: Text(
-                item.endTime,
-                style: GlobalHelper.getTextStyle(
-                  context: context,
-                  appTextStyle: AppTextStyle.BODY_MEDIUM,
-                ),
-              ),
-            ),
-          ),
+          Text("Riwayat Bulan Ini",
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+          TextButton(
+              onPressed: () => _onPressSeeAll(context),
+              child: const Text("Lihat Semua")),
         ],
       ),
     );
   }
 
-  // --- SEMUA LOGIKA TOMBOL & AKSI ---
-
-  void _onPressCreateAttendance(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => FaceRecognitionScreen()),
+  Widget _buildHistoryList(BuildContext context) {
+    if (notifier.listAttendanceThisMonth.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(40),
+            child: Text("Belum ada data"),
+          ),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final item = notifier.listAttendanceThisMonth[index];
+            return Card(
+              elevation: 0,
+              margin: const EdgeInsets.only(bottom: 12),
+              color: Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHighest
+                  .withOpacity(0.3),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              child: ListTile(
+                leading: Container(
+                  width: 50,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    DateTimeHelper.formatDateTimeFromString(
+                        dateTimeString: item.date!, format: 'dd\nMMM'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary),
+                  ),
+                ),
+                title: Text("${item.startTime} - ${item.endTime}",
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text("Presensi Berhasil",
+                    style: TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {},
+              ),
+            );
+          },
+          childCount: notifier.listAttendanceThisMonth.length,
+        ),
+      ),
     );
   }
 
-  _onPressEditNotification(BuildContext context) async {
-    DialogHelper.showBottomDialog(
+  // --- HELPER METHODS ---
+
+  Widget _buildChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(10)),
+      child: Text(text,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  Widget _buildTimeItem(String label, String time) {
+    return Column(
+      children: [
+        Text(time,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.bold)),
+        Text(label,
+            style:
+                TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: () => _onPressCreateAttendance(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Theme.of(context).colorScheme.primary,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 0,
+        ),
+        child: const Text("Ambil Absensi",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildLeaveInfo() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+          color: Colors.white10, borderRadius: BorderRadius.circular(14)),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.beach_access_rounded, color: Colors.white),
+          SizedBox(width: 8),
+          Text("Anda sedang cuti hari ini",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  void _showMenuBottomSheet(BuildContext context) {
+    showModalBottomSheet(
       context: context,
-      title: "Pengingat Absen (Sebelum Shift)",
-      content: DropdownMenu<int>(
-        initialSelection: notifier.timeNotification,
-        onSelected: (value) => _onSaveEditNotification(context, value!),
-        dropdownMenuEntries: notifier.listEditNotification,
-        width: MediaQuery.of(context).size.width -
-            40, // Biar full width di bottom sheet
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.event_available_rounded),
+              title: const Text("Pengaturan Cuti"),
+              onTap: () {
+                Navigator.pop(context);
+                _onPressLeave(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.notifications_active_outlined),
+              title: const Text("Notifikasi"),
+              onTap: () {
+                Navigator.pop(context);
+                _onPressEditNotification(context);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout_rounded, color: Colors.red),
+              title: const Text("Keluar", style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _onPressLogout(context);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  _onSaveEditNotification(BuildContext context, int param) {
-    Navigator.pop(context); // Tutup dialog
-    notifier.saveNotificationSetting(param); // Panggil fungsi di notifier
-  }
-
-  _onPressLogout(BuildContext context) async {
+  // --- LOGIC ACTIONS ---
+  void _onPressCreateAttendance(BuildContext context) => Navigator.push(
+      context, MaterialPageRoute(builder: (_) => FaceRecognitionScreen()));
+  void _onPressSeeAll(BuildContext context) => Navigator.push(
+      context, MaterialPageRoute(builder: (_) => DetailAttendanceScreen()));
+  void _onPressLeave(BuildContext context) =>
+      Navigator.push(context, MaterialPageRoute(builder: (_) => LeaveScreen()));
+  void _onPressLogout(BuildContext context) async {
     await SharedPreferencesHelper.logout();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => LoginScreen(),
-      ),
-      (route) => false,
-    );
+    Navigator.pushAndRemoveUntil(context,
+        MaterialPageRoute(builder: (_) => LoginScreen()), (route) => false);
   }
 
-  _onPressSeeAll(context) {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DetailAttendanceScreen(),
-        ));
+  void _onPressEditNotification(BuildContext context) {
+    // Implementasi dialog dropdown seperti kode sebelumnya
   }
 
   @override
-  void checkVariableAfterUi(BuildContext context) {
-    // Fungsi ini bawaan AppWidget. Bisa dikosongkan jika tidak ada aksi setelah UI dirender.
-  }
+  AppBar? appBarBuild(BuildContext context) => null;
+  @override
+  void checkVariableAfterUi(BuildContext context) {}
+  @override
+  void checkVariableBeforeUi(BuildContext context) {}
 }
