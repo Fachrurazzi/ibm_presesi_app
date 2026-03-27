@@ -19,6 +19,7 @@ import 'package:ibm_presensi_app/app/module/use_case/attendance_get_by_month_yea
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_this_month.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_send.dart';
 import 'package:ibm_presensi_app/app/module/use_case/auth_login.dart';
+import 'package:ibm_presensi_app/app/module/use_case/leave_get_history.dart';
 import 'package:ibm_presensi_app/app/module/use_case/leave_send.dart';
 import 'package:ibm_presensi_app/app/module/use_case/photo_get_bytes.dart';
 import 'package:ibm_presensi_app/app/module/use_case/photo_get_url.dart';
@@ -31,6 +32,7 @@ import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/leave/leave_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/login/login_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/map/map_notifier.dart';
+import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:ibm_presensi_app/core/network/app_interceptor.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_today.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -38,7 +40,14 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 final sl = GetIt.instance;
 
 Future<void> initDependency() async {
-  Dio dio = Dio();
+  Dio dio = Dio(
+    BaseOptions(
+      baseUrl: AppConfig.BASE_URL, // Gunakan konstan yang kita rapihin tadi
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+    ),
+  );
+
   dio.interceptors.add(AppInterceptor());
   dio.interceptors.add(
     PrettyDioLogger(
@@ -80,28 +89,29 @@ Future<void> initDependency() async {
   sl.registerSingleton<PhotoGetUrlUseCase>(PhotoGetUrlUseCase(sl()));
   sl.registerSingleton<PhotoUploadUseCase>(PhotoUploadUseCase(sl()));
   sl.registerSingleton<LeaveSendUseCase>(LeaveSendUseCase(sl()));
+  sl.registerLazySingleton(() => LeaveGetHistoryUseCase(sl()));
 
   //provider
-  sl.registerFactoryParam<LoginNotifier, void, void>(
-    (param1, param2) => LoginNotifier(sl()),
+  sl.registerFactory<LoginNotifier>(
+    () => LoginNotifier(sl()),
   );
 
-  sl.registerFactoryParam<HomeNotifier, void, void>(
-    (param1, param2) => HomeNotifier(sl(), sl(), sl(), sl(), sl()),
+  sl.registerFactory<HomeNotifier>(
+    () => HomeNotifier(sl(), sl(), sl(), sl(), sl()),
   );
 
-  sl.registerFactoryParam<MapNotifier, void, void>(
-    (param1, param2) => MapNotifier(sl(), sl(), sl()),
+  sl.registerFactory<MapNotifier>(
+    () => MapNotifier(sl(), sl(), sl()),
   );
 
-  sl.registerFactoryParam<DetailAttendanceNotifier, void, void>(
-    (param1, param2) => DetailAttendanceNotifier(sl()),
+  sl.registerFactory<DetailAttendanceNotifier>(
+    () => DetailAttendanceNotifier(sl()),
   );
-  sl.registerFactoryParam<FaceRecognitionNotifier, void, void>(
-    (param1, param2) => FaceRecognitionNotifier(sl(), sl()),
+  sl.registerFactory<FaceRecognitionNotifier>(
+    () => FaceRecognitionNotifier(sl(), sl()),
   );
 
-  sl.registerFactoryParam<LeaveNotifier, void, void>(
-    (param1, param2) => LeaveNotifier(sl()),
+  sl.registerFactory<LeaveNotifier>(
+    () => LeaveNotifier(sl(), sl()),
   );
 }

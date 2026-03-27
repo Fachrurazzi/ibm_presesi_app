@@ -9,18 +9,30 @@ part of 'attendance.dart';
 _$AttendanceEntityImpl _$$AttendanceEntityImplFromJson(
         Map<String, dynamic> json) =>
     _$AttendanceEntityImpl(
+      id: (json['id'] as num?)?.toInt(),
       startTime: json['start_time'] as String,
       endTime: json['end_time'] as String,
       date: json['date'] as String?,
+      isLate: json['is_late'] as bool?,
+      lunchMoney: (json['lunch_money'] as num?)?.toInt(),
+      lunchMoneyLabel: json['lunch_money_label'] as String?,
+      scheduleStart: json['schedule_start'] as String?,
+      scheduleEnd: json['schedule_end'] as String?,
       $type: json['runtimeType'] as String?,
     );
 
 Map<String, dynamic> _$$AttendanceEntityImplToJson(
         _$AttendanceEntityImpl instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'start_time': instance.startTime,
       'end_time': instance.endTime,
       'date': instance.date,
+      'is_late': instance.isLate,
+      'lunch_money': instance.lunchMoney,
+      'lunch_money_label': instance.lunchMoneyLabel,
+      'schedule_start': instance.scheduleStart,
+      'schedule_end': instance.scheduleEnd,
       'runtimeType': instance.$type,
     };
 
@@ -29,6 +41,8 @@ _$AttendanceParamEntityImpl _$$AttendanceParamEntityImplFromJson(
     _$AttendanceParamEntityImpl(
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
+      address: json['address'] as String?,
+      photo: json['photo'] as String?,
       $type: json['runtimeType'] as String?,
     );
 
@@ -37,6 +51,8 @@ Map<String, dynamic> _$$AttendanceParamEntityImplToJson(
     <String, dynamic>{
       'latitude': instance.latitude,
       'longitude': instance.longitude,
+      'address': instance.address,
+      'photo': instance.photo,
       'runtimeType': instance.$type,
     };
 

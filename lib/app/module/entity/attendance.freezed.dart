@@ -16,16 +16,13 @@ final _privateConstructorUsedError = UnsupportedError(
 
 Attendance _$AttendanceFromJson(Map<String, dynamic> json) {
   switch (json['runtimeType']) {
-    case 'entity':
-      return AttendanceEntity.fromJson(json);
     case 'paramEntity':
       return AttendanceParamEntity.fromJson(json);
     case 'paramGetEntity':
       return AttendanceParamGetEntity.fromJson(json);
 
     default:
-      throw CheckedFromJsonException(json, 'runtimeType', 'Attendance',
-          'Invalid union type "${json['runtimeType']}"!');
+      return AttendanceEntity.fromJson(json);
   }
 }
 
@@ -33,28 +30,58 @@ Attendance _$AttendanceFromJson(Map<String, dynamic> json) {
 mixin _$Attendance {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)
+    required TResult Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)
         entity,
-    required TResult Function(double latitude, double longitude) paramEntity,
+    required TResult Function(
+            double latitude, double longitude, String? address, String? photo)
+        paramEntity,
     required TResult Function(int month, int year) paramGetEntity,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)?
+    TResult? Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult? Function(double latitude, double longitude)? paramEntity,
+    TResult? Function(
+            double latitude, double longitude, String? address, String? photo)?
+        paramEntity,
     TResult? Function(int month, int year)? paramGetEntity,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)?
+    TResult Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult Function(double latitude, double longitude)? paramEntity,
+    TResult Function(
+            double latitude, double longitude, String? address, String? photo)?
+        paramEntity,
     TResult Function(int month, int year)? paramGetEntity,
     required TResult orElse(),
   }) =>
@@ -109,9 +136,15 @@ abstract class _$$AttendanceEntityImplCopyWith<$Res> {
       __$$AttendanceEntityImplCopyWithImpl<$Res>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'start_time') String startTime,
+      {int? id,
+      @JsonKey(name: 'start_time') String startTime,
       @JsonKey(name: 'end_time') String endTime,
-      String? date});
+      String? date,
+      @JsonKey(name: 'is_late') bool? isLate,
+      @JsonKey(name: 'lunch_money') int? lunchMoney,
+      @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+      @JsonKey(name: 'schedule_start') String? scheduleStart,
+      @JsonKey(name: 'schedule_end') String? scheduleEnd});
 }
 
 /// @nodoc
@@ -125,11 +158,21 @@ class __$$AttendanceEntityImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
     Object? startTime = null,
     Object? endTime = null,
     Object? date = freezed,
+    Object? isLate = freezed,
+    Object? lunchMoney = freezed,
+    Object? lunchMoneyLabel = freezed,
+    Object? scheduleStart = freezed,
+    Object? scheduleEnd = freezed,
   }) {
     return _then(_$AttendanceEntityImpl(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int?,
       startTime: null == startTime
           ? _value.startTime
           : startTime // ignore: cast_nullable_to_non_nullable
@@ -142,6 +185,26 @@ class __$$AttendanceEntityImplCopyWithImpl<$Res>
           ? _value.date
           : date // ignore: cast_nullable_to_non_nullable
               as String?,
+      isLate: freezed == isLate
+          ? _value.isLate
+          : isLate // ignore: cast_nullable_to_non_nullable
+              as bool?,
+      lunchMoney: freezed == lunchMoney
+          ? _value.lunchMoney
+          : lunchMoney // ignore: cast_nullable_to_non_nullable
+              as int?,
+      lunchMoneyLabel: freezed == lunchMoneyLabel
+          ? _value.lunchMoneyLabel
+          : lunchMoneyLabel // ignore: cast_nullable_to_non_nullable
+              as String?,
+      scheduleStart: freezed == scheduleStart
+          ? _value.scheduleStart
+          : scheduleStart // ignore: cast_nullable_to_non_nullable
+              as String?,
+      scheduleEnd: freezed == scheduleEnd
+          ? _value.scheduleEnd
+          : scheduleEnd // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -150,15 +213,23 @@ class __$$AttendanceEntityImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AttendanceEntityImpl implements AttendanceEntity {
   _$AttendanceEntityImpl(
-      {@JsonKey(name: 'start_time') required this.startTime,
+      {this.id,
+      @JsonKey(name: 'start_time') required this.startTime,
       @JsonKey(name: 'end_time') required this.endTime,
       this.date,
+      @JsonKey(name: 'is_late') this.isLate,
+      @JsonKey(name: 'lunch_money') this.lunchMoney,
+      @JsonKey(name: 'lunch_money_label') this.lunchMoneyLabel,
+      @JsonKey(name: 'schedule_start') this.scheduleStart,
+      @JsonKey(name: 'schedule_end') this.scheduleEnd,
       final String? $type})
       : $type = $type ?? 'entity';
 
   factory _$AttendanceEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$AttendanceEntityImplFromJson(json);
 
+  @override
+  final int? id;
   @override
   @JsonKey(name: 'start_time')
   final String startTime;
@@ -167,13 +238,28 @@ class _$AttendanceEntityImpl implements AttendanceEntity {
   final String endTime;
   @override
   final String? date;
+  @override
+  @JsonKey(name: 'is_late')
+  final bool? isLate;
+  @override
+  @JsonKey(name: 'lunch_money')
+  final int? lunchMoney;
+  @override
+  @JsonKey(name: 'lunch_money_label')
+  final String? lunchMoneyLabel;
+  @override
+  @JsonKey(name: 'schedule_start')
+  final String? scheduleStart;
+  @override
+  @JsonKey(name: 'schedule_end')
+  final String? scheduleEnd;
 
   @JsonKey(name: 'runtimeType')
   final String $type;
 
   @override
   String toString() {
-    return 'Attendance.entity(startTime: $startTime, endTime: $endTime, date: $date)';
+    return 'Attendance.entity(id: $id, startTime: $startTime, endTime: $endTime, date: $date, isLate: $isLate, lunchMoney: $lunchMoney, lunchMoneyLabel: $lunchMoneyLabel, scheduleStart: $scheduleStart, scheduleEnd: $scheduleEnd)';
   }
 
   @override
@@ -181,15 +267,26 @@ class _$AttendanceEntityImpl implements AttendanceEntity {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AttendanceEntityImpl &&
+            (identical(other.id, id) || other.id == id) &&
             (identical(other.startTime, startTime) ||
                 other.startTime == startTime) &&
             (identical(other.endTime, endTime) || other.endTime == endTime) &&
-            (identical(other.date, date) || other.date == date));
+            (identical(other.date, date) || other.date == date) &&
+            (identical(other.isLate, isLate) || other.isLate == isLate) &&
+            (identical(other.lunchMoney, lunchMoney) ||
+                other.lunchMoney == lunchMoney) &&
+            (identical(other.lunchMoneyLabel, lunchMoneyLabel) ||
+                other.lunchMoneyLabel == lunchMoneyLabel) &&
+            (identical(other.scheduleStart, scheduleStart) ||
+                other.scheduleStart == scheduleStart) &&
+            (identical(other.scheduleEnd, scheduleEnd) ||
+                other.scheduleEnd == scheduleEnd));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, startTime, endTime, date);
+  int get hashCode => Object.hash(runtimeType, id, startTime, endTime, date,
+      isLate, lunchMoney, lunchMoneyLabel, scheduleStart, scheduleEnd);
 
   @JsonKey(ignore: true)
   @override
@@ -201,39 +298,72 @@ class _$AttendanceEntityImpl implements AttendanceEntity {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)
+    required TResult Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)
         entity,
-    required TResult Function(double latitude, double longitude) paramEntity,
+    required TResult Function(
+            double latitude, double longitude, String? address, String? photo)
+        paramEntity,
     required TResult Function(int month, int year) paramGetEntity,
   }) {
-    return entity(startTime, endTime, date);
+    return entity(id, startTime, endTime, date, isLate, lunchMoney,
+        lunchMoneyLabel, scheduleStart, scheduleEnd);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)?
+    TResult? Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult? Function(double latitude, double longitude)? paramEntity,
+    TResult? Function(
+            double latitude, double longitude, String? address, String? photo)?
+        paramEntity,
     TResult? Function(int month, int year)? paramGetEntity,
   }) {
-    return entity?.call(startTime, endTime, date);
+    return entity?.call(id, startTime, endTime, date, isLate, lunchMoney,
+        lunchMoneyLabel, scheduleStart, scheduleEnd);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)?
+    TResult Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult Function(double latitude, double longitude)? paramEntity,
+    TResult Function(
+            double latitude, double longitude, String? address, String? photo)?
+        paramEntity,
     TResult Function(int month, int year)? paramGetEntity,
     required TResult orElse(),
   }) {
     if (entity != null) {
-      return entity(startTime, endTime, date);
+      return entity(id, startTime, endTime, date, isLate, lunchMoney,
+          lunchMoneyLabel, scheduleStart, scheduleEnd);
     }
     return orElse();
   }
@@ -282,18 +412,36 @@ class _$AttendanceEntityImpl implements AttendanceEntity {
 
 abstract class AttendanceEntity implements Attendance {
   factory AttendanceEntity(
-      {@JsonKey(name: 'start_time') required final String startTime,
-      @JsonKey(name: 'end_time') required final String endTime,
-      final String? date}) = _$AttendanceEntityImpl;
+          {final int? id,
+          @JsonKey(name: 'start_time') required final String startTime,
+          @JsonKey(name: 'end_time') required final String endTime,
+          final String? date,
+          @JsonKey(name: 'is_late') final bool? isLate,
+          @JsonKey(name: 'lunch_money') final int? lunchMoney,
+          @JsonKey(name: 'lunch_money_label') final String? lunchMoneyLabel,
+          @JsonKey(name: 'schedule_start') final String? scheduleStart,
+          @JsonKey(name: 'schedule_end') final String? scheduleEnd}) =
+      _$AttendanceEntityImpl;
 
   factory AttendanceEntity.fromJson(Map<String, dynamic> json) =
       _$AttendanceEntityImpl.fromJson;
 
+  int? get id;
   @JsonKey(name: 'start_time')
   String get startTime;
   @JsonKey(name: 'end_time')
   String get endTime;
   String? get date;
+  @JsonKey(name: 'is_late')
+  bool? get isLate;
+  @JsonKey(name: 'lunch_money')
+  int? get lunchMoney;
+  @JsonKey(name: 'lunch_money_label')
+  String? get lunchMoneyLabel;
+  @JsonKey(name: 'schedule_start')
+  String? get scheduleStart;
+  @JsonKey(name: 'schedule_end')
+  String? get scheduleEnd;
   @JsonKey(ignore: true)
   _$$AttendanceEntityImplCopyWith<_$AttendanceEntityImpl> get copyWith =>
       throw _privateConstructorUsedError;
@@ -306,7 +454,8 @@ abstract class _$$AttendanceParamEntityImplCopyWith<$Res> {
           $Res Function(_$AttendanceParamEntityImpl) then) =
       __$$AttendanceParamEntityImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({double latitude, double longitude});
+  $Res call(
+      {double latitude, double longitude, String? address, String? photo});
 }
 
 /// @nodoc
@@ -322,6 +471,8 @@ class __$$AttendanceParamEntityImplCopyWithImpl<$Res>
   $Res call({
     Object? latitude = null,
     Object? longitude = null,
+    Object? address = freezed,
+    Object? photo = freezed,
   }) {
     return _then(_$AttendanceParamEntityImpl(
       latitude: null == latitude
@@ -332,6 +483,14 @@ class __$$AttendanceParamEntityImplCopyWithImpl<$Res>
           ? _value.longitude
           : longitude // ignore: cast_nullable_to_non_nullable
               as double,
+      address: freezed == address
+          ? _value.address
+          : address // ignore: cast_nullable_to_non_nullable
+              as String?,
+      photo: freezed == photo
+          ? _value.photo
+          : photo // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -340,7 +499,11 @@ class __$$AttendanceParamEntityImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
   _$AttendanceParamEntityImpl(
-      {required this.latitude, required this.longitude, final String? $type})
+      {required this.latitude,
+      required this.longitude,
+      this.address,
+      this.photo,
+      final String? $type})
       : $type = $type ?? 'paramEntity';
 
   factory _$AttendanceParamEntityImpl.fromJson(Map<String, dynamic> json) =>
@@ -350,13 +513,17 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
   final double latitude;
   @override
   final double longitude;
+  @override
+  final String? address;
+  @override
+  final String? photo;
 
   @JsonKey(name: 'runtimeType')
   final String $type;
 
   @override
   String toString() {
-    return 'Attendance.paramEntity(latitude: $latitude, longitude: $longitude)';
+    return 'Attendance.paramEntity(latitude: $latitude, longitude: $longitude, address: $address, photo: $photo)';
   }
 
   @override
@@ -367,12 +534,15 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
             (identical(other.latitude, latitude) ||
                 other.latitude == latitude) &&
             (identical(other.longitude, longitude) ||
-                other.longitude == longitude));
+                other.longitude == longitude) &&
+            (identical(other.address, address) || other.address == address) &&
+            (identical(other.photo, photo) || other.photo == photo));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, latitude, longitude);
+  int get hashCode =>
+      Object.hash(runtimeType, latitude, longitude, address, photo);
 
   @JsonKey(ignore: true)
   @override
@@ -384,39 +554,69 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)
+    required TResult Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)
         entity,
-    required TResult Function(double latitude, double longitude) paramEntity,
+    required TResult Function(
+            double latitude, double longitude, String? address, String? photo)
+        paramEntity,
     required TResult Function(int month, int year) paramGetEntity,
   }) {
-    return paramEntity(latitude, longitude);
+    return paramEntity(latitude, longitude, address, photo);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)?
+    TResult? Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult? Function(double latitude, double longitude)? paramEntity,
+    TResult? Function(
+            double latitude, double longitude, String? address, String? photo)?
+        paramEntity,
     TResult? Function(int month, int year)? paramGetEntity,
   }) {
-    return paramEntity?.call(latitude, longitude);
+    return paramEntity?.call(latitude, longitude, address, photo);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)?
+    TResult Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult Function(double latitude, double longitude)? paramEntity,
+    TResult Function(
+            double latitude, double longitude, String? address, String? photo)?
+        paramEntity,
     TResult Function(int month, int year)? paramGetEntity,
     required TResult orElse(),
   }) {
     if (paramEntity != null) {
-      return paramEntity(latitude, longitude);
+      return paramEntity(latitude, longitude, address, photo);
     }
     return orElse();
   }
@@ -466,13 +666,17 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
 abstract class AttendanceParamEntity implements Attendance {
   factory AttendanceParamEntity(
       {required final double latitude,
-      required final double longitude}) = _$AttendanceParamEntityImpl;
+      required final double longitude,
+      final String? address,
+      final String? photo}) = _$AttendanceParamEntityImpl;
 
   factory AttendanceParamEntity.fromJson(Map<String, dynamic> json) =
       _$AttendanceParamEntityImpl.fromJson;
 
   double get latitude;
   double get longitude;
+  String? get address;
+  String? get photo;
   @JsonKey(ignore: true)
   _$$AttendanceParamEntityImplCopyWith<_$AttendanceParamEntityImpl>
       get copyWith => throw _privateConstructorUsedError;
@@ -562,10 +766,20 @@ class _$AttendanceParamGetEntityImpl implements AttendanceParamGetEntity {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)
+    required TResult Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)
         entity,
-    required TResult Function(double latitude, double longitude) paramEntity,
+    required TResult Function(
+            double latitude, double longitude, String? address, String? photo)
+        paramEntity,
     required TResult Function(int month, int year) paramGetEntity,
   }) {
     return paramGetEntity(month, year);
@@ -574,10 +788,20 @@ class _$AttendanceParamGetEntityImpl implements AttendanceParamGetEntity {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)?
+    TResult? Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult? Function(double latitude, double longitude)? paramEntity,
+    TResult? Function(
+            double latitude, double longitude, String? address, String? photo)?
+        paramEntity,
     TResult? Function(int month, int year)? paramGetEntity,
   }) {
     return paramGetEntity?.call(month, year);
@@ -586,10 +810,20 @@ class _$AttendanceParamGetEntityImpl implements AttendanceParamGetEntity {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'start_time') String startTime,
-            @JsonKey(name: 'end_time') String endTime, String? date)?
+    TResult Function(
+            int? id,
+            @JsonKey(name: 'start_time') String startTime,
+            @JsonKey(name: 'end_time') String endTime,
+            String? date,
+            @JsonKey(name: 'is_late') bool? isLate,
+            @JsonKey(name: 'lunch_money') int? lunchMoney,
+            @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+            @JsonKey(name: 'schedule_start') String? scheduleStart,
+            @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult Function(double latitude, double longitude)? paramEntity,
+    TResult Function(
+            double latitude, double longitude, String? address, String? photo)?
+        paramEntity,
     TResult Function(int month, int year)? paramGetEntity,
     required TResult orElse(),
   }) {

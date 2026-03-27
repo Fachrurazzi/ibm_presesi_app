@@ -25,6 +25,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
             slivers: [
               SliverToBoxAdapter(child: _buildHeader(context)),
               SliverToBoxAdapter(child: _buildPresenceCard(context)),
+              SliverToBoxAdapter(child: _buildEmployeeInfoCards(context)),
               SliverToBoxAdapter(child: _buildHistoryHeader(context)),
               _buildHistoryList(context),
             ],
@@ -33,8 +34,6 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
       ),
     );
   }
-
-  // --- WIDGET COMPONENTS ---
 
   Widget _buildHeader(BuildContext context) {
     final hour = DateTime.now().hour;
@@ -47,7 +46,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                 : 'Selamat Malam';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
       child: Row(
         children: [
           CircleAvatar(
@@ -65,7 +64,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
               children: [
                 Text(greeting,
                     style:
-                        TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                        TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                 Text(
                   notifier.name,
                   style: Theme.of(context)
@@ -75,38 +74,54 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                // --- TAMBAHKAN BAGIAN INI UNTUK LOKASI/DEPO ---
-                if (!notifier.isLeaves)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      children: [
-                        Icon(Icons.location_on,
-                            size: 14,
-                            color: Theme.of(context).colorScheme.primary),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            notifier.schedule?.office.name ??
-                                "Lokasi tidak diketahui",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade700,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        notifier.positionName,
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    if (notifier.schedule?.office != null)
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(Icons.location_on,
+                                size: 12, color: Colors.grey),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                notifier.schedule!.office.name,
+                                style: const TextStyle(
+                                    fontSize: 11, color: Colors.grey),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
           IconButton.filledTonal(
-            onPressed: () => _showMenuBottomSheet(context),
-            icon: const Icon(Icons.grid_view_rounded),
-          )
+              onPressed: () => _showMenuBottomSheet(context),
+              icon: const Icon(Icons.grid_view_rounded))
         ],
       ),
     );
@@ -163,9 +178,100 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
     );
   }
 
+  Widget _buildEmployeeInfoCards(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildSmallInfoItem(context,
+                  icon: Icons.beach_access_rounded,
+                  label: "Cuti Tahunan",
+                  value: "${notifier.leaveQuota} Hari",
+                  color: Colors.orange,
+                  onTap: () => _onPressLeave(context)),
+              const SizedBox(width: 12),
+              _buildSmallInfoItem(context,
+                  icon: Icons.history_rounded,
+                  label: "Sisa Cuti Lalu",
+                  value: "${notifier.cashableLeave} Hari",
+                  color: Colors.teal,
+                  onTap: null),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildSmallInfoItem(context,
+                  icon: Icons.calendar_month_rounded,
+                  label: "Tanggal Bergabung",
+                  value: notifier.joinDate.isNotEmpty
+                      ? DateTimeHelper.formatDateTimeFromString(
+                          dateTimeString: notifier.joinDate,
+                          format: 'dd MMM yyyy')
+                      : "-",
+                  color: Colors.blue,
+                  onTap: null),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallInfoItem(BuildContext context,
+      {required IconData icon,
+      required String label,
+      required String value,
+      required Color color,
+      VoidCallback? onTap}) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.withOpacity(0.1)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: color.withOpacity(0.1), shape: BoxShape.circle),
+                child: Icon(icon, size: 18, color: color),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        style:
+                            const TextStyle(fontSize: 10, color: Colors.grey)),
+                    Text(value,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 12),
+                        overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHistoryHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -185,13 +291,9 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   Widget _buildHistoryList(BuildContext context) {
     if (notifier.listAttendanceThisMonth.isEmpty) {
       return const SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(40),
-            child: Text("Belum ada data"),
-          ),
-        ),
-      );
+          child: Center(
+              child: Padding(
+                  padding: EdgeInsets.all(40), child: Text("Belum ada data"))));
     }
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -199,6 +301,9 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final item = notifier.listAttendanceThisMonth[index];
+            final moneyColor =
+                (item.lunchMoney ?? 0) == 0 ? Colors.red : Colors.green;
+
             return Card(
               elevation: 0,
               margin: const EdgeInsets.only(bottom: 12),
@@ -209,6 +314,8 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
               child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 leading: Container(
                   width: 50,
                   alignment: Alignment.center,
@@ -227,10 +334,35 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                   ),
                 ),
                 title: Text("${item.startTime} - ${item.endTime}",
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text("Presensi Berhasil",
-                    style: TextStyle(fontSize: 12)),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Presensi Berhasil",
+                        style: TextStyle(fontSize: 12)),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.fastfood_rounded,
+                            size: 12, color: moneyColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          item.lunchMoneyLabel ?? "Rp 0",
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: moneyColor,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                trailing: Icon(
+                  (item.isLate ?? false)
+                      ? Icons.warning_amber_rounded
+                      : Icons.check_circle_outline_rounded,
+                  color: (item.isLate ?? false) ? Colors.orange : Colors.green,
+                ),
                 onTap: () {},
               ),
             );
@@ -240,8 +372,6 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
       ),
     );
   }
-
-  // --- HELPER METHODS ---
 
   Widget _buildChip(String text) {
     return Container(
@@ -348,7 +478,6 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
     );
   }
 
-  // --- LOGIC ACTIONS ---
   void _onPressCreateAttendance(BuildContext context) => Navigator.push(
       context, MaterialPageRoute(builder: (_) => FaceRecognitionScreen()));
   void _onPressSeeAll(BuildContext context) => Navigator.push(
@@ -362,7 +491,49 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   }
 
   void _onPressEditNotification(BuildContext context) {
-    // Implementasi dialog dropdown seperti kode sebelumnya
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.notifications_active, color: Colors.blue),
+            SizedBox(width: 10),
+            Text("Pengingat Presensi")
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Ingatkan saya sebelum jam kerja:"),
+            const SizedBox(height: 20),
+            Center(
+              child: DropdownMenu<int>(
+                width: 200,
+                initialSelection: notifier.timeNotification,
+                dropdownMenuEntries: notifier.listEditNotification,
+                onSelected: (int? value) async {
+                  if (value != null) {
+                    await notifier.saveNotificationSetting(value);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                "Berhasil! Pengingat diset $value menit sebelumnya."),
+                            backgroundColor: Colors.green,
+                            behavior: SnackBarBehavior.floating),
+                      );
+                    }
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

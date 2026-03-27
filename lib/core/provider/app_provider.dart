@@ -14,6 +14,14 @@ abstract class AppProvider with ChangeNotifier {
   set errorMessage(String param) => _errorMessage = param;
   set snackbarMessage(String param) => _snackbarMessage = param;
 
+  // MODIFIKASI: Gunakan pengecekan _isDispose agar tidak crash
+  @override
+  void notifyListeners() {
+    if (!_isDispose) {
+      super.notifyListeners();
+    }
+  }
+
   void showLoading() {
     _isLoading = true;
     notifyListeners();

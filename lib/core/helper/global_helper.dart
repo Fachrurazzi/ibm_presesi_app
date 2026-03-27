@@ -20,11 +20,13 @@ enum AppTextStyle {
 
 class GlobalHelper {
   static TextStyle? getTextStyle({
-    BuildContext? context,
+    required BuildContext context, // Wajibkan context, jangan dibuat opsional
     AppTextStyle appTextStyle = AppTextStyle.BODY_MEDIUM,
   }) {
-    final textTheme = Theme.of(context!).textTheme;
-    final appTextStyleMap = {
+    final textTheme = Theme.of(context).textTheme;
+
+    // Menggunakan Map untuk mapping style
+    final Map<AppTextStyle, TextStyle?> appTextStyleMap = {
       AppTextStyle.DISPLAY_LARGE: textTheme.displayLarge,
       AppTextStyle.DISPLAY_MEDIUM: textTheme.displayMedium,
       AppTextStyle.DISPLAY_SMALL: textTheme.displaySmall,
@@ -47,5 +49,10 @@ class GlobalHelper {
 
   static ColorScheme getColorSchema(BuildContext context) {
     return Theme.of(context).colorScheme;
+  }
+
+  // Tips: Tambahkan helper untuk mengecek apakah mode gelap atau terang
+  static bool isDarkMode(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark;
   }
 }

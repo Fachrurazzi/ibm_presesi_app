@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:math';
-
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart';
@@ -12,13 +10,17 @@ class NotificationHelper {
 
   static Future<void> configurateLocalTimeZone() async {
     initializeTimeZones();
-
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-
-    setLocalLocation(getLocation(currentTimeZone));
+    // Gunakan try-catch karena terkadang nama timezone di HP tidak match dengan database library
+    try {
+      setLocalLocation(getLocation(currentTimeZone));
+    } catch (e) {
+      setLocalLocation(
+          getLocation('Asia/Jakarta')); // Fallback ke WIB jika gagal
+    }
   }
 
-  static initNotification() async {
+  static Future<void> initNotification() async {
     await configurateLocalTimeZone();
 
     AndroidInitializationSettings androidInitializationSettings =
@@ -38,18 +40,6 @@ class NotificationHelper {
     await flutterLocalNotificationsPlugin.initialize(settings);
   }
 
-  static TZDateTime convertTime(
-      int year, int month, int day, int hour, int minutes) {
-    return TZDateTime(
-      local,
-      year,
-      month,
-      day,
-      hour,
-      minutes,
-    );
-  }
-
   static scheduleNotification({
     required int id,
     required String title,
@@ -57,17 +47,31 @@ class NotificationHelper {
     required int hour,
     required int minutes,
   }) async {
-    final now = DateTime.now();
+    final now = TZDateTime.now(local);
+    var scheduledDate =
+        TZDateTime(local, now.year, now.month, now.day, hour, minutes);
+
+    // LOGIKA KRUSIAL: Jika waktu yang dijadwalkan sudah lewat hari ini,
+    // maka jadwalkan untuk BESOK agar tidak langsung muncul saat ini juga.
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       title,
       body,
-      convertTime(now.year, now.month, now.day, hour, minutes),
+      scheduledDate,
       const NotificationDetails(
-          android: AndroidNotificationDetails('1', 'ibm_presensi',
-              importance: Importance.max, priority: Priority.high),
+          android: AndroidNotificationDetails(
+            'ibm_channel_id', // Gunakan ID channel yang unik
+            'IBM Presensi Notifications',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
           iOS: DarwinNotificationDetails()),
+      androidScheduleMode: AndroidScheduleMode
+          .exactAllowWhileIdle, // Pastikan muncul tepat waktu
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -79,26 +83,21 @@ class NotificationHelper {
   }
 
   static Future<bool> requestPermission() async {
-    bool isGranted = false;
-
     if (Platform.isIOS) {
-      isGranted = await flutterLocalNotificationsPlugin
+      return await flutterLocalNotificationsPlugin
               .resolvePlatformSpecificImplementation<
                   IOSFlutterLocalNotificationsPlugin>()
               ?.requestPermissions(alert: true, sound: true, badge: true) ??
           false;
     } else if (Platform.isAndroid) {
-      final AndroidFlutterLocalNotificationsPlugin?
-          androidFlutterLocalNotificationsPlugin =
+      // Untuk Android 13 (API 33) ke atas wajib minta izin secara runtime
+      final androidImplementation =
           flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
-
-      isGranted = await androidFlutterLocalNotificationsPlugin
-              ?.requestNotificationsPermission() ??
+      return await androidImplementation?.requestNotificationsPermission() ??
           false;
     }
-
-    return isGranted;
+    return false;
   }
 
   static Future<bool> isPermissionGranted() async {

@@ -5,8 +5,8 @@ class DateTimeHelper {
     required String dateTimeString,
     required String format,
   }) {
+    // Tips: Tambahkan try-catch atau gunakan parseStrict jika format string dari API tidak menentu
     DateTime dateTime = DateTime.parse(dateTimeString);
-
     return DateFormat(format, 'id').format(dateTime);
   }
 
@@ -21,7 +21,10 @@ class DateTimeHelper {
     return b.difference(a);
   }
 
-  static  DateTime parseDateTime({required String dateTimeString, String format = 'd MMM yyyy'}) {
-    return DateFormat(format).parse(dateTimeString);
+  static DateTime parseDateTime(
+      {required String dateTimeString, String format = 'd MMM yyyy'}) {
+    // BUG POTENSIAL: DateFormat parse butuh locale yang sama jika string mengandung nama bulan/hari Indo
+    // Jika dateTimeString adalah "12 Feb 2026", maka butuh locale 'id'.
+    return DateFormat(format, 'id').parse(dateTimeString);
   }
 }

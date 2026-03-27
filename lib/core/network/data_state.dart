@@ -1,21 +1,24 @@
-import 'dart:convert';
+import 'dart:async'; // Untuk FutureOr
 import 'dart:io';
-import 'package:retrofit/retrofit.dart';
 import 'package:dio/dio.dart';
-import 'package:ibm_presensi_app/core/network/base_response.dart';
+import 'package:retrofit/retrofit.dart';
 
-// --- BASE DATA STATE ---
-class DataState<T> extends BaseResponse {
+// --- BASE RESPONSE (Jika kamu punya file sendiri, pastikan isinya sinkron) ---
+abstract class BaseResponse {
+  final bool success;
+  final String message;
+
+  BaseResponse({required this.success, required this.message});
+}
+
+// --- DATA STATE ---
+// Class utama untuk membungkus hasil dari Repository ke UseCase/UI
+abstract class DataState<T> {
+  final bool success;
+  final String message;
   final T? data;
-  DataState({required super.success, required super.message, this.data});
 
-  factory DataState.fromJson(Map<String, dynamic> json) {
-    return DataState(
-      success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      data: json['data'],
-    );
-  }
+  DataState({required this.success, required this.message, this.data});
 }
 
 class SuccessState<T> extends DataState<T> {
@@ -24,62 +27,69 @@ class SuccessState<T> extends DataState<T> {
 
 class ErrorState<T> extends DataState<T> {
   ErrorState({required super.message}) : super(success: false);
-
-  factory ErrorState.fromJson(Map<String, dynamic> json) {
-    return ErrorState(message: json['message'] ?? 'Unknown Error');
-  }
 }
 
 // --- HANDLE RESPONSE FUNCTION ---
+// Fungsi sakti yang menghubungkan ApiService (dynamic) dengan Repository
 Future<DataState<T>> handleResponse<T>(
-  Future<HttpResponse<DataState>> Function() apiCall,
-  T Function(dynamic) mapDataSuccess,
+  // Menggunakan dynamic agar cocok dengan ApiService yang sudah kita revisi
+  Future<HttpResponse<dynamic>> Function() apiCall,
+  FutureOr<T> Function(dynamic json) mapDataSuccess,
 ) async {
   try {
-    final HttpResponse<DataState> httpResponse = await apiCall();
+    final HttpResponse<dynamic> httpResponse = await apiCall();
     final int statusCode = httpResponse.response.statusCode ?? 0;
 
-    // MODIFIKASI: Semua status 2xx (200, 201, 204, dll) adalah SUKSES
+    // 1. Cek Status Code HTTP (200-299)
     if (statusCode >= 200 && statusCode < 300) {
-      final response = httpResponse.data;
+      final dynamic responseData = httpResponse.data;
 
-      if (response.success) {
-        return SuccessState(
-          message: response.message,
-          data: mapDataSuccess(response.data),
-        );
+      // 2. Parsing logika Success/Message dari Laravel PT INTIBOGA MANDIRI
+      // Kita cek apakah responseData berbentuk Map (JSON standar)
+      bool isSuccess = true;
+      String serverMessage = 'Success';
+      dynamic rawData = responseData;
+
+      if (responseData is Map<String, dynamic>) {
+        isSuccess = responseData['success'] ?? true;
+        serverMessage = responseMapMessage(responseData);
+        rawData = responseData['data'] ?? responseData;
+      }
+
+      if (isSuccess) {
+        // 3. Eksekusi Mapper (Bisa asinkron jika perlu simpan SharedPreferences)
+        final T mappedData = await mapDataSuccess(rawData);
+        return SuccessState(message: serverMessage, data: mappedData);
       } else {
-        return ErrorState(message: response.message);
+        return ErrorState(message: serverMessage);
       }
     } else {
-      // Jika status code di luar 2xx, lempar ke DioException
+      // Jika status code 4xx atau 5xx
       throw DioException(
         response: httpResponse.response,
         requestOptions: httpResponse.response.requestOptions,
       );
     }
   } on DioException catch (e) {
-    try {
-      // Parsing error message dari JSON server
-      final dynamic errorBody = e.response?.data;
-      String serverMessage = "";
-
-      if (errorBody is Map<String, dynamic>) {
-        serverMessage = errorBody['message'] ?? e.message;
-      } else {
-        serverMessage = e.message ?? "Connection Error";
-      }
-
-      return ErrorState(
-        message: '${e.response?.statusCode ?? ''} $serverMessage',
-      );
-    } catch (e1) {
-      return ErrorState(
-        message:
-            '${e.response?.statusCode ?? HttpStatus.badRequest} ${e.error ?? e}',
-      );
-    }
+    // 4. Handle Error Network / Server
+    return ErrorState(message: parseDioError(e));
   } catch (e) {
-    return ErrorState(message: e.toString());
+    // 5. Handle Error Parsing / Logic Client
+    return ErrorState(message: "Client Error: ${e.toString()}");
   }
+}
+
+// --- HELPER UNTUK PARSING PESAN ---
+String responseMapMessage(Map<String, dynamic> map) {
+  if (map.containsKey('message')) return map['message'];
+  if (map.containsKey('msg')) return map['msg'];
+  return 'Success';
+}
+
+String parseDioError(DioException e) {
+  final dynamic errorBody = e.response?.data;
+  if (errorBody is Map<String, dynamic>) {
+    return errorBody['message'] ?? e.message ?? "Server Error";
+  }
+  return e.message ?? "Connection Error";
 }

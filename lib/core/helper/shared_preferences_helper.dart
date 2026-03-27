@@ -1,28 +1,42 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferencesHelper {
-  static setInt(String key, int value) async {
-    final pref = await SharedPreferences.getInstance();
-    pref.setInt(key, value);
+  // Simpan instance agar tidak perlu panggil getInstance berkali-kali (Singleton Pattern)
+  static SharedPreferences? _prefs;
+
+  static Future<SharedPreferences> get _instance async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
   }
 
-  static setString(String key, String value) async {
-    final pref = await SharedPreferences.getInstance();
+  static Future<void> setInt(String key, int value) async {
+    final pref = await _instance;
+    await pref.setInt(key, value);
+  }
+
+  static Future<void> setString(String key, String value) async {
+    final pref = await _instance;
     await pref.setString(key, value);
   }
 
-  static getInt(String key) async {
-    final pref = await SharedPreferences.getInstance();
+  static Future<int?> getInt(String key) async {
+    final pref = await _instance;
     return pref.getInt(key);
   }
 
-  static getString(String key) async {
-    final pref = await SharedPreferences.getInstance();
+  static Future<String?> getString(String key) async {
+    final pref = await _instance;
     return pref.getString(key);
   }
 
-  static logout() async {
-    final pref = await SharedPreferences.getInstance();
-    return pref.clear();
+  // Tambahkan fungsi remove jika ingin menghapus key spesifik tanpa logout total
+  static Future<bool> remove(String key) async {
+    final pref = await _instance;
+    return await pref.remove(key);
+  }
+
+  static Future<bool> logout() async {
+    final pref = await _instance;
+    return await pref.clear();
   }
 }

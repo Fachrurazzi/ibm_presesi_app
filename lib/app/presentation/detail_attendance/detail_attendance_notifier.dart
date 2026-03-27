@@ -38,7 +38,8 @@ class DetailAttendanceNotifier extends AppProvider {
 
   @override
   void init() {
-    // Bisa tambahkan search() otomatis di sini jika ingin langsung tampil
+    // Otomatis cari data bulan sekarang saat masuk halaman
+    Future.microtask(() => search());
   }
 
   @override
@@ -49,20 +50,17 @@ class DetailAttendanceNotifier extends AppProvider {
   }
 
   Future<void> search() async {
-    // Validasi input
-    if (monthController.text.isEmpty || yearController.text.isEmpty) {
-      snackbarMessage = "Pilih bulan dan tahun terlebih dahulu";
-      return;
-    }
-
     showLoading();
 
     try {
+      // Ambil value berdasarkan label yang ada di controller
       final month = monthListDropdown
-          .firstWhere((e) => e.label == monthController.text)
+          .firstWhere((e) => e.label == monthController.text,
+              orElse: () => monthListDropdown[DateTime.now().month - 1])
           .value;
       final year = yearListDropdown
-          .firstWhere((e) => e.label == yearController.text)
+          .firstWhere((e) => e.label == yearController.text,
+              orElse: () => yearListDropdown[0])
           .value;
 
       final response = await _attendanceGetByMonthYear(
@@ -77,9 +75,10 @@ class DetailAttendanceNotifier extends AppProvider {
         errorMessage = response.message;
       }
     } catch (e) {
-      snackbarMessage = "Terjadi kesalahan saat memproses data";
+      snackbarMessage = "Gagal memproses data riwayat";
     }
 
     hideLoading();
+    notifyListeners();
   }
 }

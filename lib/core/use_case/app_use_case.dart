@@ -1,3 +1,4 @@
 abstract class AppUseCase<T, P> {
-  T call({P param});
+  // Gunakan Future agar semua UseCase bisa melakukan operasi Network/Async
+  Future<T> call({required P param});
 }

@@ -6,6 +6,9 @@ import 'package:ibm_presensi_app/core/widget/error_app_widget.dart';
 import 'package:ibm_presensi_app/core/widget/loading_app_widget.dart';
 import 'package:provider/provider.dart';
 
+/// [AppWidget] adalah Base Class untuk semua Screen di aplikasi.
+/// T: Tipe Notifier (Provider) yang digunakan.
+/// P1 & P2: Parameter opsional untuk inisialisasi Notifier lewat GetIt.
 // ignore: must_be_immutable
 abstract class AppWidget<T extends AppProvider, P1, P2>
     extends StatelessWidget {
@@ -16,33 +19,34 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
   final P2? param2;
   FilledButton? _alternatifErrorButton;
 
+  /// Digunakan jika ingin mengganti tombol retry default di ErrorAppWidget
   set alternatifErrorButton(FilledButton? param) =>
       _alternatifErrorButton = param;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<T>(
-      create: (context) => sl<T>(param1: param1, param2: param2),
+      // Mengambil instance Notifier dari Service Locator (GetIt)
+      create: (context) => sl<T>(param1: param1, param2: param2)..init(),
       child: Consumer<T>(
-        // Menggunakan Consumer agar lebih reaktif dan rapi
         builder: (context, value, child) {
           notifier = value;
 
-          // PINDAHKAN LOGIKA SIDE-EFFECT KE SINI
+          // LOGIKA SIDE-EFFECT (Snackbar & Navigasi)
+          // Dieksekusi SETELAH build frame selesai untuk menghindari crash.
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            print(
-                "DEBUG: Frame Selesai - Mengecek snackbar & navigasi..."); // CEK DISINI
-            if (context.mounted) {
-              // 1. Handle Snackbar
+            if (context.mounted && !notifier.isDispose) {
+              // 1. Menampilkan Snackbar jika ada pesan dari Notifier
               if (notifier.snackbarMessage.isNotEmpty) {
                 DialogHelper.showSnackbar(
                   context: context,
                   text: notifier.snackbarMessage,
                 );
+                // Reset pesan agar tidak muncul berulang kali saat rebuild
                 notifier.snackbarMessage = '';
               }
 
-              // 2. Handle Navigation & Redirect
+              // 2. Cek variabel untuk navigasi (misal: redirect ke Home setelah sukses)
               checkVariableAfterUi(context);
             }
           });
@@ -53,7 +57,9 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
     );
   }
 
+  /// Layout dasar menggunakan Scaffold
   Widget _layout(BuildContext context) {
+    // Dipanggil sebelum UI dirender (opsional)
     checkVariableBeforeUi(context);
 
     return Scaffold(
@@ -62,15 +68,19 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
     );
   }
 
+  /// Logika Switcher antara Loading, Error, dan Content Asli
   Widget _buildBody(BuildContext context) {
+    // 1. Tampilan Loading (Global)
     if (notifier.isLoading) {
       return const LoadingAppWidget();
     }
 
+    // 2. Tampilan Error (Global)
     if (notifier.errorMessage.isNotEmpty) {
       return ErrorAppWidget(
         description: notifier.errorMessage,
         onPressDefaultButton: () {
+          // Reset error dan panggil init ulang (Retry)
           notifier.errorMessage = '';
           notifier.init();
         },
@@ -78,12 +88,21 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
       );
     }
 
+    // 3. Tampilan Konten Asli (Didefinisikan di Screen masing-masing)
     return bodyBuild(context);
   }
 
-  // Method yang bisa di-override
+  // --- METHODS UNTUK DI-OVERRIDE DI SUB-CLASS ---
+
+  /// Digunakan untuk logika sebelum UI muncul (Jarang digunakan)
   void checkVariableBeforeUi(BuildContext context) {}
+
+  /// SANGAT PENTING: Digunakan untuk Navigasi/Redirect setelah API sukses
   void checkVariableAfterUi(BuildContext context) {}
+
+  /// Override jika halaman membutuhkan AppBar
   AppBar? appBarBuild(BuildContext context) => null;
+
+  /// WAJIB di-override: Isi konten utama dari halaman
   Widget bodyBuild(BuildContext context);
 }

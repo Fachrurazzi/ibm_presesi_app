@@ -20,7 +20,8 @@ Attendance _$AttendanceFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Attendance {
-  AttendanceEntity? get today => throw _privateConstructorUsedError;
+  AttendanceEntity? get today =>
+      throw _privateConstructorUsedError; // Boleh null jika user belum absen hari ini
   @JsonKey(name: 'this_month')
   List<AttendanceEntity> get thisMonth => throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -161,7 +162,9 @@ class _$AttendanceModelImpl implements AttendanceModel {
 
   @override
   final AttendanceEntity? today;
+// Boleh null jika user belum absen hari ini
   final List<AttendanceEntity> _thisMonth;
+// Boleh null jika user belum absen hari ini
   @override
   @JsonKey(name: 'this_month')
   List<AttendanceEntity> get thisMonth {
@@ -280,7 +283,7 @@ abstract class AttendanceModel implements Attendance {
 
   @override
   AttendanceEntity? get today;
-  @override
+  @override // Boleh null jika user belum absen hari ini
   @JsonKey(name: 'this_month')
   List<AttendanceEntity> get thisMonth;
   @override

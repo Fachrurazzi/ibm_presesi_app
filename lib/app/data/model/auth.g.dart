@@ -25,6 +25,13 @@ _$UserModelImpl _$$UserModelImplFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       email: json['email'] as String,
+      image: json['image'] as String?,
+      position: json['position'] == null
+          ? null
+          : PositionModel.fromJson(json['position'] as Map<String, dynamic>),
+      joinDate: json['join_date'] as String,
+      leaveQuota: (json['leave_quota'] as num).toInt(),
+      cashableLeave: (json['cashable_leave'] as num).toInt(),
     );
 
 Map<String, dynamic> _$$UserModelImplToJson(_$UserModelImpl instance) =>
@@ -32,4 +39,21 @@ Map<String, dynamic> _$$UserModelImplToJson(_$UserModelImpl instance) =>
       'id': instance.id,
       'name': instance.name,
       'email': instance.email,
+      'image': instance.image,
+      'position': instance.position,
+      'join_date': instance.joinDate,
+      'leave_quota': instance.leaveQuota,
+      'cashable_leave': instance.cashableLeave,
+    };
+
+_$PositionModelImpl _$$PositionModelImplFromJson(Map<String, dynamic> json) =>
+    _$PositionModelImpl(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+    );
+
+Map<String, dynamic> _$$PositionModelImplToJson(_$PositionModelImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
     };

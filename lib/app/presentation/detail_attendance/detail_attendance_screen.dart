@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/material/app_bar.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_notifier.dart';
 import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
@@ -13,7 +11,7 @@ class DetailAttendanceScreen
   @override
   AppBar? appBarBuild(BuildContext context) {
     return AppBar(
-      title: const Text('Detail Presensi',
+      title: const Text('Detail Riwayat Presensi',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
       centerTitle: true,
       elevation: 0,
@@ -29,12 +27,8 @@ class DetailAttendanceScreen
     return SafeArea(
       child: Column(
         children: [
-          // --- FILTER SECTION ---
           _buildFilterCard(context),
-
           const SizedBox(height: 16),
-
-          // --- DATA SECTION ---
           Expanded(
             child: Container(
               width: double.infinity,
@@ -74,10 +68,9 @@ class DetailAttendanceScreen
           side: BorderSide(color: Colors.grey.shade200),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12.0), // Padding sedikit diperkecil
+          padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
-              // Dropdown Bulan (Diberi flex lebih besar)
               Expanded(
                 flex: 3,
                 child: _buildDropdown(
@@ -88,10 +81,8 @@ class DetailAttendanceScreen
                 ),
               ),
               const SizedBox(width: 8),
-
-              // Dropdown Tahun
               Expanded(
-                flex: 2, // Flex lebih kecil untuk tahun karena angkanya sedikit
+                flex: 2,
                 child: _buildDropdown(
                   label: "Tahun",
                   controller: notifier.yearController,
@@ -100,8 +91,6 @@ class DetailAttendanceScreen
                 ),
               ),
               const SizedBox(width: 8),
-
-              // Tombol Cari
               IconButton.filled(
                 onPressed: () => notifier.search(),
                 icon: const Icon(Icons.search_rounded, size: 20),
@@ -109,8 +98,7 @@ class DetailAttendanceScreen
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
-                  minimumSize:
-                      const Size(48, 48), // Ukuran tombol dibuat kotak presisi
+                  minimumSize: const Size(48, 48),
                 ),
               ),
             ],
@@ -127,8 +115,6 @@ class DetailAttendanceScreen
     required int initial,
   }) {
     return DropdownMenu<int>(
-      // KUNCI PERBAIKAN: expandedInsets: EdgeInsets.zero
-      // akan membuat Dropdown memenuhi lebar Expanded tanpa terpotong
       expandedInsets: EdgeInsets.zero,
       label: Text(label, style: const TextStyle(fontSize: 12)),
       dropdownMenuEntries: entries,
@@ -137,16 +123,12 @@ class DetailAttendanceScreen
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.grey.shade50,
-        isDense: true, // Membuat input lebih ringkas
+        isDense: true,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade100),
         ),
       ),
     );
@@ -166,6 +148,7 @@ class DetailAttendanceScreen
 
   Widget _buildPresenceItem(BuildContext context, AttendanceEntity item) {
     final theme = Theme.of(context);
+    final moneyColor = (item.lunchMoney ?? 0) == 0 ? Colors.red : Colors.green;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -174,39 +157,87 @@ class DetailAttendanceScreen
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade100),
       ),
-      child: Row(
+      child: Column(
         children: [
-          // Date Box
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              DateTimeHelper.formatDateTimeFromString(
-                  dateTimeString: item.date!, format: 'dd\nMMM'),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                height: 1.1,
-                fontSize: 12,
-                color: theme.colorScheme.primary,
+          Row(
+            children: [
+              // Date Box
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  DateTimeHelper.formatDateTimeFromString(
+                      dateTimeString: item.date ?? "", format: 'dd\nMMM'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    height: 1.1,
+                    fontSize: 12,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 16),
+              // Time Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildTimeColumn("Masuk", item.startTime, Colors.black),
+                        _buildTimeColumn("Keluar", item.endTime, Colors.black),
+                        Icon(
+                          (item.isLate ?? false)
+                              ? Icons.warning_amber_rounded
+                              : Icons.check_circle_rounded,
+                          color: (item.isLate ?? false)
+                              ? Colors.orange
+                              : Colors.green,
+                          size: 20,
+                        )
+                      ],
+                    ),
+                    const Divider(height: 20),
+                    // LUNCH MONEY INFO
+                    Row(
+                      children: [
+                        Icon(Icons.fastfood_rounded,
+                            size: 14, color: moneyColor),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Uang Makan: ",
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                        Text(
+                          item.lunchMoneyLabel ?? "Rp 0",
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: moneyColor),
+                        ),
+                        const Spacer(),
+                        if (item.isLate ?? false)
+                          const Text(
+                            "Terlambat",
+                            style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 20),
-          // Time Info
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildTimeColumn("Masuk", item.startTime, Colors.green),
-                _buildTimeColumn("Keluar", item.endTime, Colors.orange),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right_rounded, color: Colors.grey),
         ],
       ),
     );
@@ -216,13 +247,13 @@ class DetailAttendanceScreen
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
         Text(
           time,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: time == "--:--" ? Colors.grey : Colors.black87,
+            color: time == "--:--" ? Colors.grey : color,
           ),
         ),
       ],
@@ -237,13 +268,8 @@ class DetailAttendanceScreen
           Icon(Icons.history_rounded, size: 80, color: Colors.grey.shade200),
           const SizedBox(height: 16),
           const Text(
-            "Belum ada data kehadiran",
+            "Tidak ada riwayat presensi",
             style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            "Silahkan pilih bulan & tahun lalu cari",
-            style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
         ],
       ),

@@ -41,7 +41,8 @@ class LoginNotifier extends AppProvider {
 
   Future<void> _checkAuth() async {
     showLoading();
-    final String? auth = await SharedPreferencesHelper.getString(PREF_AUTH);
+    final String? auth =
+        await SharedPreferencesHelper.getString(AppPreferences.AUTH_TOKEN);
     if (auth?.isNotEmpty ?? false) {
       _isLoged = true;
     }

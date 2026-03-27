@@ -20,7 +20,6 @@ ScheduleEntity _$ScheduleEntityFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$ScheduleEntity {
-// Tambahkan field lain yang ada di database Laravel jika diperlukan (misal: id, user_id)
   @JsonKey(name: 'is_wfa')
   bool get isWfa => throw _privateConstructorUsedError;
   OfficeEntity get office => throw _privateConstructorUsedError;
@@ -159,7 +158,6 @@ class _$ScheduleEntityImpl implements _ScheduleEntity {
   factory _$ScheduleEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$ScheduleEntityImplFromJson(json);
 
-// Tambahkan field lain yang ada di database Laravel jika diperlukan (misal: id, user_id)
   @override
   @JsonKey(name: 'is_wfa')
   final bool isWfa;
@@ -211,7 +209,7 @@ abstract class _ScheduleEntity implements ScheduleEntity {
   factory _ScheduleEntity.fromJson(Map<String, dynamic> json) =
       _$ScheduleEntityImpl.fromJson;
 
-  @override // Tambahkan field lain yang ada di database Laravel jika diperlukan (misal: id, user_id)
+  @override
   @JsonKey(name: 'is_wfa')
   bool get isWfa;
   @override
@@ -230,7 +228,6 @@ OfficeEntity _$OfficeEntityFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$OfficeEntity {
-// Tambahkan id jika diperlukan
   String get name => throw _privateConstructorUsedError;
   double get latitude => throw _privateConstructorUsedError;
   double get longitude => throw _privateConstructorUsedError;
@@ -350,7 +347,6 @@ class _$OfficeEntityImpl implements _OfficeEntity {
   factory _$OfficeEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$OfficeEntityImplFromJson(json);
 
-// Tambahkan id jika diperlukan
   @override
   final String name;
   @override
@@ -407,7 +403,7 @@ abstract class _OfficeEntity implements OfficeEntity {
   factory _OfficeEntity.fromJson(Map<String, dynamic> json) =
       _$OfficeEntityImpl.fromJson;
 
-  @override // Tambahkan id jika diperlukan
+  @override
   String get name;
   @override
   double get latitude;
@@ -427,7 +423,6 @@ ShiftEntity _$ShiftEntityFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$ShiftEntity {
-// Tambahkan id jika diperlukan
   String get name => throw _privateConstructorUsedError;
   @JsonKey(name: 'start_time')
   String get startTime => throw _privateConstructorUsedError;
@@ -543,7 +538,6 @@ class _$ShiftEntityImpl implements _ShiftEntity {
   factory _$ShiftEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$ShiftEntityImplFromJson(json);
 
-// Tambahkan id jika diperlukan
   @override
   final String name;
   @override
@@ -597,7 +591,7 @@ abstract class _ShiftEntity implements ShiftEntity {
   factory _ShiftEntity.fromJson(Map<String, dynamic> json) =
       _$ShiftEntityImpl.fromJson;
 
-  @override // Tambahkan id jika diperlukan
+  @override
   String get name;
   @override
   @JsonKey(name: 'start_time')

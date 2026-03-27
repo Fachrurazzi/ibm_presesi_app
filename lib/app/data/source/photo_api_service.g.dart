@@ -24,12 +24,12 @@ class _PhotoApiService implements PhotoApiService {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<HttpResponse<DataState<dynamic>>> get() async {
+  Future<HttpResponse<dynamic>> get() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<HttpResponse<DataState<dynamic>>>(Options(
+    final _options = _setStreamType<HttpResponse<dynamic>>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -45,14 +45,8 @@ class _PhotoApiService implements PhotoApiService {
           _dio.options.baseUrl,
           baseUrl,
         )));
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late DataState<dynamic> _value;
-    try {
-      _value = DataState<dynamic>.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
     final httpResponse = HttpResponse(_value, _result);
     return httpResponse;
   }
@@ -93,7 +87,7 @@ class _PhotoApiService implements PhotoApiService {
   }
 
   @override
-  Future<HttpResponse<DataState<dynamic>>> upload(File image) async {
+  Future<HttpResponse<dynamic>> upload({required File image}) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -105,7 +99,7 @@ class _PhotoApiService implements PhotoApiService {
         filename: image.path.split(Platform.pathSeparator).last,
       ),
     ));
-    final _options = _setStreamType<HttpResponse<DataState<dynamic>>>(Options(
+    final _options = _setStreamType<HttpResponse<dynamic>>(Options(
       method: 'POST',
       headers: _headers,
       extra: _extra,
@@ -122,14 +116,8 @@ class _PhotoApiService implements PhotoApiService {
           _dio.options.baseUrl,
           baseUrl,
         )));
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late DataState<dynamic> _value;
-    try {
-      _value = DataState<dynamic>.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
     final httpResponse = HttpResponse(_value, _result);
     return httpResponse;
   }

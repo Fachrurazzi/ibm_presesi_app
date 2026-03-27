@@ -14,27 +14,34 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
   Future<DataState<ScheduleEntity?>> get() {
     return handleResponse(
       () => _scheduleApiService.get(),
-      (json) {
+      (json) async {
+        // Tambahkan async jika SharedPreferences butuh waktu
         if (json != null) {
+          // 1. Parsing data dari API Laravel
           final data = ScheduleEntity.fromJson(json);
-          SharedPreferencesHelper.setString(
-              PREF_START_SHIFT, data.shift.startTime);
-          SharedPreferencesHelper.setString(PREF_END_SHIFT, data.shift.endTime);
 
-          // 👇 INI DIA KUNCI JAWABANNYA! KEMBALIKAN DATANYA! 👇
+          // 2. Simpan ke Local Storage untuk akses cepat di UI/Logic
+          await SharedPreferencesHelper.setString(
+              AppPreferences.START_SHIFT, data.shift.startTime);
+          await SharedPreferencesHelper.setString(
+              AppPreferences.END_SHIFT, data.shift.endTime);
+
           return data;
-        } else {
-          return null;
         }
+        return null;
       },
     );
   }
 
   @override
-  Future<DataState> banned() {
+  Future<DataState<bool>> banned() {
     return handleResponse(
       () => _scheduleApiService.banned(),
-      (json) => null,
+      (json) {
+        // TIPS: Kembalikan true jika proses pelaporan banned sukses.
+        // Ini membantu Notifier untuk memutuskan apakah harus logout paksa atau tidak.
+        return true;
+      },
     );
   }
 }

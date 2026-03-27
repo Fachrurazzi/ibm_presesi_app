@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/module/entity/schedule.dart';
@@ -34,7 +33,10 @@ class HomeNotifier extends AppProvider {
   // State Variables
   String _name = '';
   String? _photoUrl;
-  final bool _isPhysicDevice = true;
+  String _joinDate = '';
+  String _positionName = '';
+  int _leaveQuota = 0;
+  int _cashableLeave = 0;
   bool _isLeaves = false;
   int _timeNotification = 5;
   AttendanceEntity? _attendanceToday;
@@ -44,6 +46,10 @@ class HomeNotifier extends AppProvider {
   // Getters
   String get name => _name;
   String? get photoUrl => _photoUrl;
+  String get joinDate => _joinDate;
+  String get positionName => _positionName;
+  int get leaveQuota => _leaveQuota;
+  int get cashableLeave => _cashableLeave;
   bool get isLeaves => _isLeaves;
   int get timeNotification => _timeNotification;
   AttendanceEntity? get attendanceToday => _attendanceToday;
@@ -61,22 +67,33 @@ class HomeNotifier extends AppProvider {
   Future<void> init() async {
     showLoading();
 
-    // 1. Ambil data dasar dulu
-    _name = await SharedPreferencesHelper.getString(PREF_NAME);
+    // 1. Ambil data dasar dari SharedPreferences
+    _name =
+        await SharedPreferencesHelper.getString(AppPreferences.USER_NAME) ?? '';
     _timeNotification =
-        await SharedPreferencesHelper.getInt(PREF_NOTIF_SETTING) ?? 5;
+        await SharedPreferencesHelper.getInt(AppPreferences.NOTIF_SETTING) ?? 5;
+    _leaveQuota =
+        await SharedPreferencesHelper.getInt(AppPreferences.LEAVE_QUOTA) ?? 0;
+    _cashableLeave =
+        await SharedPreferencesHelper.getInt(AppPreferences.CASHABLE_LEAVE) ??
+            0;
+    _joinDate =
+        await SharedPreferencesHelper.getString(AppPreferences.JOIN_DATE) ?? '';
+    _positionName =
+        await SharedPreferencesHelper.getString(AppPreferences.POSITION_NAME) ??
+            'Karyawan';
 
-    // 2. Jalankan sisanya secara paralel agar cepat
+    // 2. Jalankan API secara paralel
     await Future.wait([
       _getPhotoUrl(),
       _getAttendanceToday(),
       _getAttendanceThisMonth(),
       _getSchedule(),
       _getNotificationPermission(),
-      // _getDeviceInfo(), // Buka jika ingin proteksi emulator
     ]);
 
     hideLoading();
+    notifyListeners();
   }
 
   Future<void> _getPhotoUrl() async {
@@ -88,8 +105,6 @@ class HomeNotifier extends AppProvider {
     final response = await _attendanceGetTodayUseCase();
     if (response.success) {
       _attendanceToday = response.data;
-    } else {
-      errorMessage = response.message;
     }
   }
 
@@ -104,15 +119,18 @@ class HomeNotifier extends AppProvider {
     _isLeaves = false;
     final response = await _scheduleGetUseCase();
 
-    if (response.success) {
-      if (response.data != null) {
-        _schedule = response.data;
-        _setNotification();
+    if (response.success && response.data != null) {
+      _schedule = response.data;
+
+      if (_schedule?.shift != null) {
+        await SharedPreferencesHelper.setString(
+            AppPreferences.START_SHIFT, _schedule!.shift.startTime);
+        await SharedPreferencesHelper.setString(
+            AppPreferences.END_SHIFT, _schedule!.shift.endTime);
       }
+      setNotification();
     } else if (response.message.toLowerCase().contains('cuti')) {
       _isLeaves = true;
-    } else {
-      errorMessage = response.message;
     }
   }
 
@@ -121,12 +139,13 @@ class HomeNotifier extends AppProvider {
     if (!granted) await NotificationHelper.requestPermission();
   }
 
-  Future<void> _setNotification() async {
+  Future<void> setNotification() async {
     await NotificationHelper.cancelAll();
-
     final startShift =
-        await SharedPreferencesHelper.getString(PREF_START_SHIFT);
-    final endShift = await SharedPreferencesHelper.getString(PREF_END_SHIFT);
+        await SharedPreferencesHelper.getString(AppPreferences.START_SHIFT) ??
+            '';
+    final endShift =
+        await SharedPreferencesHelper.getString(AppPreferences.END_SHIFT) ?? '';
 
     if (startShift.isEmpty || endShift.isEmpty) return;
 
@@ -140,7 +159,7 @@ class HomeNotifier extends AppProvider {
     await NotificationHelper.scheduleNotification(
       id: 'start'.hashCode,
       title: 'Pengingat Masuk',
-      body: 'Waktunya melakukan presensi masuk',
+      body: 'Waktunya presensi masuk PT Intiboga Mandiri',
       hour: startDt.hour,
       minutes: startDt.minute,
     );
@@ -148,7 +167,7 @@ class HomeNotifier extends AppProvider {
     await NotificationHelper.scheduleNotification(
       id: 'end'.hashCode,
       title: 'Pengingat Pulang',
-      body: 'Jangan lupa presensi keluar sebelum pulang',
+      body: 'Jangan lupa presensi keluar ya!',
       hour: endDt.hour,
       minutes: endDt.minute,
     );
@@ -156,9 +175,10 @@ class HomeNotifier extends AppProvider {
 
   Future<void> saveNotificationSetting(int param) async {
     showLoading();
-    await SharedPreferencesHelper.setInt(PREF_NOTIF_SETTING, param);
+    await SharedPreferencesHelper.setInt(AppPreferences.NOTIF_SETTING, param);
     _timeNotification = param;
-    await _setNotification();
+    await setNotification();
     hideLoading();
+    notifyListeners();
   }
 }

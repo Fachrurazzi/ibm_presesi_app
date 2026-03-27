@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class LoadingAppWidget extends StatelessWidget {
-  final String? message; // Tambahkan parameter pesan agar fleksibel
+  final String? message;
 
   const LoadingAppWidget({super.key, this.message});
 
@@ -21,43 +21,47 @@ class LoadingAppWidget extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 20,
-                  spreadRadius: 5,
+                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  blurRadius: 30, // Ditingkatkan agar lebih halus
+                  spreadRadius: 2,
+                  offset: const Offset(0, 10), // Memberikan kesan melayang
                 )
               ],
             ),
             child: SizedBox(
-              width: 40,
-              height: 40,
+              width: 48, // Sedikit diperbesar agar lebih proporsional
+              height: 48,
               child: CircularProgressIndicator(
-                strokeWidth: 3,
-                // Gunakan warna gradasi atau flat primary
+                strokeWidth: 4, // Sedikit lebih tebal agar jelas
                 valueColor:
                     AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                 backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                // Tips: Tambahkan strokeCap agar ujung loading tidak kaku
+                strokeCap: StrokeCap.round,
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          // Teks Loading yang lebih halus
+          // Teks Loading Utama
           Text(
             message ?? "Memuat data...",
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.2,
             ),
           ),
 
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
 
-          // Tambahkan teks sub-caption opsional
+          // Teks sub-caption
           Text(
             "Mohon tunggu sebentar",
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: Colors.grey,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
             ),
           ),
         ],

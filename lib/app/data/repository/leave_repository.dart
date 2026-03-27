@@ -9,10 +9,28 @@ class LeaveRepositoryImpl extends LeaveRepository {
   LeaveRepositoryImpl(this._leaveApiService);
 
   @override
-  Future<DataState> send(LeaveParamEntity param) {
+  Future<DataState<bool>> send(LeaveParamEntity param) {
     return handleResponse(
       () => _leaveApiService.send(body: param.toJson()),
-      (json) => null,
+      (json) {
+        // TIPS: Jangan kembalikan null.
+        // Mengembalikan 'true' memberi tahu UseCase bahwa proses tulis ke DB Laravel sukses.
+        return true;
+      },
+    );
+  }
+
+  @override
+  Future<DataState<List<LeaveEntity>>> getHistory() {
+    return handleResponse(
+      () => _leaveApiService.getHistory(),
+      (json) {
+        // Laravel mengembalikan Array di dalam field 'data'
+        final List dataList = json as List;
+        return dataList
+            .map((item) => LeaveEntity.fromJson(item as Map<String, dynamic>))
+            .toList();
+      },
     );
   }
 }
