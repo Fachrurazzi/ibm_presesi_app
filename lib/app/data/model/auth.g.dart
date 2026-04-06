@@ -8,9 +8,11 @@ part of 'auth.dart';
 
 _$AuthModelImpl _$$AuthModelImplFromJson(Map<String, dynamic> json) =>
     _$AuthModelImpl(
-      accessToken: json['access_token'] as String,
-      tokenType: json['token_type'] as String,
-      user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
+      accessToken: json['access_token'] as String? ?? '',
+      tokenType: json['token_type'] as String? ?? '',
+      user: json['user'] == null
+          ? null
+          : UserModel.fromJson(json['user'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$AuthModelImplToJson(_$AuthModelImpl instance) =>
@@ -22,16 +24,16 @@ Map<String, dynamic> _$$AuthModelImplToJson(_$AuthModelImpl instance) =>
 
 _$UserModelImpl _$$UserModelImplFromJson(Map<String, dynamic> json) =>
     _$UserModelImpl(
-      id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
-      email: json['email'] as String,
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
       image: json['image'] as String?,
       position: json['position'] == null
           ? null
           : PositionModel.fromJson(json['position'] as Map<String, dynamic>),
-      joinDate: json['join_date'] as String,
-      leaveQuota: (json['leave_quota'] as num).toInt(),
-      cashableLeave: (json['cashable_leave'] as num).toInt(),
+      joinDate: json['join_date'] as String? ?? '',
+      leaveQuota: (json['leave_quota'] as num?)?.toInt() ?? 0,
+      cashableLeave: (json['cashable_leave'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$UserModelImplToJson(_$UserModelImpl instance) =>
@@ -48,8 +50,8 @@ Map<String, dynamic> _$$UserModelImplToJson(_$UserModelImpl instance) =>
 
 _$PositionModelImpl _$$PositionModelImplFromJson(Map<String, dynamic> json) =>
     _$PositionModelImpl(
-      id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name'] as String? ?? 'Anggota IBM',
     );
 
 Map<String, dynamic> _$$PositionModelImplToJson(_$PositionModelImpl instance) =>

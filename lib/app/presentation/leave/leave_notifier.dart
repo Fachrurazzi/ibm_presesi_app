@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/module/entity/leave.dart';
-import 'package:ibm_presensi_app/app/module/use_case/leave_get_history.dart'; // Tambahkan UseCase Get
+import 'package:ibm_presensi_app/app/module/use_case/leave_get_history.dart';
 import 'package:ibm_presensi_app/app/module/use_case/leave_send.dart';
-import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
+import 'package:ibm_presensi_app/core/constant/constant.dart';
+import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/provider/app_provider.dart';
+import 'package:intl/intl.dart'; // Pastikan import intl
 
 class LeaveNotifier extends AppProvider {
   final LeaveSendUseCase _leaveSendUseCase;
@@ -16,6 +18,9 @@ class LeaveNotifier extends AppProvider {
   bool _isSuccess = false;
   bool get isSuccess => _isSuccess;
 
+  int _leaveQuota = 0;
+  int get leaveQuota => _leaveQuota;
+
   List<LeaveEntity> _listLeave = [];
   List<LeaveEntity> get listLeave => _listLeave;
 
@@ -24,19 +29,20 @@ class LeaveNotifier extends AppProvider {
   final reasonController = TextEditingController();
 
   @override
-  void init() {
+  void init() async {
     _isSuccess = false;
-    getHistory(); // Ambil riwayat saat inisialisasi
+    _leaveQuota =
+        await SharedPreferencesHelper.getInt(AppPreferences.LEAVE_QUOTA) ?? 0;
+    getHistory();
   }
 
-  // Fungsi ambil riwayat dari API Laravel
   Future<void> getHistory() async {
     showLoading();
     final response = await _leaveGetHistoryUseCase();
     if (response.success) {
       _listLeave = response.data ?? [];
     } else {
-      snackbarMessage = response.message;
+      errorMessage = response.message;
     }
     hideLoading();
     notifyListeners();
@@ -52,27 +58,44 @@ class LeaveNotifier extends AppProvider {
     );
 
     if (picked != null) {
-      controller.text =
-          DateTimeHelper.formatDateTime(dateTime: picked, format: 'yyyy-MM-dd');
+      // FIX: Gunakan DateFormat agar murni string YYYY-MM-DD
+      // Ini jauh lebih aman daripada manipulasi string manual
+      controller.text = DateFormat('yyyy-MM-dd').format(picked);
       notifyListeners();
     }
   }
 
   Future<void> send() async {
-    if (startDateController.text.isEmpty ||
-        endDateController.text.isEmpty ||
-        reasonController.text.isEmpty) {
-      snackbarMessage = "Lengkapi semua data pengajuan";
+    final start = startDateController.text;
+    final end = endDateController.text;
+    final reason = reasonController.text.trim();
+
+    if (start.isEmpty || end.isEmpty || reason.isEmpty) {
+      errorMessage = "Mohon lengkapi formulir pengajuan";
+      notifyListeners();
+      return;
+    }
+
+    // --- FIX VALIDASI AGAR TIDAK SALAH TIMEZONE ---
+    try {
+      DateTime dtStart = DateFormat('yyyy-MM-dd').parse(start);
+      DateTime dtEnd = DateFormat('yyyy-MM-dd').parse(end);
+
+      if (dtEnd.isBefore(dtStart)) {
+        errorMessage = "Tanggal selesai tidak boleh sebelum mulai";
+        notifyListeners();
+        return;
+      }
+    } catch (e) {
+      errorMessage = "Format tanggal tidak valid";
+      notifyListeners();
       return;
     }
 
     showLoading();
-    final param = LeaveParamEntity(
-      startDate: startDateController.text,
-      endDate: endDateController.text,
-      reason: reasonController.text,
-    );
-
+    // Kirim string 'start' dan 'end' langsung, jangan di-parse jadi DateTime lagi di Repository
+    final param =
+        LeaveParamEntity(startDate: start, endDate: end, reason: reason);
     final response = await _leaveSendUseCase(param: param);
 
     if (response.success) {
@@ -80,9 +103,9 @@ class LeaveNotifier extends AppProvider {
       startDateController.clear();
       endDateController.clear();
       reasonController.clear();
-      await getHistory(); // Refresh list setelah kirim
+      await getHistory();
     } else {
-      snackbarMessage = response.message;
+      errorMessage = response.message;
     }
     hideLoading();
     notifyListeners();

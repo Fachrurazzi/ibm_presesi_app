@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'photo_api_service.dart';
+part of 'profile_api_service.dart';
 
 // **************************************************************************
 // RetrofitGenerator
@@ -8,13 +8,13 @@ part of 'photo_api_service.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element
 
-class _PhotoApiService implements PhotoApiService {
-  _PhotoApiService(
+class _ProfileApiService implements ProfileApiService {
+  _ProfileApiService(
     this._dio, {
     this.baseUrl,
     this.errorLogger,
   }) {
-    baseUrl ??= 'http://10.0.2.2:8000/api/v1';
+    baseUrl ??= 'http://192.168.100.83:8000/api/v1';
   }
 
   final Dio _dio;
@@ -24,19 +24,51 @@ class _PhotoApiService implements PhotoApiService {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<HttpResponse<dynamic>> get() async {
+  Future<HttpResponse<dynamic>> updateProfile({
+    required String name,
+    File? image,
+    String? oldPassword,
+    String? newPassword,
+  }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = FormData();
+    _data.fields.add(MapEntry(
+      'name',
+      name,
+    ));
+    if (image != null) {
+      _data.files.add(MapEntry(
+        'image',
+        MultipartFile.fromFileSync(
+          image.path,
+          filename: image.path.split(Platform.pathSeparator).last,
+        ),
+      ));
+    }
+    if (oldPassword != null) {
+      _data.fields.add(MapEntry(
+        'old_password',
+        oldPassword,
+      ));
+    }
+    if (newPassword != null) {
+      _data.fields.add(MapEntry(
+        'new_password',
+        newPassword,
+      ));
+    }
     final _options = _setStreamType<HttpResponse<dynamic>>(Options(
-      method: 'GET',
+      method: 'POST',
       headers: _headers,
       extra: _extra,
+      contentType: 'multipart/form-data',
     )
         .compose(
           _dio.options,
-          '/image',
+          '/profile/update',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -52,62 +84,19 @@ class _PhotoApiService implements PhotoApiService {
   }
 
   @override
-  Future<HttpResponse<List<int>>> getBytes({required String path}) async {
+  Future<HttpResponse<dynamic>> getProfilePhoto() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<HttpResponse<List<int>>>(Options(
+    final _options = _setStreamType<HttpResponse<dynamic>>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
-      responseType: ResponseType.bytes,
     )
         .compose(
           _dio.options,
-          '${path}',
-          queryParameters: queryParameters,
-          data: _data,
-        )
-        .copyWith(
-            baseUrl: _combineBaseUrls(
-          _dio.options.baseUrl,
-          baseUrl,
-        )));
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<int> _value;
-    try {
-      _value = _result.data!.cast<int>();
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    final httpResponse = HttpResponse(_value, _result);
-    return httpResponse;
-  }
-
-  @override
-  Future<HttpResponse<dynamic>> upload({required File image}) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = FormData();
-    _data.files.add(MapEntry(
-      'image',
-      MultipartFile.fromFileSync(
-        image.path,
-        filename: image.path.split(Platform.pathSeparator).last,
-      ),
-    ));
-    final _options = _setStreamType<HttpResponse<dynamic>>(Options(
-      method: 'POST',
-      headers: _headers,
-      extra: _extra,
-      contentType: 'multipart/form-data',
-    )
-        .compose(
-          _dio.options,
-          '/image',
+          '/profile/photo',
           queryParameters: queryParameters,
           data: _data,
         )

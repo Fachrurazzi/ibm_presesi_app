@@ -1,18 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_by_month_year.dart';
+import 'package:ibm_presensi_app/core/constant/constant.dart';
+import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/provider/app_provider.dart';
 
 class DetailAttendanceNotifier extends AppProvider {
   final AttendanceGetByMonthYear _attendanceGetByMonthYear;
 
   DetailAttendanceNotifier(this._attendanceGetByMonthYear) {
+    // Ambil waktu sekarang untuk default pencarian
+    final now = DateTime.now();
+    _selectedMonth = now.month;
+    _selectedYear = now.year;
+
     init();
   }
 
-  final monthController = TextEditingController();
-  final yearController = TextEditingController();
+  // --- State Variables ---
+  int _selectedMonth = 1;
+  int _selectedYear = 2026;
+  List<AttendanceEntity> _listAttendance = [];
+  bool _isPusat = false;
 
+  // --- Getters ---
+  int get selectedMonth => _selectedMonth;
+  int get selectedYear => _selectedYear;
+  List<AttendanceEntity> get listAttendance => _listAttendance;
+  bool get isPusat => _isPusat;
+
+  // List dropdown entries (Static)
   final List<DropdownMenuEntry<int>> monthListDropdown = [
     const DropdownMenuEntry(value: 1, label: 'Januari'),
     const DropdownMenuEntry(value: 2, label: 'Februari'),
@@ -33,52 +50,65 @@ class DetailAttendanceNotifier extends AppProvider {
     const DropdownMenuEntry(value: 2025, label: '2025'),
   ];
 
-  List<AttendanceEntity> _listAttendance = [];
-  List<AttendanceEntity> get listAttendance => _listAttendance;
-
   @override
   void init() {
-    // Otomatis cari data bulan sekarang saat masuk halaman
-    Future.microtask(() => search());
+    _checkOffice();
+    // Gunakan Future.delayed agar build context selesai dulu
+    Future.delayed(Duration.zero, () => search());
   }
 
-  @override
-  void dispose() {
-    monthController.dispose();
-    yearController.dispose();
-    super.dispose();
+  // Fungsi untuk update nilai dari UI
+  void onMonthSelected(int? val) {
+    if (val != null) {
+      _selectedMonth = val;
+      notifyListeners(); // Update UI agar pilihan dropdown terlihat berubah
+    }
+  }
+
+  void onYearSelected(int? val) {
+    if (val != null) {
+      _selectedYear = val;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _checkOffice() async {
+    final office =
+        await SharedPreferencesHelper.getString(AppPreferences.OFFICE_NAME) ??
+            "";
+    _isPusat = office.toLowerCase().contains("pusat");
+    notifyListeners();
   }
 
   Future<void> search() async {
+    // Reset error & tampilkan loading
+    errorMessage = '';
     showLoading();
 
-    try {
-      // Ambil value berdasarkan label yang ada di controller
-      final month = monthListDropdown
-          .firstWhere((e) => e.label == monthController.text,
-              orElse: () => monthListDropdown[DateTime.now().month - 1])
-          .value;
-      final year = yearListDropdown
-          .firstWhere((e) => e.label == yearController.text,
-              orElse: () => yearListDropdown[0])
-          .value;
+    // Kosongkan list lama agar user tahu data sedang di-refresh
+    _listAttendance = [];
+    notifyListeners();
 
+    try {
       final response = await _attendanceGetByMonthYear(
-          param: AttendanceParamGetEntity(month: month, year: year));
+        param: AttendanceParamGetEntity(
+          month: _selectedMonth,
+          year: _selectedYear,
+        ),
+      );
 
       if (response.success) {
         _listAttendance = response.data ?? [];
-        if (_listAttendance.isEmpty) {
-          snackbarMessage = "Tidak ada data ditemukan";
-        }
+        // Sorting: Tanggal terbaru di posisi paling atas
+        _listAttendance.sort((a, b) => (b.date ?? "").compareTo(a.date ?? ""));
       } else {
         errorMessage = response.message;
       }
     } catch (e) {
-      snackbarMessage = "Gagal memproses data riwayat";
+      errorMessage = "Gagal memuat data dari server PT Intiboga";
+    } finally {
+      hideLoading();
+      notifyListeners();
     }
-
-    hideLoading();
-    notifyListeners();
   }
 }

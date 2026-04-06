@@ -48,6 +48,10 @@ dependencies:
   path_provider: ^2.1.3
   flutter_local_notifications: ^17.2.2
   flutter_timezone: ^1.0.0
+  image_picker: ^1.1.2 # <--- Tambahkan ini
+  permission_handler: ^11.3.1
+  safe_device: ^1.1.6
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:

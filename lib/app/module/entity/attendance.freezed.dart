@@ -42,7 +42,7 @@ mixin _$Attendance {
             @JsonKey(name: 'schedule_end') String? scheduleEnd)
         entity,
     required TResult Function(
-            double latitude, double longitude, String? address, String? photo)
+            double latitude, double longitude, String? address)
         paramEntity,
     required TResult Function(int month, int year) paramGetEntity,
   }) =>
@@ -60,8 +60,7 @@ mixin _$Attendance {
             @JsonKey(name: 'schedule_start') String? scheduleStart,
             @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult? Function(
-            double latitude, double longitude, String? address, String? photo)?
+    TResult? Function(double latitude, double longitude, String? address)?
         paramEntity,
     TResult? Function(int month, int year)? paramGetEntity,
   }) =>
@@ -79,8 +78,7 @@ mixin _$Attendance {
             @JsonKey(name: 'schedule_start') String? scheduleStart,
             @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult Function(
-            double latitude, double longitude, String? address, String? photo)?
+    TResult Function(double latitude, double longitude, String? address)?
         paramEntity,
     TResult Function(int month, int year)? paramGetEntity,
     required TResult orElse(),
@@ -212,7 +210,7 @@ class __$$AttendanceEntityImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$AttendanceEntityImpl implements AttendanceEntity {
-  _$AttendanceEntityImpl(
+  const _$AttendanceEntityImpl(
       {this.id,
       @JsonKey(name: 'start_time') required this.startTime,
       @JsonKey(name: 'end_time') required this.endTime,
@@ -310,7 +308,7 @@ class _$AttendanceEntityImpl implements AttendanceEntity {
             @JsonKey(name: 'schedule_end') String? scheduleEnd)
         entity,
     required TResult Function(
-            double latitude, double longitude, String? address, String? photo)
+            double latitude, double longitude, String? address)
         paramEntity,
     required TResult Function(int month, int year) paramGetEntity,
   }) {
@@ -332,8 +330,7 @@ class _$AttendanceEntityImpl implements AttendanceEntity {
             @JsonKey(name: 'schedule_start') String? scheduleStart,
             @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult? Function(
-            double latitude, double longitude, String? address, String? photo)?
+    TResult? Function(double latitude, double longitude, String? address)?
         paramEntity,
     TResult? Function(int month, int year)? paramGetEntity,
   }) {
@@ -355,8 +352,7 @@ class _$AttendanceEntityImpl implements AttendanceEntity {
             @JsonKey(name: 'schedule_start') String? scheduleStart,
             @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult Function(
-            double latitude, double longitude, String? address, String? photo)?
+    TResult Function(double latitude, double longitude, String? address)?
         paramEntity,
     TResult Function(int month, int year)? paramGetEntity,
     required TResult orElse(),
@@ -411,7 +407,7 @@ class _$AttendanceEntityImpl implements AttendanceEntity {
 }
 
 abstract class AttendanceEntity implements Attendance {
-  factory AttendanceEntity(
+  const factory AttendanceEntity(
           {final int? id,
           @JsonKey(name: 'start_time') required final String startTime,
           @JsonKey(name: 'end_time') required final String endTime,
@@ -454,8 +450,7 @@ abstract class _$$AttendanceParamEntityImplCopyWith<$Res> {
           $Res Function(_$AttendanceParamEntityImpl) then) =
       __$$AttendanceParamEntityImplCopyWithImpl<$Res>;
   @useResult
-  $Res call(
-      {double latitude, double longitude, String? address, String? photo});
+  $Res call({double latitude, double longitude, String? address});
 }
 
 /// @nodoc
@@ -472,7 +467,6 @@ class __$$AttendanceParamEntityImplCopyWithImpl<$Res>
     Object? latitude = null,
     Object? longitude = null,
     Object? address = freezed,
-    Object? photo = freezed,
   }) {
     return _then(_$AttendanceParamEntityImpl(
       latitude: null == latitude
@@ -487,10 +481,6 @@ class __$$AttendanceParamEntityImplCopyWithImpl<$Res>
           ? _value.address
           : address // ignore: cast_nullable_to_non_nullable
               as String?,
-      photo: freezed == photo
-          ? _value.photo
-          : photo // ignore: cast_nullable_to_non_nullable
-              as String?,
     ));
   }
 }
@@ -498,11 +488,10 @@ class __$$AttendanceParamEntityImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
-  _$AttendanceParamEntityImpl(
+  const _$AttendanceParamEntityImpl(
       {required this.latitude,
       required this.longitude,
       this.address,
-      this.photo,
       final String? $type})
       : $type = $type ?? 'paramEntity';
 
@@ -515,15 +504,13 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
   final double longitude;
   @override
   final String? address;
-  @override
-  final String? photo;
 
   @JsonKey(name: 'runtimeType')
   final String $type;
 
   @override
   String toString() {
-    return 'Attendance.paramEntity(latitude: $latitude, longitude: $longitude, address: $address, photo: $photo)';
+    return 'Attendance.paramEntity(latitude: $latitude, longitude: $longitude, address: $address)';
   }
 
   @override
@@ -535,14 +522,12 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
                 other.latitude == latitude) &&
             (identical(other.longitude, longitude) ||
                 other.longitude == longitude) &&
-            (identical(other.address, address) || other.address == address) &&
-            (identical(other.photo, photo) || other.photo == photo));
+            (identical(other.address, address) || other.address == address));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, latitude, longitude, address, photo);
+  int get hashCode => Object.hash(runtimeType, latitude, longitude, address);
 
   @JsonKey(ignore: true)
   @override
@@ -566,11 +551,11 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
             @JsonKey(name: 'schedule_end') String? scheduleEnd)
         entity,
     required TResult Function(
-            double latitude, double longitude, String? address, String? photo)
+            double latitude, double longitude, String? address)
         paramEntity,
     required TResult Function(int month, int year) paramGetEntity,
   }) {
-    return paramEntity(latitude, longitude, address, photo);
+    return paramEntity(latitude, longitude, address);
   }
 
   @override
@@ -587,12 +572,11 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
             @JsonKey(name: 'schedule_start') String? scheduleStart,
             @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult? Function(
-            double latitude, double longitude, String? address, String? photo)?
+    TResult? Function(double latitude, double longitude, String? address)?
         paramEntity,
     TResult? Function(int month, int year)? paramGetEntity,
   }) {
-    return paramEntity?.call(latitude, longitude, address, photo);
+    return paramEntity?.call(latitude, longitude, address);
   }
 
   @override
@@ -609,14 +593,13 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
             @JsonKey(name: 'schedule_start') String? scheduleStart,
             @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult Function(
-            double latitude, double longitude, String? address, String? photo)?
+    TResult Function(double latitude, double longitude, String? address)?
         paramEntity,
     TResult Function(int month, int year)? paramGetEntity,
     required TResult orElse(),
   }) {
     if (paramEntity != null) {
-      return paramEntity(latitude, longitude, address, photo);
+      return paramEntity(latitude, longitude, address);
     }
     return orElse();
   }
@@ -664,11 +647,10 @@ class _$AttendanceParamEntityImpl implements AttendanceParamEntity {
 }
 
 abstract class AttendanceParamEntity implements Attendance {
-  factory AttendanceParamEntity(
+  const factory AttendanceParamEntity(
       {required final double latitude,
       required final double longitude,
-      final String? address,
-      final String? photo}) = _$AttendanceParamEntityImpl;
+      final String? address}) = _$AttendanceParamEntityImpl;
 
   factory AttendanceParamEntity.fromJson(Map<String, dynamic> json) =
       _$AttendanceParamEntityImpl.fromJson;
@@ -676,7 +658,6 @@ abstract class AttendanceParamEntity implements Attendance {
   double get latitude;
   double get longitude;
   String? get address;
-  String? get photo;
   @JsonKey(ignore: true)
   _$$AttendanceParamEntityImplCopyWith<_$AttendanceParamEntityImpl>
       get copyWith => throw _privateConstructorUsedError;
@@ -723,7 +704,7 @@ class __$$AttendanceParamGetEntityImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$AttendanceParamGetEntityImpl implements AttendanceParamGetEntity {
-  _$AttendanceParamGetEntityImpl(
+  const _$AttendanceParamGetEntityImpl(
       {required this.month, required this.year, final String? $type})
       : $type = $type ?? 'paramGetEntity';
 
@@ -778,7 +759,7 @@ class _$AttendanceParamGetEntityImpl implements AttendanceParamGetEntity {
             @JsonKey(name: 'schedule_end') String? scheduleEnd)
         entity,
     required TResult Function(
-            double latitude, double longitude, String? address, String? photo)
+            double latitude, double longitude, String? address)
         paramEntity,
     required TResult Function(int month, int year) paramGetEntity,
   }) {
@@ -799,8 +780,7 @@ class _$AttendanceParamGetEntityImpl implements AttendanceParamGetEntity {
             @JsonKey(name: 'schedule_start') String? scheduleStart,
             @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult? Function(
-            double latitude, double longitude, String? address, String? photo)?
+    TResult? Function(double latitude, double longitude, String? address)?
         paramEntity,
     TResult? Function(int month, int year)? paramGetEntity,
   }) {
@@ -821,8 +801,7 @@ class _$AttendanceParamGetEntityImpl implements AttendanceParamGetEntity {
             @JsonKey(name: 'schedule_start') String? scheduleStart,
             @JsonKey(name: 'schedule_end') String? scheduleEnd)?
         entity,
-    TResult Function(
-            double latitude, double longitude, String? address, String? photo)?
+    TResult Function(double latitude, double longitude, String? address)?
         paramEntity,
     TResult Function(int month, int year)? paramGetEntity,
     required TResult orElse(),
@@ -876,7 +855,7 @@ class _$AttendanceParamGetEntityImpl implements AttendanceParamGetEntity {
 }
 
 abstract class AttendanceParamGetEntity implements Attendance {
-  factory AttendanceParamGetEntity(
+  const factory AttendanceParamGetEntity(
       {required final int month,
       required final int year}) = _$AttendanceParamGetEntityImpl;
 

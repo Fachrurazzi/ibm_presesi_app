@@ -14,7 +14,7 @@ class _AuthApiService implements AuthApiService {
     this.baseUrl,
     this.errorLogger,
   }) {
-    baseUrl ??= 'http://10.0.2.2:8000/api/v1';
+    baseUrl ??= 'http://192.168.100.83:8000/api/v1';
   }
 
   final Dio _dio;

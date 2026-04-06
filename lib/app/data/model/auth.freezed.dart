@@ -24,25 +24,25 @@ mixin _$Auth {
   String get accessToken => throw _privateConstructorUsedError;
   @JsonKey(name: 'token_type')
   String get tokenType => throw _privateConstructorUsedError;
-  UserModel get user => throw _privateConstructorUsedError;
+  UserModel? get user => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel user)
+            @JsonKey(name: 'token_type') String tokenType, UserModel? user)
         model,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel user)?
+            @JsonKey(name: 'token_type') String tokenType, UserModel? user)?
         model,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel user)?
+            @JsonKey(name: 'token_type') String tokenType, UserModel? user)?
         model,
     required TResult orElse(),
   }) =>
@@ -76,7 +76,7 @@ abstract class $AuthCopyWith<$Res> {
   $Res call(
       {@JsonKey(name: 'access_token') String accessToken,
       @JsonKey(name: 'token_type') String tokenType,
-      UserModel user});
+      UserModel? user});
 }
 
 /// @nodoc
@@ -108,7 +108,7 @@ class _$AuthCopyWithImpl<$Res, $Val extends Auth>
       user: freezed == user
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
-              as UserModel,
+              as UserModel?,
     ) as $Val);
   }
 }
@@ -123,7 +123,7 @@ abstract class _$$AuthModelImplCopyWith<$Res> implements $AuthCopyWith<$Res> {
   $Res call(
       {@JsonKey(name: 'access_token') String accessToken,
       @JsonKey(name: 'token_type') String tokenType,
-      UserModel user});
+      UserModel? user});
 }
 
 /// @nodoc
@@ -153,7 +153,7 @@ class __$$AuthModelImplCopyWithImpl<$Res>
       user: freezed == user
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
-              as UserModel,
+              as UserModel?,
     ));
   }
 }
@@ -162,9 +162,9 @@ class __$$AuthModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AuthModelImpl implements AuthModel {
   _$AuthModelImpl(
-      {@JsonKey(name: 'access_token') required this.accessToken,
-      @JsonKey(name: 'token_type') required this.tokenType,
-      required this.user});
+      {@JsonKey(name: 'access_token') this.accessToken = '',
+      @JsonKey(name: 'token_type') this.tokenType = '',
+      this.user});
 
   factory _$AuthModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$AuthModelImplFromJson(json);
@@ -176,7 +176,7 @@ class _$AuthModelImpl implements AuthModel {
   @JsonKey(name: 'token_type')
   final String tokenType;
   @override
-  final UserModel user;
+  final UserModel? user;
 
   @override
   String toString() {
@@ -210,7 +210,7 @@ class _$AuthModelImpl implements AuthModel {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel user)
+            @JsonKey(name: 'token_type') String tokenType, UserModel? user)
         model,
   }) {
     return model(accessToken, tokenType, user);
@@ -220,7 +220,7 @@ class _$AuthModelImpl implements AuthModel {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel user)?
+            @JsonKey(name: 'token_type') String tokenType, UserModel? user)?
         model,
   }) {
     return model?.call(accessToken, tokenType, user);
@@ -230,7 +230,7 @@ class _$AuthModelImpl implements AuthModel {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel user)?
+            @JsonKey(name: 'token_type') String tokenType, UserModel? user)?
         model,
     required TResult orElse(),
   }) {
@@ -278,9 +278,9 @@ class _$AuthModelImpl implements AuthModel {
 
 abstract class AuthModel implements Auth {
   factory AuthModel(
-      {@JsonKey(name: 'access_token') required final String accessToken,
-      @JsonKey(name: 'token_type') required final String tokenType,
-      required final UserModel user}) = _$AuthModelImpl;
+      {@JsonKey(name: 'access_token') final String accessToken,
+      @JsonKey(name: 'token_type') final String tokenType,
+      final UserModel? user}) = _$AuthModelImpl;
 
   factory AuthModel.fromJson(Map<String, dynamic> json) =
       _$AuthModelImpl.fromJson;
@@ -292,7 +292,7 @@ abstract class AuthModel implements Auth {
   @JsonKey(name: 'token_type')
   String get tokenType;
   @override
-  UserModel get user;
+  UserModel? get user;
   @override
   @JsonKey(ignore: true)
   _$$AuthModelImplCopyWith<_$AuthModelImpl> get copyWith =>
@@ -311,7 +311,7 @@ mixin _$User {
   @JsonKey(name: 'image')
   String? get image => throw _privateConstructorUsedError;
   PositionModel? get position =>
-      throw _privateConstructorUsedError; // Menggunakan objek Position
+      throw _privateConstructorUsedError; // Menggunakan objek Position nullable
   @JsonKey(name: 'join_date')
   String get joinDate => throw _privateConstructorUsedError;
   @JsonKey(name: 'leave_quota')
@@ -536,30 +536,33 @@ class __$$UserModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$UserModelImpl implements UserModel {
   _$UserModelImpl(
-      {required this.id,
-      required this.name,
-      required this.email,
+      {this.id = 0,
+      this.name = '',
+      this.email = '',
       @JsonKey(name: 'image') this.image,
-      required this.position,
-      @JsonKey(name: 'join_date') required this.joinDate,
-      @JsonKey(name: 'leave_quota') required this.leaveQuota,
-      @JsonKey(name: 'cashable_leave') required this.cashableLeave});
+      this.position,
+      @JsonKey(name: 'join_date') this.joinDate = '',
+      @JsonKey(name: 'leave_quota') this.leaveQuota = 0,
+      @JsonKey(name: 'cashable_leave') this.cashableLeave = 0});
 
   factory _$UserModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserModelImplFromJson(json);
 
   @override
+  @JsonKey()
   final int id;
   @override
+  @JsonKey()
   final String name;
   @override
+  @JsonKey()
   final String email;
   @override
   @JsonKey(name: 'image')
   final String? image;
   @override
   final PositionModel? position;
-// Menggunakan objek Position
+// Menggunakan objek Position nullable
   @override
   @JsonKey(name: 'join_date')
   final String joinDate;
@@ -708,14 +711,14 @@ class _$UserModelImpl implements UserModel {
 
 abstract class UserModel implements User {
   factory UserModel(
-          {required final int id,
-          required final String name,
-          required final String email,
+          {final int id,
+          final String name,
+          final String email,
           @JsonKey(name: 'image') final String? image,
-          required final PositionModel? position,
-          @JsonKey(name: 'join_date') required final String joinDate,
-          @JsonKey(name: 'leave_quota') required final int leaveQuota,
-          @JsonKey(name: 'cashable_leave') required final int cashableLeave}) =
+          final PositionModel? position,
+          @JsonKey(name: 'join_date') final String joinDate,
+          @JsonKey(name: 'leave_quota') final int leaveQuota,
+          @JsonKey(name: 'cashable_leave') final int cashableLeave}) =
       _$UserModelImpl;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =
@@ -732,7 +735,7 @@ abstract class UserModel implements User {
   String? get image;
   @override
   PositionModel? get position;
-  @override // Menggunakan objek Position
+  @override // Menggunakan objek Position nullable
   @JsonKey(name: 'join_date')
   String get joinDate;
   @override
@@ -871,14 +874,16 @@ class __$$PositionModelImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$PositionModelImpl implements PositionModel {
-  _$PositionModelImpl({required this.id, required this.name});
+  _$PositionModelImpl({this.id = 0, this.name = 'Anggota IBM'});
 
   factory _$PositionModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$PositionModelImplFromJson(json);
 
   @override
+  @JsonKey()
   final int id;
   @override
+  @JsonKey()
   final String name;
 
   @override
@@ -970,7 +975,7 @@ class _$PositionModelImpl implements PositionModel {
 }
 
 abstract class PositionModel implements Position {
-  factory PositionModel({required final int id, required final String name}) =
+  factory PositionModel({final int id, final String name}) =
       _$PositionModelImpl;
 
   factory PositionModel.fromJson(Map<String, dynamic> json) =

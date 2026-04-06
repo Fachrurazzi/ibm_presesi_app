@@ -42,7 +42,6 @@ _$AttendanceParamEntityImpl _$$AttendanceParamEntityImplFromJson(
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       address: json['address'] as String?,
-      photo: json['photo'] as String?,
       $type: json['runtimeType'] as String?,
     );
 
@@ -52,7 +51,6 @@ Map<String, dynamic> _$$AttendanceParamEntityImplToJson(
       'latitude': instance.latitude,
       'longitude': instance.longitude,
       'address': instance.address,
-      'photo': instance.photo,
       'runtimeType': instance.$type,
     };
 

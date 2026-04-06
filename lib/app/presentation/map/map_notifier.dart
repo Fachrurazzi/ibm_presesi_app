@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,7 +7,8 @@ import 'package:ibm_presensi_app/app/module/entity/schedule.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_send.dart';
 import 'package:ibm_presensi_app/app/module/use_case/schedule_banned.dart';
 import 'package:ibm_presensi_app/app/module/use_case/schedule_get.dart';
-import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
+import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart'; // Tambahkan ini
+import 'package:ibm_presensi_app/core/di/dependency.dart'; // Tambahkan ini
 import 'package:ibm_presensi_app/core/helper/location_helper.dart';
 import 'package:ibm_presensi_app/core/provider/app_provider.dart';
 
@@ -25,7 +25,7 @@ class MapNotifier extends AppProvider {
   bool _isSuccess = false;
   bool _isEnableSubmitButton = false;
   ScheduleEntity? _schedule;
-  late CircleOSM _circle;
+  CircleOSM? _circle;
   bool _isGrantedLocation = false;
   bool _isEnabledLocation = false;
   StreamSubscription<Position>? _streamCurrentLocation;
@@ -39,6 +39,13 @@ class MapNotifier extends AppProvider {
   bool get isEnabledLocation => _isEnabledLocation;
   GeoPoint? get currentLocation => _currentLocation;
 
+  // FIX: Getter officeLocation untuk MapScreen
+  GeoPoint? get officeLocation => _schedule != null
+      ? GeoPoint(
+          latitude: _schedule!.office.latitude,
+          longitude: _schedule!.office.longitude)
+      : null;
+
   final MapController mapController = MapController.withPosition(
     initPosition: GeoPoint(latitude: -3.327125, longitude: 114.592480),
   );
@@ -47,7 +54,9 @@ class MapNotifier extends AppProvider {
   void init() async {
     await _getEnabledAndPermission();
     if (errorMessage.isEmpty) await _getSchedule();
-    if (errorMessage.isEmpty) _checkTimeLimit();
+    // Opsional: aktifkan jika ingin membatasi waktu absen
+    // if (errorMessage.isEmpty) _checkTimeLimit();
+    notifyListeners();
   }
 
   Future<void> _getEnabledAndPermission() async {
@@ -65,15 +74,13 @@ class MapNotifier extends AppProvider {
   Future<void> _getSchedule() async {
     showLoading();
     final response = await _scheduleGetUseCase();
-    if (response.success) {
+    if (response.success && response.data != null) {
       _schedule = response.data!;
       _circle = CircleOSM(
         key: 'office-area',
-        centerPoint: GeoPoint(
-            latitude: _schedule!.office.latitude,
-            longitude: _schedule!.office.longitude),
+        centerPoint: officeLocation!,
         radius: _schedule!.office.radius,
-        color: Colors.blue.withOpacity(0.3),
+        color: Colors.blue.withOpacity(0.2),
         strokeWidth: 2,
         borderColor: Colors.blue,
       );
@@ -81,84 +88,83 @@ class MapNotifier extends AppProvider {
       errorMessage = response.message;
     }
     hideLoading();
+    notifyListeners();
   }
 
-  void _checkTimeLimit() {
-    if (_schedule == null) return;
-    final now = DateTime.now();
-    final parts = _schedule!.shift.startTime.split(":");
-    final shiftTime = DateTime(
-        now.year, now.month, now.day, int.parse(parts[0]), int.parse(parts[1]));
-
-    if (now.isBefore(shiftTime.subtract(const Duration(minutes: 30)))) {
-      errorMessage = 'Absen dibuka 30 menit sebelum shift dimulai.';
+  void mapIsReady(bool ready) async {
+    if (ready && _circle != null) {
+      await Future.delayed(const Duration(milliseconds: 1000));
+      await mapController.drawCircle(_circle!);
+      _startTracking();
     }
-  }
-
-  void mapIsReady() async {
-    await mapController.drawCircle(_circle);
-    _startTracking();
   }
 
   void _startTracking() {
     _streamCurrentLocation = Geolocator.getPositionStream(
-            locationSettings:
-                const LocationSettings(accuracy: LocationAccuracy.high))
-        .listen((position) {
+            locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.high, distanceFilter: 2))
+        .listen((position) async {
       if (position.isMocked) {
         _sendBanned();
         return;
       }
 
       if (!isDispose) {
-        if (_currentLocation != null)
-          mapController.removeMarker(_currentLocation!);
-
         _currentLocation = GeoPoint(
             latitude: position.latitude, longitude: position.longitude);
-        mapController.addMarker(_currentLocation!,
-            markerIcon: const MarkerIcon(
-                icon: Icon(Icons.person_pin_circle,
-                    color: Colors.red, size: 48)));
-
-        mapController.moveTo(_currentLocation!, animate: true);
         _validateLocation();
       }
     });
   }
 
   void _validateLocation() {
+    if (_schedule == null || _currentLocation == null) return;
+
     if (_schedule?.isWfa ?? false) {
       _isEnableSubmitButton = true;
-    } else {
+    } else if (_circle != null) {
+      // Cek apakah lokasi user di dalam radius kantor
       _isEnableSubmitButton =
-          LocationHelper.isLocationInCircle(_circle, _currentLocation!);
+          LocationHelper.isLocationInCircle(_circle!, _currentLocation!);
     }
     notifyListeners();
   }
 
   Future<void> send() async {
     if (_currentLocation == null) return;
+
     showLoading();
+    notifyListeners();
+
     final response = await _attendanceSendUseCase(
         param: AttendanceParamEntity(
       latitude: _currentLocation!.latitude,
       longitude: _currentLocation!.longitude,
     ));
+
     if (response.success) {
-      _isSuccess = true;
+      // KUNCI UTAMA: Update data Home secara global sebelum pindah halaman
+      if (sl.isRegistered<HomeNotifier>()) {
+        await sl<HomeNotifier>().init();
+      }
+
+      _isSuccess = true; // Ini akan memicu navigasi di checkVariableAfterUi
     } else {
       snackbarMessage = response.message;
     }
+
     hideLoading();
+    notifyListeners();
   }
 
   Future<void> _sendBanned() async {
-    _streamCurrentLocation?.cancel();
+    await _streamCurrentLocation?.cancel();
     showLoading();
+    notifyListeners();
     await _scheduleBannedUseCase();
     hideLoading();
     errorMessage = "Fake GPS Terdeteksi! Akun Anda ditangguhkan.";
+    notifyListeners();
   }
 
   @override
