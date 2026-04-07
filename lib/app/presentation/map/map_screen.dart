@@ -13,7 +13,7 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
   AppBar? appBarBuild(BuildContext context) {
     return AppBar(
       title: const Text("Lokasi Presensi",
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
       centerTitle: true,
       elevation: 0,
       backgroundColor: Colors.white,
@@ -32,57 +32,64 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // 1. MAP LAYER
-          OSMFlutter(
-            controller: notifier.mapController,
-            osmOption: OSMOption(
-              zoomOption: const ZoomOption(initZoom: 16, maxZoomLevel: 19),
-              userLocationMarker: UserLocationMaker(
-                personMarker: MarkerIcon(
-                  icon: Icon(Icons.location_history,
-                      size: 60, color: theme.colorScheme.primary),
-                ),
-                directionArrowMarker: const MarkerIcon(
-                  icon: Icon(Icons.navigation, size: 48, color: Colors.blue),
-                ),
-              ),
-              staticPoints: [
-                StaticPositionGeoPoint(
-                  "office",
-                  MarkerIcon(
-                    icon: Icon(
-                      Icons.location_on,
-                      color: Colors.redAccent.shade700,
-                      size: 56,
+      body: Center(
+        // KUNCI RESPONSIVE: Batasi lebar maksimal untuk Tablet
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Stack(
+            children: [
+              // 1. MAP LAYER (FULL)
+              OSMFlutter(
+                controller: notifier.mapController,
+                osmOption: OSMOption(
+                  zoomOption: const ZoomOption(initZoom: 16, maxZoomLevel: 19),
+                  userLocationMarker: UserLocationMaker(
+                    personMarker: MarkerIcon(
+                      icon: Icon(Icons.location_history,
+                          size: 60, color: theme.colorScheme.primary),
+                    ),
+                    directionArrowMarker: const MarkerIcon(
+                      icon:
+                          Icon(Icons.navigation, size: 48, color: Colors.blue),
                     ),
                   ),
-                  [
-                    notifier.officeLocation ??
-                        GeoPoint(latitude: 0, longitude: 0)
+                  staticPoints: [
+                    StaticPositionGeoPoint(
+                      "office",
+                      MarkerIcon(
+                        icon: Icon(
+                          Icons.location_on,
+                          color: Colors.redAccent.shade700,
+                          size: 56,
+                        ),
+                      ),
+                      [
+                        notifier.officeLocation ??
+                            GeoPoint(latitude: 0, longitude: 0)
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-            onMapIsReady: (ready) => notifier.mapIsReady(ready),
-            mapIsLoading: const Center(child: CircularProgressIndicator()),
-          ),
+                onMapIsReady: (ready) => notifier.mapIsReady(ready),
+                mapIsLoading: const Center(child: CircularProgressIndicator()),
+              ),
 
-          // 2. TOP STATUS BAR (Glassmorphism)
-          Positioned(
-            top: 16,
-            left: 20,
-            right: 20,
-            child: _buildStatusHeader(context, notifier),
-          ),
+              // 2. TOP STATUS BAR (Glassmorphism)
+              Positioned(
+                top: 16,
+                left: 20,
+                right: 20,
+                child: _buildStatusHeader(context, notifier),
+              ),
 
-          // 3. COMPACT BOTTOM PANEL
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _buildBottomPanel(context, notifier, theme),
+              // 3. COMPACT BOTTOM PANEL
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: _buildBottomPanel(context, notifier, theme),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -90,14 +97,15 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
   Widget _buildStatusHeader(BuildContext context, MapNotifier notifier) {
     bool inArea = notifier.isEnableSubmitButton;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // Blur diperkuat
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
           decoration: BoxDecoration(
-            color: (inArea ? Colors.green : Colors.redAccent).withOpacity(0.85),
-            borderRadius: BorderRadius.circular(20),
+            color: (inArea ? Colors.green : Colors.redAccent).withOpacity(0.8),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white24),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -108,14 +116,21 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
                       : Icons.location_off_rounded,
                   color: Colors.white,
                   size: 20),
-              const SizedBox(width: 10),
-              Text(
-                inArea ? "ZONA TERDETEKSI" : "DI LUAR RADIUS",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  letterSpacing: 1.1,
+              const SizedBox(width: 12),
+              // FIX: Pakai Expanded + FittedBox agar teks status tidak overflow di HP kecil
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    inArea ? "ZONA TERDETEKSI" : "DI LUAR RADIUS",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -129,19 +144,23 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
       BuildContext context, MapNotifier notifier, ThemeData theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: const BoxDecoration(
+      margin:
+          const EdgeInsets.all(20), // Memberikan margin agar terlihat melayang
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        borderRadius: BorderRadius.circular(32), // Lebih membulat (Premium)
         boxShadow: [
           BoxShadow(
-              color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 25,
+              offset: const Offset(0, 10))
         ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // INFO ROW (Horizontal Layout - Hemat Ruang)
+          // INFO ROW
           Row(
             children: [
               _buildCompactInfo(context, Icons.business_rounded, "KANTOR",
@@ -152,12 +171,12 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // BUTTON KIRIM (Lebih Slim)
+          // BUTTON KIRIM
           SizedBox(
             width: double.infinity,
-            height: 54,
+            height: 56,
             child: ElevatedButton(
               onPressed: notifier.isEnableSubmitButton && !notifier.isLoading
                   ? () => notifier.send()
@@ -165,20 +184,21 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey.shade200,
+                disabledBackgroundColor: Colors.grey.shade100,
+                disabledForegroundColor: Colors.grey.shade400,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(18)),
                 elevation: 0,
               ),
               child: notifier.isLoading
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 24,
+                      height: 24,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
+                          color: Colors.white, strokeWidth: 2.5))
                   : const Text("KIRIM PRESENSI SEKARANG",
                       style: TextStyle(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w900,
                           fontSize: 14,
                           letterSpacing: 0.5)),
             ),
@@ -192,16 +212,16 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
       BuildContext context, IconData icon, String label, String value) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.grey.shade100),
         ),
         child: Row(
           children: [
             Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,14 +231,18 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
                       style: const TextStyle(
                           fontSize: 9,
                           color: Colors.grey,
-                          fontWeight: FontWeight.bold)),
-                  Text(value,
-                      style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                          fontWeight: FontWeight.w900)),
+                  // FIX: FittedBox agar nama kantor yang panjang tidak terpotong kasar
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(value,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.black87),
+                        maxLines: 1),
+                  ),
                 ],
               ),
             ),

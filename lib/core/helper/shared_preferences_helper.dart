@@ -4,17 +4,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SharedPreferencesHelper {
   static SharedPreferences? _prefsInstance;
 
-  // Singleton pattern: Hanya panggil getInstance() SATU KALI selama aplikasi berjalan
+  // Singleton pattern
   static Future<SharedPreferences> _getPrefs() async {
-    if (_prefsInstance == null) {
-      _prefsInstance = await SharedPreferences.getInstance();
-    }
+    _prefsInstance ??= await SharedPreferences.getInstance();
     return _prefsInstance!;
   }
+
+  // --- SETTERS ---
 
   static Future<bool> setInt(String key, int value) async {
     final pref = await _getPrefs();
     return await pref.setInt(key, value);
+  }
+
+  static Future<bool> setBool(String key, bool value) async {
+    final pref = await _getPrefs();
+    final result = await pref.setBool(key, value);
+    if (kDebugMode) {
+      debugPrint("STORAGE_HELPER: Menulis [$key] -> $value | Sukses: $result");
+    }
+    return result;
   }
 
   static Future<bool> setString(String key, String? value) async {
@@ -29,36 +38,50 @@ class SharedPreferencesHelper {
     final result = await pref.setString(key, value);
 
     if (kDebugMode) {
-      // Jangan print value jika itu adalah token/password demi keamanan
       if (key == 'auth_token' || key == 'password') {
-        debugPrint("STORAGE_HELPER_SYNC: Berhasil menulis [$key] -> ***HIDDEN*** | Sukses: $result");
+        debugPrint(
+            "STORAGE_HELPER_SYNC: Berhasil menulis [$key] -> ***HIDDEN*** | Sukses: $result");
       } else {
-        debugPrint("STORAGE_HELPER_SYNC: Berhasil menulis [$key] -> $value | Sukses: $result");
+        debugPrint(
+            "STORAGE_HELPER_SYNC: Berhasil menulis [$key] -> $value | Sukses: $result");
       }
     }
-    
+
     return result;
   }
+
+  // --- GETTERS ---
 
   static Future<int?> getInt(String key) async {
     final pref = await _getPrefs();
     return pref.getInt(key);
   }
 
+  static Future<bool?> getBool(String key) async {
+    final pref = await _getPrefs();
+    final value = pref.getBool(key);
+    if (kDebugMode) {
+      debugPrint("STORAGE_HELPER: Membaca [$key] -> $value");
+    }
+    return value;
+  }
+
   static Future<String?> getString(String key) async {
     final pref = await _getPrefs();
     final value = pref.getString(key);
-    
+
     if (kDebugMode) {
       if (key == 'auth_token' || key == 'password') {
-         debugPrint("STORAGE_HELPER: Membaca [$key] -> ***HIDDEN***");
+        debugPrint("STORAGE_HELPER: Membaca [$key] -> ***HIDDEN***");
       } else {
-         debugPrint("STORAGE_HELPER: Membaca [$key] -> $value");
+        debugPrint("STORAGE_HELPER: Membaca [$key] -> $value");
       }
     }
-    
+
     return value;
   }
+
+  // --- ACTIONS ---
 
   static Future<bool> remove(String key) async {
     final pref = await _getPrefs();

@@ -22,12 +22,14 @@ class DetailAttendanceNotifier extends AppProvider {
   int _selectedYear = 2026;
   List<AttendanceEntity> _listAttendance = [];
   bool _isPusat = false;
+  bool _isWfa = false; // <-- TAMBAHAN: Variabel untuk status Dinas Luar
 
   // --- Getters ---
   int get selectedMonth => _selectedMonth;
   int get selectedYear => _selectedYear;
   List<AttendanceEntity> get listAttendance => _listAttendance;
   bool get isPusat => _isPusat;
+  bool get isWfa => _isWfa; // <-- TAMBAHAN: Getter agar bisa dibaca di UI
 
   // List dropdown entries (Static)
   final List<DropdownMenuEntry<int>> monthListDropdown = [
@@ -77,6 +79,17 @@ class DetailAttendanceNotifier extends AppProvider {
         await SharedPreferencesHelper.getString(AppPreferences.OFFICE_NAME) ??
             "";
     _isPusat = office.toLowerCase().contains("pusat");
+
+    // TAMBAHAN: Ambil data status WFA (Dinas Luar) dari SharedPreferences
+    // Catatan: Pastikan Anda menggunakan Key yang sesuai (misal AppPreferences.IS_WFA).
+    // Jika bentuknya boolean, gunakan getBool. Jika String, gunakan getString lalu parsing.
+    try {
+      _isWfa = await SharedPreferencesHelper.getBool('IS_WFA') ?? false;
+    } catch (e) {
+      // Fallback jika terjadi error parsing
+      _isWfa = false;
+    }
+
     notifyListeners();
   }
 

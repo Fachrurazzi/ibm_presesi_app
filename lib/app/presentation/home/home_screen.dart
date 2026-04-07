@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/face_recognition/face_recognition_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
@@ -24,42 +25,46 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
 
     if (homeProv.isEmulator) {
       return Scaffold(
-        body: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.phonelink_erase_rounded,
-                  size: 100, color: Colors.red),
-              const SizedBox(height: 24),
-              const Text("AKSES DIBLOKIR",
-                  style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 22,
-                      color: Colors.red)),
-              const SizedBox(height: 12),
-              const Text(
-                  "Akun Anda ditangguhkan otomatis karena terdeteksi penggunaan Emulator atau Fake GPS.\n\nDemi keamanan data PT INTIBOGA MANDIRI, silakan gunakan smartphone asli untuk melakukan presensi.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.black54, fontSize: 14, height: 1.5)),
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: () => exit(0),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15))),
-                  child: const Text("TUTUP APLIKASI",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              )
-            ],
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.phonelink_erase_rounded,
+                      size: 100, color: Colors.red),
+                  const SizedBox(height: 24),
+                  const Text("AKSES DIBLOKIR",
+                      style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 22,
+                          color: Colors.red)),
+                  const SizedBox(height: 12),
+                  const Text(
+                      "Akun Anda ditangguhkan otomatis karena terdeteksi penggunaan Emulator atau Fake GPS.\n\nDemi keamanan data PT INTIBOGA MANDIRI, silakan gunakan smartphone asli untuk melakukan presensi.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.black54, fontSize: 14, height: 1.5)),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: () => exit(0),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15))),
+                      child: const Text("TUTUP APLIKASI",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  )
+                ],
+              ),
+            ),
           ),
         ),
       );
@@ -70,17 +75,23 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => homeProv.refreshData(),
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: _buildHeader(context, homeProv)),
-              SliverToBoxAdapter(child: _buildPresenceCard(context, homeProv)),
-              SliverToBoxAdapter(
-                  child: _buildEmployeeInfoCards(context, homeProv)),
-              SliverToBoxAdapter(child: _buildHistoryHeader(context)),
-              _buildHistoryList(context, homeProv),
-              const SliverToBoxAdapter(child: SizedBox(height: 30)),
-            ],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(child: _buildHeader(context, homeProv)),
+                  SliverToBoxAdapter(
+                      child: _buildPresenceCard(context, homeProv)),
+                  SliverToBoxAdapter(
+                      child: _buildEmployeeInfoCards(context, homeProv)),
+                  SliverToBoxAdapter(child: _buildHistoryHeader(context)),
+                  _buildHistoryList(context, homeProv),
+                  const SliverToBoxAdapter(child: SizedBox(height: 30)),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -90,12 +101,12 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   Widget _buildHeader(BuildContext context, HomeNotifier prov) {
     final hour = DateTime.now().hour;
     String greeting = hour < 11
-        ? 'Selamat Pagi'
+        ? 'Selamat Pagi 🌤️'
         : hour < 15
-            ? 'Selamat Siang'
+            ? 'Selamat Siang ☀️'
             : hour < 18
-                ? 'Selamat Sore'
-                : 'Selamat Malam';
+                ? 'Selamat Sore 🌇'
+                : 'Selamat Malam 🌙';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
@@ -105,10 +116,8 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
             onTap: () => _onPressProfile(context),
             child: (prov.photoUrl != null && prov.photoUrl!.isNotEmpty)
                 ? CachedNetworkImage(
-                    // PENTING: Gunakan ValueKey agar widget refresh saat URL berubah
                     key: ValueKey(prov.photoUrl),
                     imageUrl: prov.photoUrl!,
-                    // Biar transisi mulus, gambar lama nggak langsung hilang jadi putih
                     imageBuilder: (context, imageProvider) => Container(
                       width: 56,
                       height: 56,
@@ -171,18 +180,22 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                     overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildBadge(context, prov.positionName),
                     if (prov.schedule?.office != null) ...[
                       const SizedBox(width: 8),
-                      const Icon(Icons.location_on_rounded,
-                          size: 12, color: Colors.grey),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 2),
+                        child: Icon(Icons.location_on_rounded,
+                            size: 12, color: Colors.grey),
+                      ),
                       const SizedBox(width: 2),
-                      Flexible(
+                      Expanded(
                           child: Text(prov.schedule!.office.name,
+                              maxLines: 2,
                               style: const TextStyle(
-                                  fontSize: 11, color: Colors.grey),
-                              overflow: TextOverflow.ellipsis)),
+                                  fontSize: 11, color: Colors.grey))),
                     ],
                   ],
                 ),
@@ -231,11 +244,15 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildTimeItem(
-                  "Masuk", prov.attendanceToday?.startTime ?? '--:--'),
+              Flexible(
+                child: _buildTimeItem(
+                    "Masuk", prov.attendanceToday?.startTime ?? '--:--'),
+              ),
               Container(width: 1, height: 40, color: Colors.white24),
-              _buildTimeItem(
-                  "Keluar", prov.attendanceToday?.endTime ?? '--:--'),
+              Flexible(
+                child: _buildTimeItem(
+                    "Keluar", prov.attendanceToday?.endTime ?? '--:--'),
+              ),
             ],
           ),
           const SizedBox(height: 32),
@@ -248,50 +265,44 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   Widget _buildEmployeeInfoCards(BuildContext context, HomeNotifier prov) {
     final currency =
         NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-    final String officeName = prov.schedule?.office.name.toLowerCase() ?? "";
-    bool isDalamKota =
-        officeName.contains("banjarmasin") || officeName.contains("pusat");
-    bool isLate = prov.attendanceToday?.isLate ?? false;
-    bool isDinasLuar = prov.schedule?.isWfa ?? false;
+    final bool isWfa = prov.schedule?.isWfa ?? false;
+    final bool isPusat =
+        prov.schedule?.office.name.toLowerCase().contains("pusat") ?? false;
+
+    // Logika: Jika di pusat tapi sedang WFA, maka dapat Uang Makan (Bukan Catering)
+    final bool dapatCatering = isPusat && !isWfa;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSmallInfoItem(context,
-                  icon: isDalamKota
-                      ? Icons.restaurant_rounded
-                      : Icons.payments_rounded,
-                  label: isDalamKota ? "Fasilitas Makan" : "Uang Makan",
-                  subLabel: isDalamKota ? "Harian" : "Bulan Ini",
-                  value: isDalamKota
-                      ? (isLate ? "Catering Hangus" : "Catering Rantangan")
-                      : currency.format(prov.totalLunchMoney),
-                  color: (isDalamKota && isLate) ? Colors.red : Colors.green),
+              _buildSmallInfoItem(
+                context,
+                icon: dapatCatering
+                    ? Icons.restaurant_rounded
+                    : Icons.payments_rounded,
+                label: dapatCatering ? "Fasilitas Makan" : "Uang Makan",
+                value: dapatCatering
+                    ? (prov.attendanceToday?.isLate ?? false
+                        ? "Catering Hangus"
+                        : "Catering Rantangan")
+                    : currency.format(prov.totalLunchMoney),
+                color: dapatCatering ? Colors.blue : Colors.green,
+              ),
               const SizedBox(width: 12),
-              _buildSmallInfoItem(context,
-                  icon: Icons.beach_access_rounded,
-                  label: "Sisa Cuti",
-                  subLabel: "Tahunan",
-                  value: "${prov.leaveQuota} Hari",
-                  color: Colors.orange,
-                  onTap: () => _onPressLeave(context)),
+              _buildSmallInfoItem(
+                context,
+                icon: Icons.beach_access_rounded,
+                label: "Sisa Cuti",
+                value: "${prov.leaveQuota} Hari",
+                color: Colors.orange,
+                onTap: () => Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => LeaveScreen())),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          _buildSmallInfoItem(context,
-              icon: isDinasLuar
-                  ? Icons.local_shipping_rounded
-                  : Icons.location_city_rounded,
-              label: "Status Penugasan",
-              value: isDinasLuar
-                  ? "Dinas Luar Kota (${prov.schedule?.office.name ?? 'Cabang'})"
-                  : "Tugas Dalam Kota (Banjarmasin)",
-              color: isDinasLuar ? Colors.blue : Colors.purple,
-              isFullWidth: true),
         ],
       ),
     );
@@ -327,23 +338,29 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                  Text(label,
-                      style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.black54,
-                          fontWeight: FontWeight.bold)),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(label,
+                        style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold)),
+                  ),
                   if (subLabel != null)
                     Text(subLabel,
                         style: TextStyle(
                             fontSize: 8, color: Colors.grey.shade500)),
                   const SizedBox(height: 2),
-                  Text(value,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          color: Colors.black87),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis)
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(value,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.black87)),
+                  )
                 ])),
           ],
         ),
@@ -354,13 +371,42 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
 
   Widget _buildHistoryList(BuildContext context, HomeNotifier prov) {
     if (prov.listAttendanceThisMonth.isEmpty) {
-      return const SliverToBoxAdapter(
-          child: Center(
-              child: Padding(
-                  padding: EdgeInsets.all(50),
-                  child: Text("Belum ada riwayat",
-                      style: TextStyle(color: Colors.grey)))));
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color:
+                      Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.event_busy_rounded,
+                    size: 64,
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+              ),
+              const SizedBox(height: 20),
+              const Text("Belum Ada Riwayat",
+                  style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      color: Colors.black87)),
+              const SizedBox(height: 8),
+              const Text(
+                  "Catatan presensi Anda bulan ini masih kosong.\nJangan lupa absen ya!",
+                  textAlign: TextAlign.center,
+                  style:
+                      TextStyle(color: Colors.grey, fontSize: 13, height: 1.5)),
+            ],
+          ),
+        ),
+      );
     }
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       sliver: SliverList(
@@ -372,11 +418,15 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
               prov.schedule?.office.name.toLowerCase() ?? "";
           bool isDalamKota = officeName.contains("banjarmasin") ||
               officeName.contains("pusat");
+          bool isDinasLuar = prov.schedule?.isWfa ?? false;
+
+          // LOGIKA BARU DI RIWAYAT
+          bool isDapatCatering = isDalamKota && !isDinasLuar;
 
           String lunchStatus = "";
           Color statusColor = Colors.green;
 
-          if (isDalamKota) {
+          if (isDapatCatering) {
             if (isLate) {
               lunchStatus = "Catering Hangus (Telat)";
               statusColor = Colors.red;
@@ -391,11 +441,20 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
           }
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(20)),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                )
+              ],
+              border: Border.all(color: Colors.grey.shade100, width: 1),
+            ),
             child: Row(children: [
               _buildDateBox(context, item.date!),
               const SizedBox(width: 16),
@@ -403,43 +462,55 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text(
-                        "${item.startTime ?? '--:--'} - ${item.endTime ?? '--:--'}",
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Row(children: [
-                      Icon(
-                          isDalamKota
-                              ? Icons.restaurant_rounded
-                              : Icons.fastfood_rounded,
-                          size: 12,
-                          color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(lunchStatus,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: statusColor,
-                                fontWeight: FontWeight.bold)),
-                      )
-                    ])
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                          "${item.startTime ?? '--:--'} - ${item.endTime ?? '--:--'}",
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w900, fontSize: 15)),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                                isDapatCatering
+                                    ? Icons.restaurant_rounded
+                                    : Icons.fastfood_rounded,
+                                size: 10,
+                                color: statusColor),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(lunchStatus,
+                                maxLines: 2,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: statusColor,
+                                    fontWeight: FontWeight.bold)),
+                          )
+                        ])
                   ])),
               Column(
                 children: [
-                  Icon(
-                      isLate
-                          ? Icons.warning_amber_rounded
-                          : Icons.check_circle_rounded,
-                      color: isLate ? Colors.orange : Colors.green,
-                      size: 22),
+                  Icon(isLate ? Icons.warning_rounded : Icons.verified_rounded,
+                      color: isLate ? Colors.orange : Colors.green, size: 26),
                   if (isLate)
-                    const Text("Telat",
-                        style: TextStyle(
-                            fontSize: 8,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.bold))
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text("Terlambat",
+                          style: TextStyle(
+                              fontSize: 9,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.w900)),
+                    )
                 ],
               )
             ]),
@@ -487,11 +558,14 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
               color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)));
 
   Widget _buildTimeItem(String label, String time) => Column(children: [
-        Text(time,
-            style: const TextStyle(
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.w900)),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(time,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900)),
+        ),
         Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11))
       ]);
 
@@ -533,10 +607,13 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   Widget _buildHistoryHeader(BuildContext context) => Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Expanded(
-          child: Text("Riwayat Bulan Ini",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              overflow: TextOverflow.ellipsis),
+        const Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text("Riwayat Bulan Ini",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
         ),
         TextButton(
             onPressed: () => _onPressSeeAll(context),
@@ -545,15 +622,14 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
 
   void _onPressProfile(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen()));
-    //     .then((_) {
-    //   // Re-trigger sinkronisasi saat balik dari Profile
-    //   context.read<HomeNotifier>().init();
-    // });
   }
 
-  void _onPressCreateAttendance(BuildContext context) => Navigator.push(
-          context, MaterialPageRoute(builder: (_) => FaceRecognitionScreen()))
-      .then((_) => notifier.init());
+  void _onPressCreateAttendance(BuildContext context) {
+    HapticFeedback.lightImpact(); // Getaran halus saat tombol ditekan
+    Navigator.push(
+            context, MaterialPageRoute(builder: (_) => FaceRecognitionScreen()))
+        .then((_) => notifier.init());
+  }
 
   void _onPressSeeAll(BuildContext context) => Navigator.push(
       context, MaterialPageRoute(builder: (_) => DetailAttendanceScreen()));

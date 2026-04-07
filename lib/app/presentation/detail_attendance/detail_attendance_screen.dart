@@ -31,26 +31,33 @@ class DetailAttendanceScreen
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          _buildFilterSection(context, prov),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(30)),
+      body: Center(
+        // KUNCI RESPONSIVE: Batasi lebar maksimal halaman agar rapi di Tablet
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            children: [
+              _buildFilterSection(context, prov),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: prov.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : prov.listAttendance.isEmpty
+                          ? _buildEmptyState(
+                              context) // Kirim context untuk Theme
+                          : _buildAttendanceList(prov),
+                ),
               ),
-              child: prov.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : prov.listAttendance.isEmpty
-                      ? _buildEmptyState()
-                      : _buildAttendanceList(prov),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -84,7 +91,7 @@ class DetailAttendanceScreen
             ),
           ),
           const SizedBox(width: 8),
-          // DROPDOWN TAHUN (Flex 2 - Disesuaikan agar tidak terpotong)
+          // DROPDOWN TAHUN (Flex 2)
           Expanded(
             flex: 2,
             child: DropdownMenu<int>(
@@ -125,11 +132,10 @@ class DetailAttendanceScreen
   }
 
   Widget _buildAttendanceList(DetailAttendanceNotifier prov) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(20),
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
       physics: const BouncingScrollPhysics(),
       itemCount: prov.listAttendance.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) =>
           _buildPresenceItem(context, prov, prov.listAttendance[index]),
     );
@@ -140,11 +146,17 @@ class DetailAttendanceScreen
     final theme = Theme.of(context);
     final isLate = item.isLate ?? false;
 
-    // LOGIKA RANTANGAN / UANG MAKAN
+    // Asumsikan prov.isWfa sudah dibuat di Notifier.
+    // Jika namanya beda, ganti variabel ini.
+    bool isDinasLuar = prov.isWfa ?? false;
+
+    // KUNCI LOGIKA BARU: Dapat catering JIKA di Pusat DAN BUKAN dinas luar
+    bool isDapatCatering = prov.isPusat && !isDinasLuar;
+
     String infoMakan = "";
     Color statusColor = Colors.green;
 
-    if (prov.isPusat) {
+    if (isDapatCatering) {
       infoMakan = isLate ? "Rantangan Hangus (Telat)" : "Fasilitas Rantangan";
       statusColor = isLate ? Colors.red : Colors.blue;
     } else {
@@ -152,17 +164,21 @@ class DetailAttendanceScreen
       statusColor = (item.lunchMoney ?? 0) == 0 ? Colors.red : Colors.green;
     }
 
+    // DESAIN CARD SAMA DENGAN HOME SCREEN
     return Container(
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          )
         ],
+        border: Border.all(color: Colors.grey.shade100, width: 1),
       ),
       child: Row(
         children: [
@@ -171,8 +187,9 @@ class DetailAttendanceScreen
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.05),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade100),
             ),
             child: Center(
               child: Text(
@@ -186,50 +203,82 @@ class DetailAttendanceScreen
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           // INFO DETAIL
+          // Di dalam _buildPresenceItem
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
                     "${item.startTime ?? '--:--'} - ${item.endTime ?? '--:--'}",
                     style: const TextStyle(
-                        fontWeight: FontWeight.w900, fontSize: 15)),
+                        fontWeight: FontWeight.w900, fontSize: 15),
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  infoMakan,
+                  infoMakan, // Sudah otomatis menyesuaikan Pusat/Cabang/WFA
                   style: TextStyle(
                       fontSize: 11,
                       color: statusColor,
                       fontWeight: FontWeight.bold),
+                  maxLines: 2, // Izinkan turun baris jika kepanjangan
                 ),
               ],
             ),
           ),
           // ICON STATUS
-          Icon(
-              isLate ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
-              color: isLate ? Colors.orange : Colors.green,
-              size: 26),
+          Column(
+            children: [
+              Icon(isLate ? Icons.warning_rounded : Icons.verified_rounded,
+                  color: isLate ? Colors.orange : Colors.green, size: 26),
+              if (isLate)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text("Terlambat",
+                      style: TextStyle(
+                          fontSize: 9,
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w900)),
+                )
+            ],
+          )
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
+  Widget _buildEmptyState(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_toggle_off_rounded,
-              size: 70, color: Colors.grey.shade200),
-          const SizedBox(height: 16),
-          const Text("Tidak ada riwayat presensi",
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.event_busy_rounded,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+          ),
+          const SizedBox(height: 20),
+          const Text("Tidak Ada Riwayat",
               style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14)),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  color: Colors.black87)),
+          const SizedBox(height: 8),
+          const Text(
+              "Belum ada data presensi untuk\nbulan dan tahun yang dipilih.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.5)),
         ],
       ),
     );

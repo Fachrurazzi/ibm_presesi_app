@@ -67,11 +67,31 @@ dev_dependencies:
   build_runner: ^2.4.9
   freezed: ^2.5.2
   json_serializable: ^6.8.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
-
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo_ibm.png"
+  min_sdk_android: 21 # sesuai dengan min sdk projek Anda
+  adaptive_icon_background: "#FFFFFF" # Warna background icon (Putih)
+  adaptive_icon_foreground: "assets/images/logo_ibm.png"
 # The following section is specific to Flutter packages.
+
+flutter_native_splash:
+  color: "#FFFFFF" # Background putih bersih
+  image: "assets/images/logo_ibm.png"
+  branding: "assets/images/logo_ibm.png" # Opsional: jika ingin ada logo Indofood di bawah
+
+  android_12:
+    image: "assets/images/logo_ibm.png"
+    color: "#FFFFFF"
+
+  fullscreen: true
+
 flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

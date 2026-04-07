@@ -1,7 +1,10 @@
+import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/presentation/face_recognition/face_recognition_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/map/map_screen.dart';
 import 'package:ibm_presensi_app/core/widget/app_widget.dart';
+import 'package:provider/provider.dart';
 
 class FaceRecognitionScreen
     extends AppWidget<FaceRecognitionNotifier, void, void> {
@@ -10,6 +13,7 @@ class FaceRecognitionScreen
   @override
   void checkVariableAfterUi(BuildContext context) {
     if (notifier.percentMatch >= 75) {
+      // Jeda 1.5 detik agar user bisa melihat status "Berhasil"
       Future.delayed(const Duration(milliseconds: 1500), () async {
         if (context.mounted) {
           final result = await Navigator.push(
@@ -39,15 +43,16 @@ class FaceRecognitionScreen
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message,
-              style: const TextStyle(fontWeight: FontWeight.w600)),
+              style:
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           backgroundColor: color,
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.only(
-              bottom: MediaQuery.of(context).size.height - 100,
-              left: 20,
-              right: 20),
+              bottom: MediaQuery.of(context).size.height - 120,
+              left: 24,
+              right: 24),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
       );
     });
@@ -56,20 +61,29 @@ class FaceRecognitionScreen
   @override
   Widget bodyBuild(BuildContext context) {
     final theme = Theme.of(context);
+    final notifier = context.watch<FaceRecognitionNotifier>();
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                size: 18, color: Colors.black87),
-            onPressed: () => Navigator.pop(context),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(50),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white24)),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 16, color: Colors.black87),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
           ),
         ),
       ),
@@ -77,10 +91,10 @@ class FaceRecognitionScreen
         children: [
           _buildBackgroundDecor(theme),
           SafeArea(
-            // --- FIX OVERFLOW DISINI ---
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   child: ConstrainedBox(
                     constraints:
                         BoxConstraints(minHeight: constraints.maxHeight),
@@ -92,17 +106,16 @@ class FaceRecognitionScreen
                           Column(
                             children: [
                               const SizedBox(height: 20),
-                              _buildHeader(theme),
-                              const SizedBox(
-                                  height: 30), // Dikurangi sedikit agar muat
-                              _buildFaceFrame(theme),
-                              const SizedBox(height: 30),
-                              _buildStatusIndicator(theme),
+                              _buildHeader(notifier),
+                              const SizedBox(height: 40),
+                              _buildFaceFrame(theme, notifier),
+                              const SizedBox(height: 40),
+                              _buildStatusIndicator(theme, notifier),
                             ],
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 24, top: 20),
-                            child: _buildActionButton(theme),
+                            padding: const EdgeInsets.only(bottom: 30, top: 20),
+                            child: _buildActionButton(theme, notifier),
                           ),
                         ],
                       ),
@@ -122,12 +135,12 @@ class FaceRecognitionScreen
       top: -100,
       right: -100,
       child: CircleAvatar(
-          radius: 150,
-          backgroundColor: theme.colorScheme.primary.withOpacity(0.05)),
+          radius: 180,
+          backgroundColor: theme.colorScheme.primary.withOpacity(0.04)),
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeader(FaceRecognitionNotifier notifier) {
     return Column(
       children: [
         Text(
@@ -135,23 +148,28 @@ class FaceRecognitionScreen
               ? "Pendaftaran Wajah"
               : "Verifikasi Wajah",
           style: const TextStyle(
-              fontWeight: FontWeight.w900, fontSize: 24, letterSpacing: -0.5),
+              fontWeight: FontWeight.w900, fontSize: 26, letterSpacing: -0.5),
         ),
-        const SizedBox(height: 8),
-        Text(
-          notifier.isRegistrationMode
-              ? "Ambil foto master untuk identitas biometrik."
-              : "Posisikan wajah Anda tepat di tengah lingkaran.",
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.black54, fontSize: 14),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            notifier.isRegistrationMode
+                ? "Ambil foto master wajah Anda untuk identitas biometrik."
+                : "Posisikan wajah Anda tepat di tengah lingkaran cahaya.",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                color: Colors.black54, fontSize: 13, height: 1.5),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildFaceFrame(ThemeData theme) {
+  Widget _buildFaceFrame(ThemeData theme, FaceRecognitionNotifier notifier) {
     final bool isError = notifier.percentMatch == -1.0;
     final bool isSuccess = notifier.percentMatch >= 75;
+
     final Color borderColor = isError
         ? Colors.redAccent
         : isSuccess
@@ -162,117 +180,160 @@ class FaceRecognitionScreen
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // Outer Glow
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 500),
+            width: 280,
+            height: 280,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                    color: borderColor.withOpacity(0.15),
+                    blurRadius: 40,
+                    spreadRadius: 10)
+              ],
+            ),
+          ),
+          // Main Frame
           AnimatedContainer(
             duration: const Duration(milliseconds: 400),
-            width: 270,
-            height: 270,
+            width: 260,
+            height: 260,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: borderColor, width: 6),
-              boxShadow: [
-                BoxShadow(
-                    color: borderColor.withOpacity(0.2),
-                    blurRadius: 30,
-                    spreadRadius: 5)
-              ],
             ),
             child: ClipOval(
               child: Container(
-                color: Colors.white,
+                color: Colors.grey.shade50,
                 child: notifier.currentImage ??
                     notifier.basePhotoWidget ??
-                    Icon(Icons.face_rounded,
-                        size: 120, color: Colors.grey.shade200),
+                    Icon(Icons.face_retouching_natural_rounded,
+                        size: 100, color: Colors.grey.shade200),
               ),
             ),
           ),
-          // Animasi Laser hanya muncul saat scan
+          // Laser Scanner
           if (notifier.isLoading ||
               (notifier.percentMatch == 0 && notifier.currentImage != null))
-            const ScanningLaser(size: 250),
+            const ScanningLaser(size: 260),
         ],
       ),
     );
   }
 
-  Widget _buildStatusIndicator(ThemeData theme) {
+  Widget _buildStatusIndicator(
+      ThemeData theme, FaceRecognitionNotifier notifier) {
     if (notifier.isLoading) {
-      return const Column(
+      return Column(
         children: [
-          SizedBox(
-              width: 24,
-              height: 24,
+          const SizedBox(
+              width: 28,
+              height: 28,
               child: CircularProgressIndicator(strokeWidth: 3)),
-          SizedBox(height: 16),
-          Text("Memproses wajah...",
-              style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 20),
+          Text("Memproses biometrik...",
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary)),
         ],
       );
     }
 
     if (notifier.percentMatch == -1.0) {
-      return Column(
+      return const Column(
         children: [
-          const Icon(Icons.cancel_rounded, color: Colors.red, size: 40),
-          const SizedBox(height: 8),
-          const Text("VERIFIKASI GAGAL",
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w900)),
-          Text(notifier.errorMessage,
-              style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 44),
+          SizedBox(height: 8),
+          Text("VERIFIKASI GAGAL",
+              style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16)),
+          Text("Wajah tidak cocok, silakan coba lagi",
+              style: TextStyle(fontSize: 12, color: Colors.black54)),
         ],
       );
     }
 
     if (notifier.percentMatch >= 75) {
-      return const Column(
+      return Column(
         children: [
-          Icon(Icons.check_circle_rounded, color: Colors.green, size: 40),
-          SizedBox(height: 8),
-          Text("Wajah Terverifikasi!",
-              style:
-                  TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+                color: Colors.green, shape: BoxShape.circle),
+            child:
+                const Icon(Icons.check_rounded, color: Colors.white, size: 30),
+          ),
+          const SizedBox(height: 12),
+          const Text("VERIFIKASI BERHASIL",
+              style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16)),
         ],
       );
     }
 
-    return Text("Siap memindai wajah",
-        style: TextStyle(color: Colors.grey.shade400));
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade400),
+        const SizedBox(width: 6),
+        Text("Siap memindai wajah",
+            style: TextStyle(
+                color: Colors.grey.shade400,
+                fontWeight: FontWeight.w600,
+                fontSize: 12)),
+      ],
+    );
   }
 
-  Widget _buildActionButton(ThemeData theme) {
+  Widget _buildActionButton(ThemeData theme, FaceRecognitionNotifier notifier) {
     if (!notifier.isLocationGranted) {
-      return _buttonTemplate("AKTIFKAN LOKASI", Icons.location_on,
-          Colors.orange.shade800, () => notifier.requestLocationPermission());
+      return _buttonTemplate(
+          "AKTIFKAN LOKASI",
+          Icons.location_on_rounded,
+          Colors.orange.shade800,
+          () => notifier.requestLocationPermission(),
+          notifier);
     }
 
     return _buttonTemplate(
       notifier.isRegistrationMode
           ? "AMBIL FOTO MASTER"
-          : (notifier.percentMatch == -1.0 ? "COBA LAGI" : "MULAI SCAN"),
+          : (notifier.percentMatch == -1.0
+              ? "ULANGI SCAN"
+              : "MULAI SCAN WAJAH"),
       notifier.percentMatch == -1.0
-          ? Icons.replay_rounded
-          : Icons.camera_alt_rounded,
+          ? Icons.refresh_rounded
+          : Icons.face_unlock_rounded,
       theme.colorScheme.primary,
       () => notifier.getCurrentPhoto(),
+      notifier,
     );
   }
 
-  Widget _buttonTemplate(
-      String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buttonTemplate(String label, IconData icon, Color color,
+      VoidCallback onTap, FaceRecognitionNotifier notifier) {
     return SizedBox(
       width: double.infinity,
-      height: 60,
+      height: 58,
       child: ElevatedButton.icon(
         onPressed: notifier.isLoading ? null : onTap,
-        icon: Icon(icon),
+        icon: Icon(icon, size: 20),
         label: Text(label,
             style: const TextStyle(
-                fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                fontWeight: FontWeight.w900, letterSpacing: 1.1, fontSize: 14)),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: color.withOpacity(0.5),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          elevation: 0,
         ),
       ),
     );
@@ -282,7 +343,6 @@ class FaceRecognitionScreen
   AppBar? appBarBuild(BuildContext context) => null;
 }
 
-// --- WIDGET ANIMASI LASER ---
 class ScanningLaser extends StatefulWidget {
   final double size;
   const ScanningLaser({super.key, required this.size});
@@ -297,9 +357,9 @@ class _ScanningLaserState extends State<ScanningLaser>
   @override
   void initState() {
     super.initState();
-    _ctrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 2))
-          ..repeat(reverse: true);
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 1500, milliseconds: 500))
+      ..repeat(reverse: true);
   }
 
   @override
@@ -314,21 +374,21 @@ class _ScanningLaserState extends State<ScanningLaser>
       animation: _ctrl,
       builder: (context, child) {
         return Positioned(
-          top: _ctrl.value * (widget.size - 20),
+          top: _ctrl.value * (widget.size - 10),
           child: Container(
-            width: widget.size,
-            height: 4,
+            width: widget.size - 20,
+            height: 3,
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                    color: Colors.blue.withOpacity(0.4),
-                    blurRadius: 10,
+                    color: Colors.blue.withOpacity(0.6),
+                    blurRadius: 12,
                     spreadRadius: 2)
               ],
-              gradient: const LinearGradient(colors: [
-                Colors.transparent,
-                Colors.blue,
-                Colors.transparent
+              gradient: LinearGradient(colors: [
+                Colors.blue.withOpacity(0),
+                Colors.blue.withAlpha(200),
+                Colors.blue.withOpacity(0),
               ]),
             ),
           ),
