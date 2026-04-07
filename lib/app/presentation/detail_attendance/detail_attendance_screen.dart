@@ -38,6 +38,48 @@ class DetailAttendanceScreen
           child: Column(
             children: [
               _buildFilterSection(context, prov),
+              // --- PERBAIKAN TOTAL UANG MAKAN (ANTI-OVERFLOW) ---
+              if (!prov.isLoading && prov.listAttendance.isNotEmpty)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade100),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize
+                            .min, // Agar container mengecil pas dengan isi
+                        children: [
+                          Icon(Icons.account_balance_wallet_rounded,
+                              size: 16, color: Colors.green.shade700),
+                          const SizedBox(width: 8),
+                          // KUNCI PERBAIKAN: Gunakan Flexible agar Row tahu batas maksimalnya
+                          Flexible(
+                            child: FittedBox(
+                              // Mencegah teks pecah ke bawah, tapi mengecilkan font jika sempit
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                "Total Uang Makan: Rp ${prov.totalUangMakan}",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize:
+                                        13, // Sedikit dikecilkan agar lebih aman
+                                    color: Colors.green.shade700),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 8),
               Expanded(
                 child: Container(
@@ -69,7 +111,7 @@ class DetailAttendanceScreen
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // DROPDOWN BULAN (Flex 3)
+          // DROPDOWN BULAN
           Expanded(
             flex: 3,
             child: DropdownMenu<int>(
@@ -79,19 +121,25 @@ class DetailAttendanceScreen
               initialSelection: prov.selectedMonth,
               dropdownMenuEntries: prov.monthListDropdown,
               onSelected: (val) => prov.onMonthSelected(val),
-              textStyle: const TextStyle(fontSize: 13),
+              // Tambahkan menuStyle agar tidak terlalu lebar ke bawah
+              menuStyle: MenuStyle(
+                maximumSize:
+                    WidgetStateProperty.all(const Size.fromHeight(300)),
+              ),
+              textStyle:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               inputDecorationTheme: InputDecorationTheme(
                 filled: true,
                 fillColor: Colors.grey.shade100,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          // DROPDOWN TAHUN (Flex 2)
+          // DROPDOWN TAHUN
           Expanded(
             flex: 2,
             child: DropdownMenu<int>(
@@ -101,28 +149,38 @@ class DetailAttendanceScreen
               initialSelection: prov.selectedYear,
               dropdownMenuEntries: prov.yearListDropdown,
               onSelected: (val) => prov.onYearSelected(val),
-              textStyle: const TextStyle(fontSize: 13),
+              textStyle:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               inputDecorationTheme: InputDecorationTheme(
                 filled: true,
                 fillColor: Colors.grey.shade100,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          // SEARCH BUTTON
-          SizedBox(
+          // TOMBOL CARI DENGAN EFEK ELEVASI
+          Container(
             height: 48,
             width: 48,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4))
+              ],
+            ),
             child: IconButton.filled(
               onPressed: () => prov.search(),
               icon: const Icon(Icons.search_rounded, size: 22),
               style: IconButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(14)),
               ),
             ),
           ),
@@ -145,13 +203,7 @@ class DetailAttendanceScreen
       AttendanceEntity item) {
     final theme = Theme.of(context);
     final isLate = item.isLate ?? false;
-
-    // Asumsikan prov.isWfa sudah dibuat di Notifier.
-    // Jika namanya beda, ganti variabel ini.
-    bool isDinasLuar = prov.isWfa ?? false;
-
-    // KUNCI LOGIKA BARU: Dapat catering JIKA di Pusat DAN BUKAN dinas luar
-    bool isDapatCatering = prov.isPusat && !isDinasLuar;
+    bool isDapatCatering = (prov.isPusat ?? false) && !(prov.isWfa ?? false);
 
     String infoMakan = "";
     Color statusColor = Colors.green;
@@ -164,89 +216,61 @@ class DetailAttendanceScreen
       statusColor = (item.lunchMoney ?? 0) == 0 ? Colors.red : Colors.green;
     }
 
-    // DESAIN CARD SAMA DENGAN HOME SCREEN
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          )
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
         ],
-        border: Border.all(color: Colors.grey.shade100, width: 1),
       ),
       child: Row(
         children: [
-          // BOX TANGGAL
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Center(
-              child: Text(
-                DateTimeHelper.formatDateTimeFromString(
-                    dateTimeString: item.date ?? "", format: 'dd\nMMM'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary),
-              ),
-            ),
-          ),
+          _buildDateBox(context, item.date ?? ""),
           const SizedBox(width: 16),
-          // INFO DETAIL
-          // Di dalam _buildPresenceItem
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
                   child: Text(
-                    "${item.startTime ?? '--:--'} - ${item.endTime ?? '--:--'}",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w900, fontSize: 15),
-                  ),
+                      "${item.startTime ?? '--:--'} - ${item.endTime ?? '--:--'}",
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w900, fontSize: 15)),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  infoMakan, // Sudah otomatis menyesuaikan Pusat/Cabang/WFA
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: statusColor,
-                      fontWeight: FontWeight.bold),
-                  maxLines: 2, // Izinkan turun baris jika kepanjangan
+                // Gunakan Row + Flexible agar teks "Rantangan Hangus" tidak Overflow
+                Row(
+                  children: [
+                    Icon(
+                        isDapatCatering
+                            ? Icons.restaurant_rounded
+                            : Icons.payments_rounded,
+                        size: 12,
+                        color: statusColor.withOpacity(0.7)),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(infoMakan,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: statusColor,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          // ICON STATUS
-          Column(
-            children: [
-              Icon(isLate ? Icons.warning_rounded : Icons.verified_rounded,
-                  color: isLate ? Colors.orange : Colors.green, size: 26),
-              if (isLate)
-                const Padding(
-                  padding: EdgeInsets.only(top: 4),
-                  child: Text("Terlambat",
-                      style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.orange,
-                          fontWeight: FontWeight.w900)),
-                )
-            ],
-          )
+          _buildStatusIcon(isLate),
         ],
       ),
     );
@@ -281,6 +305,55 @@ class DetailAttendanceScreen
               style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.5)),
         ],
       ),
+    );
+  }
+
+  // Fungsi untuk membuat kotak tanggal di sebelah kiri list
+  Widget _buildDateBox(BuildContext context, String date) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Center(
+        child: Text(
+          DateTimeHelper.formatDateTimeFromString(
+              dateTimeString: date, format: 'dd\nMMM'),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary),
+        ),
+      ),
+    );
+  }
+
+  // Fungsi untuk membuat icon status (Centang Hijau atau Warning Oranye)
+  Widget _buildStatusIcon(bool isLate) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          isLate ? Icons.warning_rounded : Icons.verified_rounded,
+          color: isLate ? Colors.orange : Colors.green,
+          size: 26,
+        ),
+        if (isLate)
+          const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text(
+              "Terlambat",
+              style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w900),
+            ),
+          )
+      ],
     );
   }
 

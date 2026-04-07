@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:ui';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/presentation/face_recognition/face_recognition_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/map/map_screen.dart';
@@ -13,14 +13,17 @@ class FaceRecognitionScreen
   @override
   void checkVariableAfterUi(BuildContext context) {
     if (notifier.percentMatch >= 75) {
-      // Jeda 1.5 detik agar user bisa melihat status "Berhasil"
       Future.delayed(const Duration(milliseconds: 1500), () async {
         if (context.mounted) {
-          final result = await Navigator.push(
+          // 1. Tunggu sampai user kembali dari Map
+          await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => MapScreen()),
           );
-          if (result == true && context.mounted) Navigator.pop(context, true);
+
+          // 2. KETIKA KEMBALI KE SINI (User tekan Back dari Map)
+          // Panggil fungsi reset di notifier agar lingkaran tidak hijau lagi
+          notifier.resetState();
         }
       });
     }
@@ -89,7 +92,13 @@ class FaceRecognitionScreen
       ),
       body: Stack(
         children: [
-          _buildBackgroundDecor(theme),
+          Positioned(
+            top: -100,
+            right: -100,
+            child: CircleAvatar(
+                radius: 180,
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.04)),
+          ),
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -108,14 +117,14 @@ class FaceRecognitionScreen
                               const SizedBox(height: 20),
                               _buildHeader(notifier),
                               const SizedBox(height: 40),
-                              _buildFaceFrame(theme, notifier),
+                              _buildFaceFrame(context, theme, notifier),
                               const SizedBox(height: 40),
                               _buildStatusIndicator(theme, notifier),
                             ],
                           ),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 30, top: 20),
-                            child: _buildActionButton(theme, notifier),
+                            child: _buildActionButton(notifier),
                           ),
                         ],
                       ),
@@ -130,33 +139,26 @@ class FaceRecognitionScreen
     );
   }
 
-  Widget _buildBackgroundDecor(ThemeData theme) {
-    return Positioned(
-      top: -100,
-      right: -100,
-      child: CircleAvatar(
-          radius: 180,
-          backgroundColor: theme.colorScheme.primary.withOpacity(0.04)),
-    );
-  }
-
   Widget _buildHeader(FaceRecognitionNotifier notifier) {
     return Column(
       children: [
-        Text(
-          notifier.isRegistrationMode
-              ? "Pendaftaran Wajah"
-              : "Verifikasi Wajah",
-          style: const TextStyle(
-              fontWeight: FontWeight.w900, fontSize: 26, letterSpacing: -0.5),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            notifier.isRegistrationMode
+                ? "Pendaftaran Wajah"
+                : "Verifikasi Identitas",
+            style: const TextStyle(
+                fontWeight: FontWeight.w900, fontSize: 26, letterSpacing: -0.5),
+          ),
         ),
         const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             notifier.isRegistrationMode
-                ? "Ambil foto master wajah Anda untuk identitas biometrik."
-                : "Posisikan wajah Anda tepat di tengah lingkaran cahaya.",
+                ? "Silakan KEDIPKAN MATA Anda untuk mendaftarkan wajah master."
+                : "Silakan KEDIPKAN MATA Anda untuk memverifikasi kehadiran.",
             textAlign: TextAlign.center,
             style: const TextStyle(
                 color: Colors.black54, fontSize: 13, height: 1.5),
@@ -166,10 +168,13 @@ class FaceRecognitionScreen
     );
   }
 
-  Widget _buildFaceFrame(ThemeData theme, FaceRecognitionNotifier notifier) {
-    final bool isError = notifier.percentMatch == -1.0;
-    final bool isSuccess = notifier.percentMatch >= 75;
+  Widget _buildFaceFrame(
+      BuildContext context, ThemeData theme, FaceRecognitionNotifier notifier) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double frameSize = (screenWidth * 0.7).clamp(220.0, 280.0);
 
+    final bool isSuccess = notifier.percentMatch >= 75;
+    final bool isError = notifier.percentMatch == -1.0;
     final Color borderColor = isError
         ? Colors.redAccent
         : isSuccess
@@ -180,11 +185,10 @@ class FaceRecognitionScreen
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer Glow
           AnimatedContainer(
             duration: const Duration(milliseconds: 500),
-            width: 280,
-            height: 280,
+            width: frameSize + 20,
+            height: frameSize + 20,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               boxShadow: [
@@ -195,29 +199,26 @@ class FaceRecognitionScreen
               ],
             ),
           ),
-          // Main Frame
           AnimatedContainer(
             duration: const Duration(milliseconds: 400),
-            width: 260,
-            height: 260,
+            width: frameSize,
+            height: frameSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: borderColor, width: 6),
             ),
             child: ClipOval(
               child: Container(
-                color: Colors.grey.shade50,
-                child: notifier.currentImage ??
-                    notifier.basePhotoWidget ??
-                    Icon(Icons.face_retouching_natural_rounded,
-                        size: 100, color: Colors.grey.shade200),
+                color: Colors.black,
+                child: (notifier.cameraController != null &&
+                        notifier.cameraController!.value.isInitialized)
+                    ? AspectRatio(
+                        aspectRatio: 1,
+                        child: CameraPreview(notifier.cameraController!))
+                    : const Center(child: CircularProgressIndicator()),
               ),
             ),
           ),
-          // Laser Scanner
-          if (notifier.isLoading ||
-              (notifier.percentMatch == 0 && notifier.currentImage != null))
-            const ScanningLaser(size: 260),
         ],
       ),
     );
@@ -233,167 +234,67 @@ class FaceRecognitionScreen
               height: 28,
               child: CircularProgressIndicator(strokeWidth: 3)),
           const SizedBox(height: 20),
-          Text("Memproses biometrik...",
+          Text("Memproses...",
               style: TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                   color: theme.colorScheme.primary)),
         ],
       );
     }
 
-    if (notifier.percentMatch == -1.0) {
+    if (notifier.percentMatch >= 75) {
       return const Column(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 44),
-          SizedBox(height: 8),
-          Text("VERIFIKASI GAGAL",
-              style: TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16)),
-          Text("Wajah tidak cocok, silakan coba lagi",
-              style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Icon(Icons.check_circle_rounded, color: Colors.green, size: 40),
+          SizedBox(height: 12),
+          Text("TERVERIFIKASI",
+              style:
+                  TextStyle(color: Colors.green, fontWeight: FontWeight.w900)),
         ],
       );
     }
 
-    if (notifier.percentMatch >= 75) {
-      return Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-                color: Colors.green, shape: BoxShape.circle),
-            child:
-                const Icon(Icons.check_rounded, color: Colors.white, size: 30),
-          ),
-          const SizedBox(height: 12),
-          const Text("VERIFIKASI BERHASIL",
-              style: TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16)),
-        ],
-      );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade400),
-        const SizedBox(width: 6),
-        Text("Siap memindai wajah",
-            style: TextStyle(
-                color: Colors.grey.shade400,
-                fontWeight: FontWeight.w600,
-                fontSize: 12)),
+        Icon(
+            notifier.percentMatch == -1.0
+                ? Icons.warning_amber_rounded
+                : Icons.remove_red_eye_outlined,
+            color: notifier.percentMatch == -1.0
+                ? Colors.redAccent
+                : Colors.orange,
+            size: 44),
+        const SizedBox(height: 8),
+        FittedBox(
+          child: Text(
+              notifier.percentMatch == -1.0 ? "COBA LAGI" : "SILAKAN BERKEDIP",
+              style: TextStyle(
+                  color: notifier.percentMatch == -1.0
+                      ? Colors.redAccent
+                      : Colors.orange,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16)),
+        ),
       ],
     );
   }
 
-  Widget _buildActionButton(ThemeData theme, FaceRecognitionNotifier notifier) {
+  Widget _buildActionButton(FaceRecognitionNotifier notifier) {
     if (!notifier.isLocationGranted) {
-      return _buttonTemplate(
-          "AKTIFKAN LOKASI",
-          Icons.location_on_rounded,
-          Colors.orange.shade800,
-          () => notifier.requestLocationPermission(),
-          notifier);
-    }
-
-    return _buttonTemplate(
-      notifier.isRegistrationMode
-          ? "AMBIL FOTO MASTER"
-          : (notifier.percentMatch == -1.0
-              ? "ULANGI SCAN"
-              : "MULAI SCAN WAJAH"),
-      notifier.percentMatch == -1.0
-          ? Icons.refresh_rounded
-          : Icons.face_unlock_rounded,
-      theme.colorScheme.primary,
-      () => notifier.getCurrentPhoto(),
-      notifier,
-    );
-  }
-
-  Widget _buttonTemplate(String label, IconData icon, Color color,
-      VoidCallback onTap, FaceRecognitionNotifier notifier) {
-    return SizedBox(
-      width: double.infinity,
-      height: 58,
-      child: ElevatedButton.icon(
-        onPressed: notifier.isLoading ? null : onTap,
-        icon: Icon(icon, size: 20),
-        label: Text(label,
-            style: const TextStyle(
-                fontWeight: FontWeight.w900, letterSpacing: 1.1, fontSize: 14)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: color.withOpacity(0.5),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          elevation: 0,
+      return SizedBox(
+        width: double.infinity,
+        height: 58,
+        child: ElevatedButton.icon(
+          onPressed: () => notifier.requestLocationPermission(),
+          icon: const Icon(Icons.location_on_rounded),
+          label: const Text("AKTIFKAN LOKASI",
+              style: TextStyle(fontWeight: FontWeight.w900)),
         ),
-      ),
-    );
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   @override
   AppBar? appBarBuild(BuildContext context) => null;
-}
-
-class ScanningLaser extends StatefulWidget {
-  final double size;
-  const ScanningLaser({super.key, required this.size});
-
-  @override
-  State<ScanningLaser> createState() => _ScanningLaserState();
-}
-
-class _ScanningLaserState extends State<ScanningLaser>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 1500, milliseconds: 500))
-      ..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (context, child) {
-        return Positioned(
-          top: _ctrl.value * (widget.size - 10),
-          child: Container(
-            width: widget.size - 20,
-            height: 3,
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.blue.withOpacity(0.6),
-                    blurRadius: 12,
-                    spreadRadius: 2)
-              ],
-              gradient: LinearGradient(colors: [
-                Colors.blue.withOpacity(0),
-                Colors.blue.withAlpha(200),
-                Colors.blue.withOpacity(0),
-              ]),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }

@@ -314,59 +314,55 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
       String? subLabel,
       required String value,
       required Color color,
-      VoidCallback? onTap,
-      bool isFullWidth = false}) {
-    Widget content = InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.shade100)),
-        child: Row(
-          children: [
-            Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: color.withOpacity(0.1), shape: BoxShape.circle),
-                child: Icon(icon, size: 18, color: color)),
-            const SizedBox(width: 10),
-            Expanded(
+      VoidCallback? onTap}) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(12), // Kurangi padding sedikit
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.shade100)),
+          child: Row(
+            children: [
+              Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                      color: color.withOpacity(0.1), shape: BoxShape.circle),
+                  child: Icon(icon, size: 16, color: color)),
+              const SizedBox(width: 8),
+              Expanded(
                 child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(label,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                             fontSize: 10,
                             color: Colors.black54,
                             fontWeight: FontWeight.bold)),
-                  ),
-                  if (subLabel != null)
-                    Text(subLabel,
-                        style: TextStyle(
-                            fontSize: 8, color: Colors.grey.shade500)),
-                  const SizedBox(height: 2),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(value,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            color: Colors.black87)),
-                  )
-                ])),
-          ],
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(value,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                              color: Colors.black87)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
-    return isFullWidth ? content : Expanded(child: content);
   }
 
   Widget _buildHistoryList(BuildContext context, HomeNotifier prov) {
@@ -557,17 +553,24 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
           style: const TextStyle(
               color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)));
 
-  Widget _buildTimeItem(String label, String time) => Column(children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(time,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900)),
-        ),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11))
-      ]);
+  Widget _buildTimeItem(String label, String time) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 35, // Batasi tinggi agar tidak memakan tempat di HP pendek
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(time,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28, // Ukuran ideal
+                      fontWeight: FontWeight.w900)),
+            ),
+          ),
+          Text(label,
+              style: const TextStyle(color: Colors.white70, fontSize: 11))
+        ],
+      );
 
   Widget _buildActionButton(BuildContext context, HomeNotifier prov) {
     bool isDone = prov.attendanceToday?.endTime != null &&

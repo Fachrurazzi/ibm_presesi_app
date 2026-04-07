@@ -83,7 +83,7 @@ class LeaveScreen extends AppWidget<LeaveNotifier, void, void> {
 
   Widget _buildQuotaHeader(BuildContext context, ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20), // Sedikit dikurangi agar tidak sesak
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -93,40 +93,45 @@ class LeaveScreen extends AppWidget<LeaveNotifier, void, void> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-              color: theme.colorScheme.primary.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10))
+              color: theme.colorScheme.primary.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 8))
         ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
+                color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
             child: const Icon(Icons.beach_access_rounded,
-                color: Colors.white, size: 28),
+                color: Colors.white, size: 24),
           ),
-          const SizedBox(width: 18),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Sisa Kuota Cuti",
-                  style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
-              Text("${notifier.leaveQuota} Hari",
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900)),
-            ],
+          const SizedBox(width: 16),
+          // GUNAKAN FLEXIBLE agar teks tidak overflow di HP kecil
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Sisa Kuota Cuti",
+                    style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text("${notifier.leaveQuota} Hari",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900)),
+                ),
+              ],
+            ),
           )
         ],
       ),
@@ -176,30 +181,33 @@ class LeaveScreen extends AppWidget<LeaveNotifier, void, void> {
       children: [
         Text(label,
             style: const TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w800, color: Colors.grey)),
-        const SizedBox(height: 8),
+                fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey)),
+        const SizedBox(height: 6),
         InkWell(
           onTap: () => notifier.selectDate(context, controller),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 12), // Padding lebih slim
             decoration: BoxDecoration(
                 color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.grey.shade100)),
             child: Row(
               children: [
-                Icon(icon, size: 16, color: Colors.grey),
-                const SizedBox(width: 10),
+                Icon(icon,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+                const SizedBox(width: 8),
                 Expanded(
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      controller.text.isEmpty ? "Pilih" : controller.text,
+                      controller.text.isEmpty ? "Pilih Tgl" : controller.text,
                       style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: controller.text.isEmpty
                               ? Colors.grey
                               : Colors.black87),

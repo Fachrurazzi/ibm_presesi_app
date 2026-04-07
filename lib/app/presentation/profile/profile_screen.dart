@@ -14,6 +14,8 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
   @override
   Widget bodyBuild(BuildContext context) {
     final prov = context.watch<ProfileNotifier>();
+    // Ambil tinggi layar untuk penyesuaian jarak
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -24,14 +26,19 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.02), // Jarak dinamis
             _buildAvatarHeader(context, prov),
-            const SizedBox(height: 32),
+            SizedBox(height: screenHeight * 0.03), // Jarak dinamis
             _buildSectionHeader("Informasi Pribadi"),
             const SizedBox(height: 16),
             _buildCustomField(
@@ -39,7 +46,7 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
               label: "Nama Lengkap",
               icon: Icons.person_rounded,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: screenHeight * 0.025),
             _buildSectionHeader("Keamanan Akun"),
             const SizedBox(height: 16),
             _buildCustomField(
@@ -61,19 +68,21 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
               onToggle: () => prov.toggleObscureNew(),
               hint: "Minimal 6 karakter",
             ),
-            const SizedBox(height: 40),
+            SizedBox(height: screenHeight * 0.04),
             _buildSaveButton(context, prov),
 
-            // --- TOMBOL LOGOUT ---
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             TextButton.icon(
               onPressed: () => _onPressLogout(context),
-              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+              icon: const Icon(Icons.logout_rounded,
+                  color: Colors.redAccent, size: 18),
               label: const Text("Keluar dari Akun",
                   style: TextStyle(
-                      color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -81,6 +90,11 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
   }
 
   Widget _buildAvatarHeader(BuildContext context, ProfileNotifier prov) {
+    final theme = Theme.of(context);
+    // Ukuran avatar menyesuaikan lebar layar agar tidak terlalu dominan di HP kecil
+    double avatarSize = MediaQuery.of(context).size.width * 0.28;
+    avatarSize = avatarSize.clamp(50, 60); // Tetap di kisaran radius 50-60
+
     return Column(
       children: [
         Stack(
@@ -91,31 +105,34 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    color: theme.colorScheme.primary.withOpacity(0.15),
                     width: 2),
               ),
               child: CircleAvatar(
-                // KUNCI: ValueKey memastikan widget dirender ulang saat sumber gambar berubah
                 key: ValueKey(prov.imageFileLocal?.path ?? prov.imageUrlServer),
-                radius: 60,
+                radius: avatarSize,
                 backgroundColor: Colors.grey.shade100,
                 backgroundImage: prov.imageFileLocal != null
-                    ? FileImage(prov.imageFileLocal!) as ImageProvider
-                    : (prov.imageUrlServer != null &&
-                            prov.imageUrlServer!.isNotEmpty
-                        ? CachedNetworkImageProvider(
-                            prov.imageUrlServer!,
-                            headers: const {
-                              "User-Agent": "Mozilla/5.0",
-                              "Accept": "image/*"
-                            },
-                          ) as ImageProvider
-                        : null),
-                child: (prov.imageFileLocal == null &&
-                        (prov.imageUrlServer == null ||
-                            prov.imageUrlServer!.isEmpty))
-                    ? Icon(Icons.person, size: 60, color: Colors.grey.shade400)
+                    ? FileImage(prov.imageFileLocal!)
+                    : null,
+                child: prov.imageFileLocal == null
+                    ? ClipOval(
+                        child: (prov.imageUrlServer != null &&
+                                prov.imageUrlServer!.isNotEmpty)
+                            ? CachedNetworkImage(
+                                imageUrl: prov.imageUrlServer!,
+                                fit: BoxFit.cover,
+                                width: avatarSize * 2,
+                                height: avatarSize * 2,
+                                placeholder: (context, url) => const Center(
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    _buildPlaceholderIcon(),
+                              )
+                            : _buildPlaceholderIcon(),
+                      )
                     : null,
               ),
             ),
@@ -124,25 +141,47 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                ),
-                child: const Icon(Icons.edit_rounded,
-                    color: Colors.white, size: 18),
+                    color: theme.colorScheme.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(0, 2))
+                    ]),
+                child: const Icon(
+                    Icons
+                        .camera_alt_rounded, // Pakai icon kamera lebih intuitif
+                    color: Colors.white,
+                    size: 16),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        Text(prov.position,
-            style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: 16)),
-        const SizedBox(height: 4),
+        const SizedBox(height: 12),
+        FittedBox(
+          // Mencegah nama jabatan overflow
+          fit: BoxFit.scaleDown,
+          child: Text(prov.position,
+              style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: theme.colorScheme.primary,
+                  fontSize: 15)),
+        ),
+        const SizedBox(height: 2),
         _buildFormattedJoinDate(prov.joinDate),
       ],
+    );
+  }
+
+// Widget Helper untuk Placeholder
+  Widget _buildPlaceholderIcon() {
+    return Container(
+      width: 120,
+      height: 120,
+      color: Colors.grey.shade100,
+      child: Icon(Icons.person, size: 60, color: Colors.grey.shade400),
     );
   }
 
@@ -339,7 +378,7 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
   @override
   void checkVariableBeforeUi(BuildContext context) {
     // KUNCI: Refresh data setiap kali masuk layar profil agar sinkron dengan SharedPreferences
-    // Future.microtask(() => notifier.init());
+    Future.microtask(() => notifier.init());
   }
 
   @override

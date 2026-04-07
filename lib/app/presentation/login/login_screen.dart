@@ -102,9 +102,12 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
                         // Email Field
                         _buildInputField(
                           controller: notifier.emailController,
-                          label: "Email Perusahaan",
+                          label: "Email Karyawan",
                           icon: Icons.email_outlined,
-                          hint: "user@intiboga.com",
+                          hint: "user@ibm.com",
+                          keyboardType:
+                              TextInputType.emailAddress, // Tambahkan ini
+                          textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 20),
 
@@ -116,8 +119,10 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
                           hint: "••••••••",
                           isPassword: true,
                           obscureText: !notifier.isShowPassword,
+                          textInputAction: TextInputAction.done,
                           onToggleVisible: () => notifier.isShowPassword =
                               !notifier.isShowPassword,
+                          onSubmitted: (_) => notifier.login(),
                         ),
 
                         const SizedBox(height: 40),
@@ -141,7 +146,7 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
                                     height: 24,
                                     child: CircularProgressIndicator(
                                         color: Colors.white, strokeWidth: 3))
-                                : const Text("MASUK SEKARANG",
+                                : const Text("MASUK",
                                     style: TextStyle(
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 1)),
@@ -149,7 +154,7 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
                         ),
 
                         const SizedBox(height: 40),
-                        Text("© 2026 PT Intiboga Mandiri",
+                        Text("© ${DateTime.now().year} PT Intiboga Mandiri",
                             style: theme.textTheme.labelSmall
                                 ?.copyWith(color: Colors.grey.shade400)),
                       ],
@@ -172,6 +177,9 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onToggleVisible,
+    TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    Function(String)? onSubmitted,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,6 +193,11 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
         TextField(
           controller: controller,
           obscureText: obscureText,
+          keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          onSubmitted: onSubmitted,
+          autocorrect: !isPassword,
+          enableSuggestions: !isPassword,
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: Icon(icon, size: 20),

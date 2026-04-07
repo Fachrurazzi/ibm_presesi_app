@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // <--- TAMBAHKAN INI UNTUK FORMAT RUPIAH
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_by_month_year.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
@@ -22,14 +24,31 @@ class DetailAttendanceNotifier extends AppProvider {
   int _selectedYear = 2026;
   List<AttendanceEntity> _listAttendance = [];
   bool _isPusat = false;
-  bool _isWfa = false; // <-- TAMBAHAN: Variabel untuk status Dinas Luar
+  bool _isWfa = false;
 
   // --- Getters ---
   int get selectedMonth => _selectedMonth;
   int get selectedYear => _selectedYear;
   List<AttendanceEntity> get listAttendance => _listAttendance;
   bool get isPusat => _isPusat;
-  bool get isWfa => _isWfa; // <-- TAMBAHAN: Getter agar bisa dibaca di UI
+  bool get isWfa => _isWfa;
+
+  // --- TAMBAHAN: GETTER UNTUK HITUNG TOTAL ---
+  String get totalUangMakan {
+    int total = 0;
+    for (var item in _listAttendance) {
+      total += (item.lunchMoney ?? 0);
+    }
+
+    // Format ke "150.000"
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: '',
+      decimalDigits: 0,
+    );
+
+    return formatter.format(total).trim();
+  }
 
   // List dropdown entries (Static)
   final List<DropdownMenuEntry<int>> monthListDropdown = [
@@ -55,15 +74,13 @@ class DetailAttendanceNotifier extends AppProvider {
   @override
   void init() {
     _checkOffice();
-    // Gunakan Future.delayed agar build context selesai dulu
     Future.delayed(Duration.zero, () => search());
   }
 
-  // Fungsi untuk update nilai dari UI
   void onMonthSelected(int? val) {
     if (val != null) {
       _selectedMonth = val;
-      notifyListeners(); // Update UI agar pilihan dropdown terlihat berubah
+      notifyListeners();
     }
   }
 
@@ -80,13 +97,9 @@ class DetailAttendanceNotifier extends AppProvider {
             "";
     _isPusat = office.toLowerCase().contains("pusat");
 
-    // TAMBAHAN: Ambil data status WFA (Dinas Luar) dari SharedPreferences
-    // Catatan: Pastikan Anda menggunakan Key yang sesuai (misal AppPreferences.IS_WFA).
-    // Jika bentuknya boolean, gunakan getBool. Jika String, gunakan getString lalu parsing.
     try {
       _isWfa = await SharedPreferencesHelper.getBool('IS_WFA') ?? false;
     } catch (e) {
-      // Fallback jika terjadi error parsing
       _isWfa = false;
     }
 
@@ -94,11 +107,9 @@ class DetailAttendanceNotifier extends AppProvider {
   }
 
   Future<void> search() async {
-    // Reset error & tampilkan loading
     errorMessage = '';
     showLoading();
 
-    // Kosongkan list lama agar user tahu data sedang di-refresh
     _listAttendance = [];
     notifyListeners();
 

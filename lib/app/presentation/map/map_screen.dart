@@ -144,39 +144,34 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
       BuildContext context, MapNotifier notifier, ThemeData theme) {
     return Container(
       width: double.infinity,
-      margin:
-          const EdgeInsets.all(20), // Memberikan margin agar terlihat melayang
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24), // Margin disesuaikan
+      padding: const EdgeInsets.all(16), // Padding lebih slim
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(32), // Lebih membulat (Premium)
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 25,
-              offset: const Offset(0, 10))
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 8))
         ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // INFO ROW
           Row(
             children: [
               _buildCompactInfo(context, Icons.business_rounded, "KANTOR",
                   notifier.schedule?.office.name ?? "-"),
-              const SizedBox(width: 12),
-              _buildCompactInfo(context, Icons.schedule_rounded, "SHIFT",
-                  notifier.schedule?.shift.name ?? "-"),
+              const SizedBox(width: 8), // Jarak antar info dikecilkan
+              _buildCompactInfo(context, Icons.access_time_filled_rounded,
+                  "SHIFT", notifier.schedule?.shift.name ?? "-"),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          // BUTTON KIRIM
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 54,
             child: ElevatedButton(
               onPressed: notifier.isEnableSubmitButton && !notifier.isLoading
                   ? () => notifier.send()
@@ -184,23 +179,21 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey.shade100,
-                disabledForegroundColor: Colors.grey.shade400,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18)),
+                    borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
               child: notifier.isLoading
                   ? const SizedBox(
-                      width: 24,
-                      height: 24,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5))
-                  : const Text("KIRIM PRESENSI SEKARANG",
+                          color: Colors.white, strokeWidth: 2))
+                  : const Text("KIRIM PRESENSI", // Teks disingkat sedikit
                       style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 14,
-                          letterSpacing: 0.5)),
+                          letterSpacing: 1)),
             ),
           ),
         ],
