@@ -1,19 +1,18 @@
 import 'package:dio/dio.dart';
-import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:retrofit/retrofit.dart';
 
 part 'schedule_api_service.g.dart';
 
-@RestApi(baseUrl: AppConfig.BASE_URL)
+@RestApi() // BaseURL dikelola terpusat di dependency.dart
 abstract class ScheduleApiService {
-  factory ScheduleApiService(Dio dio) = _ScheduleApiService;
+  factory ScheduleApiService(Dio dio, {String baseUrl}) = _ScheduleApiService;
 
-  // 1. Ambil Jadwal Kerja (Shift & Office)
-  // Gunakan dynamic agar Retrofit membiarkan data dalam bentuk Map mentah
+  /// Mengambil data jadwal kerja (Shift jam masuk/pulang & lokasi kantor)
+  /// Digunakan oleh HomeNotifier untuk validasi radius absensi
   @GET('/schedule')
   Future<HttpResponse<dynamic>> get();
 
-  // 2. Kirim Status/Cek Banned
+  /// Melaporkan status perangkat atau mengecek status banned akun
   @POST('/banned')
   Future<HttpResponse<dynamic>> banned();
 }

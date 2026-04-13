@@ -13,9 +13,7 @@ class _LeaveApiService implements LeaveApiService {
     this._dio, {
     this.baseUrl,
     this.errorLogger,
-  }) {
-    baseUrl ??= 'http://192.168.100.83:8000/api/v1';
-  }
+  });
 
   final Dio _dio;
 
@@ -38,7 +36,7 @@ class _LeaveApiService implements LeaveApiService {
     )
         .compose(
           _dio.options,
-          '/leaves',
+          '/leaves/store',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -66,7 +64,7 @@ class _LeaveApiService implements LeaveApiService {
     )
         .compose(
           _dio.options,
-          '/leaves',
+          '/leaves/history',
           queryParameters: queryParameters,
           data: _data,
         )

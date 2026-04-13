@@ -24,11 +24,13 @@ mixin _$Profile {
   String get name => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
   @JsonKey(name: 'image')
-  String? get image =>
-      throw _privateConstructorUsedError; // TAMBAHKAN INI: Agar join_date dari Laravel bisa terbaca
+  String? get image => throw _privateConstructorUsedError;
+
+  /// Format: YYYY-MM-DD dari Laravel
   @JsonKey(name: 'join_date')
-  String? get joinDate =>
-      throw _privateConstructorUsedError; // Gunakan Map agar extension bisa baca key 'name' (seperti Admin/HRD)
+  String get joinDate => throw _privateConstructorUsedError;
+
+  /// Menampung objek jabatan {id: 1, name: "Driver"}
   Map<String, dynamic>? get position => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
@@ -37,7 +39,7 @@ mixin _$Profile {
             String name,
             String email,
             @JsonKey(name: 'image') String? image,
-            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'join_date') String joinDate,
             Map<String, dynamic>? position)
         entity,
   }) =>
@@ -49,7 +51,7 @@ mixin _$Profile {
             String name,
             String email,
             @JsonKey(name: 'image') String? image,
-            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'join_date') String joinDate,
             Map<String, dynamic>? position)?
         entity,
   }) =>
@@ -61,7 +63,7 @@ mixin _$Profile {
             String name,
             String email,
             @JsonKey(name: 'image') String? image,
-            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'join_date') String joinDate,
             Map<String, dynamic>? position)?
         entity,
     required TResult orElse(),
@@ -98,7 +100,7 @@ abstract class $ProfileCopyWith<$Res> {
       String name,
       String email,
       @JsonKey(name: 'image') String? image,
-      @JsonKey(name: 'join_date') String? joinDate,
+      @JsonKey(name: 'join_date') String joinDate,
       Map<String, dynamic>? position});
 }
 
@@ -119,7 +121,7 @@ class _$ProfileCopyWithImpl<$Res, $Val extends Profile>
     Object? name = null,
     Object? email = null,
     Object? image = freezed,
-    Object? joinDate = freezed,
+    Object? joinDate = null,
     Object? position = freezed,
   }) {
     return _then(_value.copyWith(
@@ -139,10 +141,10 @@ class _$ProfileCopyWithImpl<$Res, $Val extends Profile>
           ? _value.image
           : image // ignore: cast_nullable_to_non_nullable
               as String?,
-      joinDate: freezed == joinDate
+      joinDate: null == joinDate
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       position: freezed == position
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
@@ -164,7 +166,7 @@ abstract class _$$ProfileEntityImplCopyWith<$Res>
       String name,
       String email,
       @JsonKey(name: 'image') String? image,
-      @JsonKey(name: 'join_date') String? joinDate,
+      @JsonKey(name: 'join_date') String joinDate,
       Map<String, dynamic>? position});
 }
 
@@ -183,7 +185,7 @@ class __$$ProfileEntityImplCopyWithImpl<$Res>
     Object? name = null,
     Object? email = null,
     Object? image = freezed,
-    Object? joinDate = freezed,
+    Object? joinDate = null,
     Object? position = freezed,
   }) {
     return _then(_$ProfileEntityImpl(
@@ -203,10 +205,10 @@ class __$$ProfileEntityImplCopyWithImpl<$Res>
           ? _value.image
           : image // ignore: cast_nullable_to_non_nullable
               as String?,
-      joinDate: freezed == joinDate
+      joinDate: null == joinDate
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       position: freezed == position
           ? _value._position
           : position // ignore: cast_nullable_to_non_nullable
@@ -220,10 +222,10 @@ class __$$ProfileEntityImplCopyWithImpl<$Res>
 class _$ProfileEntityImpl implements ProfileEntity {
   const _$ProfileEntityImpl(
       {this.id = 0,
-      this.name = "",
+      this.name = "Karyawan IBM",
       this.email = "",
       @JsonKey(name: 'image') this.image,
-      @JsonKey(name: 'join_date') this.joinDate,
+      @JsonKey(name: 'join_date') this.joinDate = "-",
       final Map<String, dynamic>? position})
       : _position = position;
 
@@ -242,13 +244,16 @@ class _$ProfileEntityImpl implements ProfileEntity {
   @override
   @JsonKey(name: 'image')
   final String? image;
-// TAMBAHKAN INI: Agar join_date dari Laravel bisa terbaca
+
+  /// Format: YYYY-MM-DD dari Laravel
   @override
   @JsonKey(name: 'join_date')
-  final String? joinDate;
-// Gunakan Map agar extension bisa baca key 'name' (seperti Admin/HRD)
+  final String joinDate;
+
+  /// Menampung objek jabatan {id: 1, name: "Driver"}
   final Map<String, dynamic>? _position;
-// Gunakan Map agar extension bisa baca key 'name' (seperti Admin/HRD)
+
+  /// Menampung objek jabatan {id: 1, name: "Driver"}
   @override
   Map<String, dynamic>? get position {
     final value = _position;
@@ -296,7 +301,7 @@ class _$ProfileEntityImpl implements ProfileEntity {
             String name,
             String email,
             @JsonKey(name: 'image') String? image,
-            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'join_date') String joinDate,
             Map<String, dynamic>? position)
         entity,
   }) {
@@ -311,7 +316,7 @@ class _$ProfileEntityImpl implements ProfileEntity {
             String name,
             String email,
             @JsonKey(name: 'image') String? image,
-            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'join_date') String joinDate,
             Map<String, dynamic>? position)?
         entity,
   }) {
@@ -326,7 +331,7 @@ class _$ProfileEntityImpl implements ProfileEntity {
             String name,
             String email,
             @JsonKey(name: 'image') String? image,
-            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'join_date') String joinDate,
             Map<String, dynamic>? position)?
         entity,
     required TResult orElse(),
@@ -379,7 +384,7 @@ abstract class ProfileEntity implements Profile {
       final String name,
       final String email,
       @JsonKey(name: 'image') final String? image,
-      @JsonKey(name: 'join_date') final String? joinDate,
+      @JsonKey(name: 'join_date') final String joinDate,
       final Map<String, dynamic>? position}) = _$ProfileEntityImpl;
 
   factory ProfileEntity.fromJson(Map<String, dynamic> json) =
@@ -394,10 +399,14 @@ abstract class ProfileEntity implements Profile {
   @override
   @JsonKey(name: 'image')
   String? get image;
-  @override // TAMBAHKAN INI: Agar join_date dari Laravel bisa terbaca
+  @override
+
+  /// Format: YYYY-MM-DD dari Laravel
   @JsonKey(name: 'join_date')
-  String? get joinDate;
-  @override // Gunakan Map agar extension bisa baca key 'name' (seperti Admin/HRD)
+  String get joinDate;
+  @override
+
+  /// Menampung objek jabatan {id: 1, name: "Driver"}
   Map<String, dynamic>? get position;
   @override
   @JsonKey(ignore: true)

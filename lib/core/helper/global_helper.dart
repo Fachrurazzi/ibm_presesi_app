@@ -19,40 +19,63 @@ enum AppTextStyle {
 }
 
 class GlobalHelper {
+  /// Mengambil TextStyle berdasarkan tema Material 3.
+  /// Menggunakan [switch] agar lebih hemat memori dibandingkan Map.
   static TextStyle? getTextStyle({
-    required BuildContext context, // Wajibkan context, jangan dibuat opsional
+    required BuildContext context,
     AppTextStyle appTextStyle = AppTextStyle.BODY_MEDIUM,
   }) {
     final textTheme = Theme.of(context).textTheme;
 
-    // Menggunakan Map untuk mapping style
-    final Map<AppTextStyle, TextStyle?> appTextStyleMap = {
-      AppTextStyle.DISPLAY_LARGE: textTheme.displayLarge,
-      AppTextStyle.DISPLAY_MEDIUM: textTheme.displayMedium,
-      AppTextStyle.DISPLAY_SMALL: textTheme.displaySmall,
-      AppTextStyle.HEADLINE_LARGE: textTheme.headlineLarge,
-      AppTextStyle.HEADLINE_MEDIUM: textTheme.headlineMedium,
-      AppTextStyle.HEADLINE_SMALL: textTheme.headlineSmall,
-      AppTextStyle.TITLE_LARGE: textTheme.titleLarge,
-      AppTextStyle.TITLE_MEDIUM: textTheme.titleMedium,
-      AppTextStyle.TITLE_SMALL: textTheme.titleSmall,
-      AppTextStyle.LABEL_LARGE: textTheme.labelLarge,
-      AppTextStyle.LABEL_MEDIUM: textTheme.labelMedium,
-      AppTextStyle.LABEL_SMALL: textTheme.labelSmall,
-      AppTextStyle.BODY_LARGE: textTheme.bodyLarge,
-      AppTextStyle.BODY_MEDIUM: textTheme.bodyMedium,
-      AppTextStyle.BODY_SMALL: textTheme.bodySmall,
-    };
-
-    return appTextStyleMap[appTextStyle];
+    switch (appTextStyle) {
+      case AppTextStyle.DISPLAY_LARGE:
+        return textTheme.displayLarge;
+      case AppTextStyle.DISPLAY_MEDIUM:
+        return textTheme.displayMedium;
+      case AppTextStyle.DISPLAY_SMALL:
+        return textTheme.displaySmall;
+      case AppTextStyle.HEADLINE_LARGE:
+        return textTheme.headlineLarge;
+      case AppTextStyle.HEADLINE_MEDIUM:
+        return textTheme.headlineMedium;
+      case AppTextStyle.HEADLINE_SMALL:
+        return textTheme.headlineSmall;
+      case AppTextStyle.TITLE_LARGE:
+        return textTheme.titleLarge;
+      case AppTextStyle.TITLE_MEDIUM:
+        return textTheme.titleMedium;
+      case AppTextStyle.TITLE_SMALL:
+        return textTheme.titleSmall;
+      case AppTextStyle.LABEL_LARGE:
+        return textTheme.labelLarge;
+      case AppTextStyle.LABEL_MEDIUM:
+        return textTheme.labelMedium;
+      case AppTextStyle.LABEL_SMALL:
+        return textTheme.labelSmall;
+      case AppTextStyle.BODY_LARGE:
+        return textTheme.bodyLarge;
+      case AppTextStyle.BODY_MEDIUM:
+        return textTheme.bodyMedium;
+      case AppTextStyle.BODY_SMALL:
+        return textTheme.bodySmall;
+    }
   }
 
   static ColorScheme getColorSchema(BuildContext context) {
     return Theme.of(context).colorScheme;
   }
 
-  // Tips: Tambahkan helper untuk mengecek apakah mode gelap atau terang
   static bool isDarkMode(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark;
+  }
+
+  /// Helper untuk mendapatkan ukuran layar (Responsivitas)
+  static Size getScreenSize(BuildContext context) {
+    return MediaQuery.of(context).size;
+  }
+
+  /// Helper untuk mendapatkan tinggi Safe Area (Penting untuk Notifikasi/Pill)
+  static double getTopPadding(BuildContext context) {
+    return MediaQuery.of(context).padding.top;
   }
 }

@@ -12,6 +12,7 @@ _$LeaveParamEntityImpl _$$LeaveParamEntityImplFromJson(
       startDate: json['start_date'] as String,
       endDate: json['end_date'] as String,
       reason: json['reason'] as String,
+      type: json['type'] as String? ?? 'Cuti',
       $type: json['runtimeType'] as String?,
     );
 
@@ -21,6 +22,7 @@ Map<String, dynamic> _$$LeaveParamEntityImplToJson(
       'start_date': instance.startDate,
       'end_date': instance.endDate,
       'reason': instance.reason,
+      'type': instance.type,
       'runtimeType': instance.$type,
     };
 
@@ -30,7 +32,8 @@ _$LeaveEntityImpl _$$LeaveEntityImplFromJson(Map<String, dynamic> json) =>
       startDate: json['start_date'] as String,
       endDate: json['end_date'] as String,
       reason: json['reason'] as String,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'pending',
+      approvedBy: json['approved_by'] as String?,
       $type: json['runtimeType'] as String?,
     );
 
@@ -41,5 +44,6 @@ Map<String, dynamic> _$$LeaveEntityImplToJson(_$LeaveEntityImpl instance) =>
       'end_date': instance.endDate,
       'reason': instance.reason,
       'status': instance.status,
+      'approved_by': instance.approvedBy,
       'runtimeType': instance.$type,
     };

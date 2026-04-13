@@ -13,22 +13,23 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
   @override
   Future<DataState<ScheduleEntity?>> get() {
     return handleResponse(
-      () => _scheduleApiService.get(),
-      (json) async {
-        // Tambahkan async jika SharedPreferences butuh waktu
-        if (json != null) {
-          // 1. Parsing data dari API Laravel
-          final data = ScheduleEntity.fromJson(json);
+      apiCall: () => _scheduleApiService.get(),
+      mapDataSuccess: (json) async {
+        if (json == null) return null;
 
-          // 2. Simpan ke Local Storage untuk akses cepat di UI/Logic
-          await SharedPreferencesHelper.setString(
-              AppPreferences.START_SHIFT, data.shift.startTime);
-          await SharedPreferencesHelper.setString(
-              AppPreferences.END_SHIFT, data.shift.endTime);
+        // 1. Parsing data ke Entity
+        final data = ScheduleEntity.fromJson(json as Map<String, dynamic>);
 
-          return data;
-        }
-        return null;
+        // 2. Simpan secara Paralel agar Cepat (WITA Standard)
+        // Kita simpan jam mulai dan jam selesai shift untuk keperluan Notifikasi
+        await Future.wait([
+          SharedPreferencesHelper.setString(
+              AppPreferences.START_SHIFT, data.shift.startTime),
+          SharedPreferencesHelper.setString(
+              AppPreferences.END_SHIFT, data.shift.endTime),
+        ]);
+
+        return data;
       },
     );
   }
@@ -36,12 +37,8 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
   @override
   Future<DataState<bool>> banned() {
     return handleResponse(
-      () => _scheduleApiService.banned(),
-      (json) {
-        // TIPS: Kembalikan true jika proses pelaporan banned sukses.
-        // Ini membantu Notifier untuk memutuskan apakah harus logout paksa atau tidak.
-        return true;
-      },
+      apiCall: () => _scheduleApiService.banned(),
+      mapDataSuccess: (json) => true, // Sukses melaporkan status banned
     );
   }
 }

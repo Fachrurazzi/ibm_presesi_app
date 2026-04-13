@@ -13,9 +13,7 @@ class _ProfileApiService implements ProfileApiService {
     this._dio, {
     this.baseUrl,
     this.errorLogger,
-  }) {
-    baseUrl ??= 'http://192.168.100.83:8000/api/v1';
-  }
+  });
 
   final Dio _dio;
 

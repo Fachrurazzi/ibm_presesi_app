@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:camera/camera.dart';
+import 'package:elegant_notification/elegant_notification.dart';
+import 'package:elegant_notification/resources/arrays.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ibm_presensi_app/app/presentation/face_recognition/face_recognition_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/map/map_screen.dart';
 import 'package:ibm_presensi_app/core/widget/app_widget.dart';
@@ -8,215 +11,219 @@ import 'package:provider/provider.dart';
 
 class FaceRecognitionScreen
     extends AppWidget<FaceRecognitionNotifier, void, void> {
-  FaceRecognitionScreen({super.key});
+  FaceRecognitionScreen({super.key}) : super(param1: null, param2: null);
 
   @override
   void checkVariableAfterUi(BuildContext context) {
-    if (notifier.percentMatch >= 75) {
-      Future.delayed(const Duration(milliseconds: 1500), () async {
-        if (context.mounted) {
-          // 1. Tunggu sampai user kembali dari Map
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => MapScreen()),
-          );
+    final double safeAreaTop = MediaQuery.of(context).padding.top;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final prov = context.read<FaceRecognitionNotifier>();
 
-          // 2. KETIKA KEMBALI KE SINI (User tekan Back dari Map)
-          // Panggil fungsi reset di notifier agar lingkaran tidak hijau lagi
-          notifier.resetState();
+    // 1. HANDLER NOTIFIKASI BIOMETRIK (DEBOUNCED)
+    // Filter pesan agar tidak spamming notifikasi untuk instruksi dasar
+    if (prov.biometricMessage.isNotEmpty &&
+        prov.biometricMessage != "Posisikan wajah Anda" &&
+        prov.biometricMessage != "Tahan, jangan bergerak..." &&
+        prov.biometricMessage != "Siap...") {
+      final msg = prov.biometricMessage;
+      final isError = prov.isErrorMessage;
+      prov.biometricMessage = ""; // Reset segera
+
+      HapticFeedback.lightImpact();
+      _showPill(context, msg, isError, screenWidth, safeAreaTop);
+    }
+
+    // 2. LOGIKA NAVIGASI DENGAN JEDA FOTO (2 DETIK)
+    if (prov.percentMatch >= 80) {
+      HapticFeedback.heavyImpact();
+      prov.stopCameraManual(); // Matikan kamera agar hardware istirahat
+
+      // Berikan jeda agar user bisa melihat pratinjau wajah sukses di Overlay
+      Future.delayed(const Duration(milliseconds: 2000), () {
+        if (context.mounted) {
+          if (prov.isRegistrationMode) {
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/main-navbar', (route) => false);
+          } else {
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (_) => MapScreen()));
+          }
+          prov.resetState();
         }
       });
     }
   }
 
-  @override
-  void checkVariableBeforeUi(BuildContext context) {
-    if (notifier.errorMessage.isNotEmpty) {
-      _showTopSnackBar(context, notifier.errorMessage, Colors.redAccent);
-      notifier.errorMessage = "";
-    }
-    if (notifier.snackbarMessage.isNotEmpty) {
-      _showTopSnackBar(context, notifier.snackbarMessage, Colors.green);
-      notifier.snackbarMessage = "";
-    }
-  }
+  void _showPill(BuildContext context, String msg, bool isError, double width,
+      double margin) {
+    bool isInstruction = msg.toLowerCase().contains("dekatkan") ||
+        msg.toLowerCase().contains("mohon");
 
-  void _showTopSnackBar(BuildContext context, String message, Color color) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message,
-              style:
-                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          backgroundColor: color,
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-              bottom: MediaQuery.of(context).size.height - 120,
-              left: 24,
-              right: 24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        ),
-      );
-    });
+    ElegantNotification(
+      width: width * 0.9,
+      notificationMargin: margin + 10,
+      position: Alignment.topCenter,
+      animation: AnimationType.fromTop,
+      background: (isError || isInstruction)
+          ? Colors.red.shade50
+          : Colors.green.shade50,
+      title: Text(
+        (isError || isInstruction) ? "Instruksi" : "Berhasil",
+        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+      ),
+      description: Text(
+        msg,
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+      ),
+      icon: Icon(
+        (isError || isInstruction)
+            ? Icons.warning_amber_rounded
+            : Icons.check_circle_rounded,
+        color: (isError || isInstruction) ? Colors.red : Colors.green,
+      ),
+      showProgressIndicator: false,
+      borderRadius: BorderRadius.circular(20), // Konsisten dengan gaya IBM 20px
+      displayCloseButton: false,
+    ).show(context);
   }
 
   @override
   Widget bodyBuild(BuildContext context) {
-    final theme = Theme.of(context);
     final notifier = context.watch<FaceRecognitionNotifier>();
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(50),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white24)),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                    size: 16, color: Colors.black87),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-          ),
-        ),
-      ),
+      backgroundColor: Colors.black,
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          Positioned(
-            top: -100,
-            right: -100,
-            child: CircleAvatar(
-                radius: 180,
-                backgroundColor: theme.colorScheme.primary.withOpacity(0.04)),
-          ),
+          // 1. FULL CAMERA PREVIEW
+          _buildFullScreenCamera(size, notifier),
+
+          // 2. SCANNING MASK (Lubang Oval)
+          _buildCameraOverlay(context),
+
+          // 3. UI LAYER
           SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            children: [
-                              const SizedBox(height: 20),
-                              _buildHeader(notifier),
-                              const SizedBox(height: 40),
-                              _buildFaceFrame(context, theme, notifier),
-                              const SizedBox(height: 40),
-                              _buildStatusIndicator(theme, notifier),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 30, top: 20),
-                            child: _buildActionButton(notifier),
-                          ),
-                        ],
-                      ),
-                    ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildTopHeader(context, notifier),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: Column(
+                    children: [
+                      _buildLiveStatus(notifier),
+                      const SizedBox(height: 30),
+                      _buildBottomAction(notifier),
+                    ],
                   ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(FaceRecognitionNotifier notifier) {
-    return Column(
-      children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            notifier.isRegistrationMode
-                ? "Pendaftaran Wajah"
-                : "Verifikasi Identitas",
-            style: const TextStyle(
-                fontWeight: FontWeight.w900, fontSize: 26, letterSpacing: -0.5),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            notifier.isRegistrationMode
-                ? "Silakan KEDIPKAN MATA Anda untuk mendaftarkan wajah master."
-                : "Silakan KEDIPKAN MATA Anda untuk memverifikasi kehadiran.",
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Colors.black54, fontSize: 13, height: 1.5),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFaceFrame(
-      BuildContext context, ThemeData theme, FaceRecognitionNotifier notifier) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double frameSize = (screenWidth * 0.7).clamp(220.0, 280.0);
-
-    final bool isSuccess = notifier.percentMatch >= 75;
-    final bool isError = notifier.percentMatch == -1.0;
-    final Color borderColor = isError
-        ? Colors.redAccent
-        : isSuccess
-            ? Colors.green
-            : theme.colorScheme.primary;
-
-    return Center(
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            width: frameSize + 20,
-            height: frameSize + 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                    color: borderColor.withOpacity(0.15),
-                    blurRadius: 40,
-                    spreadRadius: 10)
+                ),
               ],
             ),
           ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            width: frameSize,
-            height: frameSize,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: borderColor, width: 6),
-            ),
-            child: ClipOval(
-              child: Container(
-                color: Colors.black,
-                child: (notifier.cameraController != null &&
-                        notifier.cameraController!.value.isInitialized)
-                    ? AspectRatio(
-                        aspectRatio: 1,
-                        child: CameraPreview(notifier.cameraController!))
-                    : const Center(child: CircularProgressIndicator()),
+
+          // 4. SUCCESS OVERLAY
+          if (notifier.capturedFaceBytes != null && notifier.percentMatch >= 80)
+            _buildSuccessOverlay(context, notifier),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuccessOverlay(
+      BuildContext context, FaceRecognitionNotifier notifier) {
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+      child: Container(
+        color: Colors.black.withOpacity(0.4),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 260,
+                    height: 360,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(130),
+                      border: Border.all(color: Colors.greenAccent, width: 8),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.greenAccent.withOpacity(0.5),
+                            blurRadius: 40)
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(122),
+                      child: Image.memory(notifier.capturedFaceBytes!,
+                          fit: BoxFit.cover),
+                    ),
+                  ),
+                  const Positioned(
+                    bottom: 10,
+                    child: Icon(Icons.check_circle_rounded,
+                        color: Colors.greenAccent, size: 90),
+                  ),
+                ],
               ),
+              const SizedBox(height: 30),
+              const Text("VERIFIKASI BERHASIL",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                      letterSpacing: 2)),
+              const SizedBox(height: 10),
+              Text(
+                  notifier.isRegistrationMode
+                      ? "Pendaftaran wajah sukses, mengalihkan..."
+                      : "Mohon tunggu, mengalihkan ke peta...",
+                  style: const TextStyle(color: Colors.white70, fontSize: 14)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFullScreenCamera(Size size, FaceRecognitionNotifier notifier) {
+    if (notifier.cameraController == null ||
+        !notifier.cameraController!.value.isInitialized) {
+      return const Center(
+          child: CircularProgressIndicator(color: Colors.white));
+    }
+    var camera = notifier.cameraController!.value;
+    var scale = size.aspectRatio * camera.aspectRatio;
+    if (scale < 1) scale = 1 / scale;
+    return Transform.scale(
+      scale: scale,
+      child: Center(child: CameraPreview(notifier.cameraController!)),
+    );
+  }
+
+  Widget _buildCameraOverlay(BuildContext context) {
+    return ColorFiltered(
+      colorFilter:
+          ColorFilter.mode(Colors.black.withOpacity(0.6), BlendMode.srcOut),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(
+              decoration: const BoxDecoration(
+                  color: Colors.black, backgroundBlendMode: BlendMode.dstOut)),
+          Center(
+            child: Container(
+              width: 260,
+              height: 360,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(130)),
             ),
           ),
         ],
@@ -224,71 +231,119 @@ class FaceRecognitionScreen
     );
   }
 
-  Widget _buildStatusIndicator(
-      ThemeData theme, FaceRecognitionNotifier notifier) {
-    if (notifier.isLoading) {
-      return Column(
+  Widget _buildTopHeader(
+      BuildContext context, FaceRecognitionNotifier notifier) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
         children: [
-          const SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 3)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close_rounded,
+                    color: Colors.white, size: 30),
+                onPressed: () {
+                  notifier.stopCameraManual();
+                  Navigator.pop(context);
+                },
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20)),
+                child: Text(
+                  notifier.isRegistrationMode
+                      ? "MODE PENDAFTARAN"
+                      : "MODE VERIFIKASI",
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      letterSpacing: 1),
+                ),
+              ),
+              const SizedBox(width: 48), // Balance for close button
+            ],
+          ),
           const SizedBox(height: 20),
-          Text("Memproses...",
-              style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: theme.colorScheme.primary)),
+          _buildHeaderText(notifier),
         ],
-      );
-    }
+      ),
+    );
+  }
 
-    if (notifier.percentMatch >= 75) {
+  Widget _buildHeaderText(FaceRecognitionNotifier notifier) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white10)),
+      child: Text(
+        notifier.isRegistrationMode
+            ? "Posisikan wajah di dalam oval\ndan kedipkan mata untuk mendaftar"
+            : "Silakan berkedip untuk\nmemverifikasi kehadiran Anda",
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            height: 1.5),
+      ),
+    );
+  }
+
+  Widget _buildLiveStatus(FaceRecognitionNotifier notifier) {
+    if (notifier.isLoading) {
       return const Column(
         children: [
-          Icon(Icons.check_circle_rounded, color: Colors.green, size: 40),
-          SizedBox(height: 12),
-          Text("TERVERIFIKASI",
+          CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+          SizedBox(height: 16),
+          Text("Memproses Biometrik...",
               style:
-                  TextStyle(color: Colors.green, fontWeight: FontWeight.w900)),
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ],
       );
     }
-
     return Column(
       children: [
-        Icon(
-            notifier.percentMatch == -1.0
-                ? Icons.warning_amber_rounded
-                : Icons.remove_red_eye_outlined,
-            color: notifier.percentMatch == -1.0
-                ? Colors.redAccent
-                : Colors.orange,
-            size: 44),
-        const SizedBox(height: 8),
-        FittedBox(
-          child: Text(
-              notifier.percentMatch == -1.0 ? "COBA LAGI" : "SILAKAN BERKEDIP",
-              style: TextStyle(
-                  color: notifier.percentMatch == -1.0
-                      ? Colors.redAccent
-                      : Colors.orange,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16)),
-        ),
+        Icon(Icons.remove_red_eye_rounded,
+            color: Colors.orangeAccent.shade200, size: 45),
+        const SizedBox(height: 12),
+        const Text("SILAKAN BERKEDIP",
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+                fontSize: 16)),
       ],
     );
   }
 
-  Widget _buildActionButton(FaceRecognitionNotifier notifier) {
+  Widget _buildBottomAction(FaceRecognitionNotifier notifier) {
     if (!notifier.isLocationGranted) {
-      return SizedBox(
-        width: double.infinity,
-        height: 58,
-        child: ElevatedButton.icon(
-          onPressed: () => notifier.requestLocationPermission(),
-          icon: const Icon(Icons.location_on_rounded),
-          label: const Text("AKTIFKAN LOKASI",
-              style: TextStyle(fontWeight: FontWeight.w900)),
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: SizedBox(
+          width: double.infinity,
+          height: 60,
+          child: ElevatedButton.icon(
+            onPressed: () => notifier.requestLocationPermission(),
+            icon: const Icon(Icons.location_on_rounded),
+            label: const Text("AKTIFKAN AKSES LOKASI",
+                style:
+                    TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18)),
+            ),
+          ),
         ),
       );
     }

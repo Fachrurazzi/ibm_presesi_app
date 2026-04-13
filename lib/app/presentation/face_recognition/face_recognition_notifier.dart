@@ -7,11 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_face_api/flutter_face_api.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-import 'package:ibm_presensi_app/app/module/entity/profile.dart';
-import 'package:ibm_presensi_app/app/module/use_case/update_profile.dart';
+import 'package:ibm_presensi_app/app/module/use_case/auth_register_face.dart';
 import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:ibm_presensi_app/core/di/dependency.dart';
@@ -20,109 +17,116 @@ import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/provider/app_provider.dart';
 
 class FaceRecognitionNotifier extends AppProvider with WidgetsBindingObserver {
-  final UpdateProfileUseCase _updateProfileUseCase;
+  final AuthRegisterFaceUseCase _registerFaceUseCase;
   final Dio _dio;
 
-  FaceRecognitionNotifier(this._updateProfileUseCase, this._dio) {
+  FaceRecognitionNotifier(this._registerFaceUseCase, this._dio) {
     WidgetsBinding.instance.addObserver(this);
     init();
   }
 
-  // --- VARIABLES ---
+  // --- Core Objects ---
   CameraController? _cameraController;
   CameraDescription? _cameraDescription;
   final _faceSDK = FaceSDK.instance;
-  MatchFacesImage? mfImage1;
+  MatchFacesImage? _masterFace;
 
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
       enableClassification: true,
-      enableTracking: true,
+      performanceMode: FaceDetectorMode.fast,
     ),
   );
 
+  // --- State Variables ---
   bool _isProcessing = false;
-  bool _isLive = false;
+  bool _isFaceDetected = false;
   bool _isLocationGranted = false;
   bool _isRegistrationMode = false;
   double _percentMatch = 0.0;
+  String biometricMessage = "Posisikan wajah Anda";
+  bool isErrorMessage = false;
+  DateTime? _lastProcessingTime;
 
-  // --- GETTERS ---
+  // KUNCI: Variabel untuk menyimpan foto hasil scan agar bisa ditampilkan di Overlay Screen
+  Uint8List? _capturedFaceBytes;
+
+  // --- Getters ---
   CameraController? get cameraController => _cameraController;
-  bool get isLive => _isLive;
+  bool get isFaceDetected => _isFaceDetected;
   bool get isLocationGranted => _isLocationGranted;
   bool get isRegistrationMode => _isRegistrationMode;
   double get percentMatch => _percentMatch;
+  Uint8List? get capturedFaceBytes => _capturedFaceBytes; // Expose ke Screen
 
   @override
   Future<void> init() async {
     showLoading();
-    await checkLocationPermission();
+
+    // 1. Cek Izin & Inisialisasi SDK
+    _isLocationGranted = await Permission.locationWhenInUse.isGranted;
     await _faceSDK.initialize();
 
-    String? photoUrl =
-        await SharedPreferencesHelper.getString(AppPreferences.IMAGE_URL);
-    if (photoUrl == null ||
-        photoUrl.isEmpty ||
-        !photoUrl.contains('users-avatar')) {
+    final bool hasRegistered =
+        SharedPreferencesHelper.getBool(AppPreferences.IS_FACE_REGISTERED) ??
+            false;
+    final String? photoUrl =
+        SharedPreferencesHelper.getString(AppPreferences.IMAGE_URL);
+
+    if (!hasRegistered || photoUrl == null || photoUrl.isEmpty) {
       _isRegistrationMode = true;
     } else {
-      await _fetchBasePhoto(photoUrl);
+      _isRegistrationMode = false;
+      await _fetchMasterPhoto(photoUrl);
     }
 
+    // 2. Warm-up hardware & init kamera
+    await Future.delayed(const Duration(milliseconds: 400));
     await _initializeCamera();
+
     hideLoading();
     notifyListeners();
   }
 
-  Future<void> checkLocationPermission() async {
-    final status = await Permission.locationWhenInUse.status;
-    _isLocationGranted = status.isGranted;
-    notifyListeners();
-  }
+  // --- CAMERA & PERMISSION LOGIC ---
 
   Future<void> requestLocationPermission() async {
+    if (_cameraController != null &&
+        _cameraController!.value.isStreamingImages) {
+      await _cameraController!.stopImageStream();
+    }
+
     final status = await Permission.locationWhenInUse.request();
-    if (status.isGranted) {
-      _isLocationGranted = true;
-      snackbarMessage = "Izin lokasi diberikan! 📍";
-    } else if (status.isPermanentlyDenied) {
+    _isLocationGranted = status.isGranted;
+
+    if (status.isPermanentlyDenied) {
       openAppSettings();
     }
+
+    await _initializeCamera();
     notifyListeners();
   }
 
-  Future<void> _fetchBasePhoto(String path) async {
-    try {
-      String fullUrl =
-          path.startsWith('http') ? path : "${AppConfig.STORAGE_URL}/$path";
-      String finalUrl = "$fullUrl?v=${DateTime.now().millisecondsSinceEpoch}";
-
-      final response = await _dio.get(
-        finalUrl,
-        options: Options(
-          responseType: ResponseType.bytes,
-          validateStatus: (status) => status! < 500,
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final Uint8List bytes = Uint8List.fromList(response.data);
-        mfImage1 = MatchFacesImage(bytes, ImageType.PRINTED);
-        _isRegistrationMode = false;
-      } else {
-        _isRegistrationMode = true;
+  Future<void> stopCameraManual() async {
+    if (_cameraController != null) {
+      if (_cameraController!.value.isStreamingImages) {
+        await _cameraController!.stopImageStream();
       }
-    } catch (e) {
-      _isRegistrationMode = true;
+      await _cameraController!.dispose();
+      _cameraController = null;
+      notifyListeners();
     }
   }
 
   Future<void> _initializeCamera() async {
     try {
       final cameras = await availableCameras();
-      _cameraDescription = cameras
-          .firstWhere((cam) => cam.lensDirection == CameraLensDirection.front);
+      if (cameras.isEmpty) return;
+
+      _cameraDescription = cameras.firstWhere(
+        (cam) => cam.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
 
       _cameraController = CameraController(
         _cameraDescription!,
@@ -134,18 +138,33 @@ class FaceRecognitionNotifier extends AppProvider with WidgetsBindingObserver {
       );
 
       await _cameraController!.initialize();
-
-      _cameraController!.startImageStream((CameraImage image) {
-        // KUNCI: Cegah loop jika sedang sibuk, sudah live, atau sedang loading UI
-        if (_isProcessing || _isLive || isLoading) return;
-        _processCameraImage(image);
-      });
+      _startStream();
+      notifyListeners();
     } catch (e) {
-      errorMessage = "Gagal mengakses kamera.";
+      debugPrint("🚨 CAMERA_ERROR: $e");
+      errorMessage = "Hardware kamera sibuk atau tidak ditemukan.";
     }
   }
 
-  Future<void> _processCameraImage(CameraImage image) async {
+  void _startStream() {
+    if (_cameraController == null || !_cameraController!.value.isInitialized)
+      return;
+
+    _cameraController!.startImageStream((image) {
+      if (_isProcessing || _isFaceDetected || isLoading) return;
+
+      final now = DateTime.now();
+      if (_lastProcessingTime != null &&
+          now.difference(_lastProcessingTime!).inMilliseconds < 500) return;
+      _lastProcessingTime = now;
+
+      _detectFaceLogic(image);
+    });
+  }
+
+  // --- BIOMETRIC LOGIC ---
+
+  Future<void> _detectFaceLogic(CameraImage image) async {
     _isProcessing = true;
     try {
       final inputImage = CameraUtils.convertCameraImageToInputImage(
@@ -154,176 +173,173 @@ class FaceRecognitionNotifier extends AppProvider with WidgetsBindingObserver {
 
       final faces = await _faceDetector.processImage(inputImage);
 
-      if (faces.length > 1) {
-        errorMessage = "Hanya boleh ada 1 wajah di layar.";
-        notifyListeners();
-        return;
-      }
-
       if (faces.isEmpty) {
-        errorMessage = "";
+        _updateMessage("Dekatkan wajah ke kamera", isError: false);
         return;
       }
 
       final face = faces[0];
 
-      // LOGIKA KEDIPAN (LIVENESS)
+      // Validasi jarak wajah (Geometri dasar)
+      if (face.boundingBox.width < 110) {
+        _updateMessage("Wajah terlalu jauh", isError: true);
+        return;
+      }
+
+      _updateMessage("Tahan... Kedipkan mata Anda", isError: false);
+
+      // ANTI-SPOOFING: Deteksi Kedipan
       if (face.leftEyeOpenProbability != null &&
           face.rightEyeOpenProbability != null) {
         if (face.leftEyeOpenProbability! < 0.2 &&
             face.rightEyeOpenProbability! < 0.2) {
-          _isLive = true;
-          HapticFeedback.mediumImpact();
+          _isFaceDetected = true;
+          HapticFeedback.heavyImpact();
 
-          // A. STOP STREAM SEGERA
           await _cameraController?.stopImageStream();
-
-          // B. JEDA 500ms agar hardware kamera beralih mode (PENTING!)
-          await Future.delayed(const Duration(milliseconds: 500));
-
-          notifyListeners();
-
-          // C. AMBIL FOTO
+          await Future.delayed(const Duration(milliseconds: 300));
           await _captureAndVerify();
         }
       }
     } catch (e) {
-      debugPrint("Process Error: $e");
+      debugPrint("🚨 FACE_DETECT_ERROR: $e");
     } finally {
-      if (!_isLive) _isProcessing = false;
+      _isProcessing = false;
     }
   }
 
   Future<void> _captureAndVerify() async {
+    showLoading();
     try {
-      showLoading();
-      if (_cameraController == null ||
-          !_cameraController!.value.isInitialized) {
-        return;
-      }
+      if (_cameraController == null) return;
+      final XFile photo = await _cameraController!.takePicture();
+      final Uint8List bytes = await photo.readAsBytes();
 
-      final XFile file = await _cameraController!.takePicture();
-      final Uint8List bytes = await file.readAsBytes();
+      // SIMPAN BYTES: Agar Screen bisa menampilkan foto hasil scan di Overlay
+      _capturedFaceBytes = bytes;
 
       if (_isRegistrationMode) {
-        await _registerFace(bytes);
+        await _handleRegistration(photo.path, bytes);
       } else {
-        await _matchFaces(bytes);
+        await _handleVerification(bytes);
       }
     } catch (e) {
-      debugPrint("Capture Error: $e");
-      _restartCameraStream("Gagal mengambil foto. Silakan berkedip lagi.");
+      _resetStream("Kamera terganggu, coba lagi.");
     }
   }
 
-  Future<void> _registerFace(Uint8List bytes) async {
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final file = File(
-          '${tempDir.path}/face_reg_${DateTime.now().millisecondsSinceEpoch}.jpg');
-      await file.writeAsBytes(bytes);
-
-      final name =
-          await SharedPreferencesHelper.getString(AppPreferences.USER_NAME) ??
-              'User';
-      final response = await _updateProfileUseCase(
-          ProfileParamUpdate(name: name, image: file));
-
-      if (response.success && response.data != null) {
-        final user = response.data as ProfileEntity;
-        await SharedPreferencesHelper.setString(
-            AppPreferences.IMAGE_URL, user.image ?? "");
-        mfImage1 = MatchFacesImage(bytes, ImageType.PRINTED);
-        _percentMatch = 100.0;
-        _isRegistrationMode = false;
-        snackbarMessage = "Wajah berhasil didaftarkan! ✅";
-        if (sl.isRegistered<HomeNotifier>()) sl<HomeNotifier>().init();
-      } else {
-        _restartCameraStream(response.message);
-      }
-    } catch (e) {
-      _restartCameraStream("Gagal registrasi.");
-    } finally {
-      hideLoading();
-      notifyListeners();
-    }
-  }
-
-  Future<void> _matchFaces(Uint8List bytes) async {
-    if (mfImage1 == null) {
-      _restartCameraStream("Data master tidak ditemukan.");
+  Future<void> _handleVerification(Uint8List liveBytes) async {
+    if (_masterFace == null) {
+      _resetStream("Foto master belum dimuat.");
       return;
     }
 
     try {
-      MatchFacesImage mfImage2 = MatchFacesImage(bytes, ImageType.LIVE);
-      final request = MatchFacesRequest([mfImage1!, mfImage2]);
+      final liveFace = MatchFacesImage(liveBytes, ImageType.LIVE);
+      final request = MatchFacesRequest([_masterFace!, liveFace]);
       final response = await _faceSDK.matchFaces(request);
 
       if (response.error != null) {
-        _restartCameraStream("Gagal memproses wajah.");
+        _resetStream("Gagal memproses biometrik.");
       } else {
-        final split = await _faceSDK.splitComparedFaces(response.results, 0.75);
+        final split = await _faceSDK.splitComparedFaces(response.results, 0.80);
         if (split.matchedFaces.isNotEmpty) {
-          _percentMatch = double.parse(
-              (split.matchedFaces[0].similarity * 100).toStringAsFixed(1));
-          snackbarMessage = "Terverifikasi! ($_percentMatch%)";
+          _percentMatch = (split.matchedFaces[0].similarity * 100);
+          _updateMessage("Verifikasi Berhasil! ✅", isError: false);
+          notifyListeners(); // Update Screen untuk memicu navigasi & overlay
         } else {
-          _restartCameraStream("Wajah tidak cocok dengan database.");
+          _resetStream("Wajah tidak cocok ❌");
         }
       }
     } catch (e) {
-      _restartCameraStream("Kesalahan biometrik.");
+      _resetStream("Gagal mencocokkan wajah.");
     } finally {
       hideLoading();
+    }
+  }
+
+  // --- UTILS ---
+
+  Future<void> _fetchMasterPhoto(String path) async {
+    try {
+      String fullUrl =
+          path.startsWith('http') ? path : "${AppConfig.STORAGE_URL}/$path";
+      String finalUrl = "$fullUrl?v=${DateTime.now().millisecondsSinceEpoch}";
+      final resp = await _dio.get(finalUrl,
+          options: Options(responseType: ResponseType.bytes));
+
+      if (resp.statusCode == 200) {
+        _masterFace =
+            MatchFacesImage(Uint8List.fromList(resp.data), ImageType.PRINTED);
+      } else {
+        _isRegistrationMode = true;
+      }
+    } catch (e) {
+      _isRegistrationMode = true;
+    }
+  }
+
+  Future<void> _handleRegistration(String path, Uint8List bytes) async {
+    final resp = await _registerFaceUseCase(
+        param: RegisterFaceParam(faceModel: "MASTER_FACE", imagePath: path));
+    if (resp.success) {
+      await SharedPreferencesHelper.setBool(
+          AppPreferences.IS_FACE_REGISTERED, true);
+      _masterFace = MatchFacesImage(bytes, ImageType.PRINTED);
+      _percentMatch = 100.0;
+      _isRegistrationMode = false;
+      _updateMessage("Registrasi Berhasil! ✅", isError: false);
+      if (sl.isRegistered<HomeNotifier>()) sl<HomeNotifier>().init();
+    } else {
+      _resetStream(resp.message);
+    }
+    hideLoading();
+  }
+
+  void _updateMessage(String msg, {bool isError = true}) {
+    if (biometricMessage != msg) {
+      biometricMessage = msg;
+      isErrorMessage = isError;
       notifyListeners();
     }
   }
 
-  void _restartCameraStream(String errorMsg) {
-    hideLoading();
-    _percentMatch = -1.0;
-    _isLive = false;
+  void _resetStream(String errorMsg) {
+    _isFaceDetected = false;
     _isProcessing = false;
-    errorMessage = errorMsg;
-    notifyListeners();
+    _percentMatch = 0.0;
+    _capturedFaceBytes = null; // Reset foto jika gagal
+    _updateMessage(errorMsg);
 
-    // Beri jeda agar hardware tidak crash saat start stream kembali
-    Future.delayed(const Duration(milliseconds: 600), () {
+    Future.delayed(const Duration(seconds: 2), () {
       if (_cameraController != null &&
-          !_cameraController!.value.isStreamingImages) {
-        _cameraController!.startImageStream((image) {
-          if (!_isProcessing && !_isLive && !isLoading) {
-            _processCameraImage(image);
-          }
-        });
+          !_cameraController!.value.isStreamingImages &&
+          !isLoading) {
+        _startStream();
       }
     });
   }
 
   void resetState() {
-    _percentMatch = 0.0;
-    _isLive = false;
-    _isProcessing = false;
-    errorMessage = "";
-
-    // Nyalakan kembali stream kamera agar user bisa scan ulang
-    if (_cameraController != null &&
-        !_cameraController!.value.isStreamingImages) {
-      _cameraController!.startImageStream((image) {
-        if (!_isProcessing && !_isLive && !isLoading)
-          _processCameraImage(image);
-      });
-    }
-
-    notifyListeners();
+    _capturedFaceBytes = null;
+    _resetStream("Siap...");
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    stopCameraManual();
     _faceDetector.close();
-    _cameraController?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      stopCameraManual();
+    } else if (state == AppLifecycleState.resumed) {
+      _initializeCamera();
+    }
   }
 }

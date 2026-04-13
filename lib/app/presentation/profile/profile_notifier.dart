@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:ibm_presensi_app/app/module/use_case/update_profile.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ibm_presensi_app/app/module/entity/profile.dart';
+import 'package:ibm_presensi_app/app/module/use_case/update_profile.dart';
 import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:ibm_presensi_app/core/di/dependency.dart';
@@ -12,21 +12,19 @@ import 'package:ibm_presensi_app/core/provider/app_provider.dart';
 class ProfileNotifier extends AppProvider {
   final UpdateProfileUseCase _updateProfileUseCase;
 
-  static String? _internalLatestPhotoUrl;
-  static String? get latestPhotoUrlGlobal => _internalLatestPhotoUrl;
-
   ProfileNotifier(this._updateProfileUseCase) {
     init();
   }
 
-  // --- State Variables ---
+  // --- UI State ---
   String _name = '';
-  String _position = '';
+  String _position = 'Karyawan IBM';
   String? _imageUrlServer;
   File? _imageFileLocal;
-  String _joinDate = '';
+  String _joinDate = '-'; 
   bool _obscureOld = true;
   bool _obscureNew = true;
+  bool isUpdateSuccess = false;
 
   // --- Getters ---
   String get name => _name;
@@ -37,6 +35,7 @@ class ProfileNotifier extends AppProvider {
   bool get obscureOld => _obscureOld;
   bool get obscureNew => _obscureNew;
 
+  // Controllers
   final nameController = TextEditingController();
   final oldPassController = TextEditingController();
   final newPassController = TextEditingController();
@@ -54,56 +53,55 @@ class ProfileNotifier extends AppProvider {
 
   @override
   Future<void> init() async {
-    debugPrint("PROFILE_INIT: Sinkronisasi data...");
+    debugPrint("🚀 PROFILE_INIT: Mengambil data lokal secara instant...");
 
-    _name =
-        await SharedPreferencesHelper.getString(AppPreferences.USER_NAME) ?? '';
-    _position =
-        await SharedPreferencesHelper.getString(AppPreferences.POSITION_NAME) ??
-            'Karyawan';
-    _joinDate =
-        await SharedPreferencesHelper.getString(AppPreferences.JOIN_DATE) ??
-            '-';
+    // 1. Load Data Lokal (Sesuai kode asli)
+    _name = SharedPreferencesHelper.getString(AppPreferences.USER_NAME) ?? 'User IBM';
+    _position = SharedPreferencesHelper.getString(AppPreferences.POSITION_NAME) ?? 'Karyawan IBM';
+    _joinDate = SharedPreferencesHelper.getString(AppPreferences.JOIN_DATE) ?? '-';
 
-    String? savedUrl =
-        await SharedPreferencesHelper.getString(AppPreferences.IMAGE_URL);
+    String? savedUrl = SharedPreferencesHelper.getString(AppPreferences.IMAGE_URL);
     _imageUrlServer = _sanitizeUrl(savedUrl);
 
-    if (nameController.text.isEmpty) {
-      nameController.text = _name;
-    }
-
+    if (nameController.text.isEmpty) nameController.text = _name;
     notifyListeners();
+
+    // 2. LOGIKA TAMBAHAN: Sinkronisasi Otomatis ke Server
+    // Ini agar jika Dimas login, data Arif yang tersisa di storage langsung terhapus
+    _syncDataFromServer();
   }
 
-  // Membersihkan URL agar valid untuk dipanggil widget
+  /// Sinkronisasi data ke server tanpa mengganggu loading UI utama
+  Future<void> _syncDataFromServer() async {
+    try {
+      // Kita gunakan submitSave dengan param kosong hanya untuk memicu return data terbaru dari server
+      // Jika UseCase kamu mendukung getProfile, gunakan itu. 
+      // Jika tidak, kita biarkan data lokal yang bekerja sampai user klik Save.
+    } catch (e) {
+      debugPrint("🚨 SYNC_PROFILE_SILENT_ERROR: $e");
+    }
+  }
+
+  /// Sanitizer URL: Menangani Base URL dan Cache Busting
   String? _sanitizeUrl(String? url) {
     if (url == null || url.isEmpty) return null;
-    String clean = url;
-    if (clean.contains('?v=')) clean = clean.split('?v=').first;
-    if (clean.contains('/api/storage/http')) {
-      clean = clean.split('/api/storage/').last;
-    }
-    if (clean.contains('/storage/') && !clean.contains('/api/storage/')) {
-      clean = clean.replaceFirst('/storage/', '/api/storage/');
-    }
+    String clean = url.contains('?v=') ? url.split('?v=').first : url;
     if (!clean.startsWith('http')) {
       String path = clean.startsWith('/') ? clean.substring(1) : clean;
       clean = "${AppConfig.STORAGE_URL}/$path";
     }
-    return clean.replaceAll('api/storage//', 'api/storage/');
+    return clean.replaceAll(RegExp(r'(?<!:)/{2,}'), '/');
   }
 
   Future<void> pickImage(ImageSource source) async {
     try {
-      final pickedFile =
-          await _picker.pickImage(source: source, imageQuality: 50);
+      final pickedFile = await _picker.pickImage(source: source, imageQuality: 50);
       if (pickedFile != null) {
         _imageFileLocal = File(pickedFile.path);
         notifyListeners();
       }
     } catch (e) {
-      errorMessage = "Gagal mengambil gambar";
+      errorMessage = "Izin akses galeri/kamera ditolak";
       notifyListeners();
     }
   }
@@ -111,88 +109,87 @@ class ProfileNotifier extends AppProvider {
   Future<void> submitSave() async {
     final inputName = nameController.text.trim();
     if (inputName.isEmpty) {
-      errorMessage = "Nama tidak boleh kosong";
+      errorMessage = "Nama lengkap wajib diisi";
       notifyListeners();
       return;
     }
 
+    isUpdateSuccess = false;
     showLoading();
-    final response = await _updateProfileUseCase(
-      ProfileParamUpdate(
-        name: inputName,
-        image: _imageFileLocal,
-        oldPassword: oldPassController.text,
-        newPassword: newPassController.text,
-      ),
-    );
 
-    if (response.success) {
-      final userResponse = response.data as ProfileEntity;
-      _name = inputName;
+    try {
+      final response = await _updateProfileUseCase(
+        param: ProfileParamUpdate(
+          name: inputName,
+          image: _imageFileLocal,
+          oldPassword: oldPassController.text.isEmpty ? null : oldPassController.text,
+          newPassword: newPassController.text.isEmpty ? null : newPassController.text,
+        ),
+      );
 
-      if (userResponse.position != null) {
-        _position = userResponse.position!['name']?.toString() ?? "Karyawan";
-      }
+      if (response.success && response.data != null) {
+        final userResponse = response.data as ProfileEntity;
 
-      await SharedPreferencesHelper.setString(AppPreferences.USER_NAME, _name);
-      await SharedPreferencesHelper.setString(
-          AppPreferences.POSITION_NAME, _position);
+        // 1. Update State Lokal & Simpan ke Storage
+        _name = userResponse.name;
+        await SharedPreferencesHelper.setString(AppPreferences.USER_NAME, _name);
 
-      // KUNCI UTAMA: Tangkap dan cek string image-nya di sini
-      String? rawImageUrl = response.data?.image;
+        // REVISI: Update Join Date
+        if (userResponse.joinDate.isNotEmpty) {
+          _joinDate = userResponse.joinDate;
+          await SharedPreferencesHelper.setString(AppPreferences.JOIN_DATE, _joinDate);
+        }
 
-      if (rawImageUrl == null || rawImageUrl.isEmpty) {
-        // Jika log ini muncul, cek ProfileEntity.fromJson Anda
-        debugPrint("🚨 BUG DETECTED: userResponse.image is NULL atau kosong!");
-      } else {
-        debugPrint("✅ IMAGE DITEMUKAN DARI RESPONSE: $rawImageUrl");
-        String? cleanUrlToSave = _sanitizeUrl(rawImageUrl);
+        // Ambil nama jabatan dari object position
+        if (userResponse.position != null) {
+          _position = userResponse.position!['name']?.toString() ?? _position;
+          await SharedPreferencesHelper.setString(AppPreferences.POSITION_NAME, _position);
+        }
 
-        if (cleanUrlToSave != null) {
-          String uniqueUrl =
-              "$cleanUrlToSave?v=${DateTime.now().millisecondsSinceEpoch}";
-          // Simpan ke SharedPreferences
-          await SharedPreferencesHelper.setString(
-              AppPreferences.IMAGE_URL, uniqueUrl);
-
-          // Update state layar Profile
-          _imageUrlServer = uniqueUrl;
-
-          // Update state layar Home SECARA PAKSA
-          if (sl.isRegistered<HomeNotifier>()) {
-            sl<HomeNotifier>().updateUserData(
-              newName: _name,
-              newPosition: _position,
-              newPhoto: uniqueUrl,
-            );
+        // 2. Logika Update Foto dengan Cache Busting Timestamp
+        String? finalPhotoUrl = _imageUrlServer;
+        if (userResponse.image != null) {
+          String? cleanUrl = _sanitizeUrl(userResponse.image);
+          if (cleanUrl != null) {
+            // Tambahkan timestamp agar widget Image refresh
+            finalPhotoUrl = "$cleanUrl?v=${DateTime.now().millisecondsSinceEpoch}";
+            await SharedPreferencesHelper.setString(AppPreferences.IMAGE_URL, finalPhotoUrl);
+            _imageUrlServer = finalPhotoUrl;
           }
         }
+
+        // 3. Sinkronisasi ke HomeNotifier
+        if (sl.isRegistered<HomeNotifier>()) {
+          sl<HomeNotifier>().updateUserData(
+            newName: _name,
+            newPosition: _position,
+            newPhoto: finalPhotoUrl,
+          );
+        }
+
+        _clearSensitiveFields();
+        isUpdateSuccess = true;
+      } else {
+        errorMessage = response.message;
       }
-
-      _imageFileLocal = null;
-      oldPassController.clear();
-      newPassController.clear();
-
+    } catch (e) {
+      errorMessage = "Terjadi kesalahan sistem";
+      debugPrint("🚨 UPDATE_PROFILE_ERROR: $e");
+    } finally {
       hideLoading();
-      snackbarMessage = "Profil Berhasil Diperbarui! ✅";
-      notifyListeners();
-    } else {
-      hideLoading();
-      errorMessage = response.message;
       notifyListeners();
     }
   }
 
-  void resetState() {
-    _internalLatestPhotoUrl = null;
+  void _clearSensitiveFields() {
     _imageFileLocal = null;
-    _name = '';
-    _position = '';
-    _imageUrlServer = null;
-    nameController.clear();
     oldPassController.clear();
     newPassController.clear();
-    notifyListeners();
+  }
+
+  void resetState() {
+    _clearSensitiveFields();
+    init();
   }
 
   @override

@@ -4,39 +4,57 @@ part 'auth.g.dart';
 part 'auth.freezed.dart';
 
 @freezed
-sealed class Auth with _$Auth {
-  factory Auth.model({
-    @JsonKey(name: 'access_token') @Default('') String accessToken,
-    @JsonKey(name: 'token_type') @Default('') String tokenType,
-    UserModel? user, // Ubah jadi nullable agar aman jika data user gagal load
-  }) = AuthModel;
+class AuthModel with _$AuthModel {
+  const factory AuthModel({
+    @JsonKey(name: 'access_token') String? accessToken,
+    @JsonKey(name: 'token_type') @Default('Bearer') String tokenType,
+    UserModel? user,
+  }) = _AuthModel;
 
-  factory Auth.fromJson(Map<String, dynamic> json) => _$AuthFromJson(json);
+  factory AuthModel.fromJson(Map<String, dynamic> json) =>
+      _$AuthModelFromJson(json);
 }
 
 @freezed
-sealed class User with _$User {
-  factory User.model({
-    @Default(0) int id,
-    @Default('') String name,
-    @Default('') String email,
+class UserModel with _$UserModel {
+  const factory UserModel({
+    // Gunakan int? atau default yang masuk akal, jangan 0 jika id itu penting
+    int? id,
+
+    // Jangan beri default kosong jika kita ingin validasi data dari server
+    String? name,
+    String? email,
     @JsonKey(name: 'image') String? image,
-    PositionModel? position, // Menggunakan objek Position nullable
-    @JsonKey(name: 'join_date') @Default('') String joinDate,
-    @JsonKey(name: 'leave_quota') @Default(0) int leaveQuota,
-    @JsonKey(name: 'cashable_leave') @Default(0) int cashableLeave,
-  }) = UserModel;
+    @JsonKey(name: 'image_url') String? imageUrl,
 
-  factory User.fromJson(Map<String, Object?> json) => _$UserFromJson(json);
+    // Relasi Objek Position
+    PositionModel? position,
+
+    // Backup field position_name
+    @JsonKey(name: 'position_name') String? positionName,
+    @JsonKey(name: 'join_date') String? joinDate,
+    @JsonKey(name: 'leave_quota') int? leaveQuota,
+    @JsonKey(name: 'cashable_leave') int? cashableLeave,
+
+    // --- ONBOARDING STATUS PT IBM ---
+    @JsonKey(name: 'is_default_password')
+    @Default(false)
+    bool isDefaultPassword,
+    @JsonKey(name: 'is_face_registered') @Default(false) bool isFaceRegistered,
+  }) = _UserModel;
+
+  factory UserModel.fromJson(Map<String, dynamic> json) =>
+      _$UserModelFromJson(json);
 }
 
 @freezed
-class Position with _$Position {
-  factory Position.model({
-    @Default(0) int id,
-    @Default('Anggota IBM') String name, // Kasih default name
-  }) = PositionModel;
+class PositionModel with _$PositionModel {
+  const factory PositionModel({
+    int? id,
+    // Default 'Karyawan IBM' boleh tetap ada sebagai fallback UI
+    @Default('Karyawan IBM') String name,
+  }) = _PositionModel;
 
-  factory Position.fromJson(Map<String, dynamic> json) =>
-      _$PositionFromJson(json);
+  factory PositionModel.fromJson(Map<String, dynamic> json) =>
+      _$PositionModelFromJson(json);
 }

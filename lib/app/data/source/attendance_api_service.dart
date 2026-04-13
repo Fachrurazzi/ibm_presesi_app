@@ -4,22 +4,24 @@ import 'package:retrofit/retrofit.dart';
 
 part 'attendance_api_service.g.dart';
 
-@RestApi(baseUrl: AppConfig.BASE_URL)
+@RestApi() // BaseURL sudah dihandle secara global di Dependency Injection (Dio)
 abstract class AttendanceApiService {
-  factory AttendanceApiService(Dio dio) = _AttendanceApiService;
+  factory AttendanceApiService(Dio dio, {String baseUrl}) =
+      _AttendanceApiService;
 
-  // 1. Ambil data absen hari ini
-  // Gunakan dynamic agar Retrofit tidak mencoba memanggil .fromJson()
-  @GET('/today')
+  /// Mengambil data presensi hari ini & ringkasan bulan berjalan
+  @GET('/attendance/today') // Pastikan endpoint sesuai dengan API Laravel kamu
   Future<HttpResponse<dynamic>> getAttendanceToday();
 
-  // 2. Kirim data absen (Check-in/Check-out)
-  @POST('/store')
-  Future<HttpResponse<dynamic>> sendAttendance(
-      {@Body() required Map<String, dynamic> body});
+  /// Mengirim data presensi (Check-in/Check-out)
+  /// Menggunakan Map agar fleksibel mengirim koordinat GPS & Image Base64
+  @POST('/attendance/store')
+  Future<HttpResponse<dynamic>> sendAttendance({
+    @Body() required Map<String, dynamic> body,
+  });
 
-  // 3. Ambil riwayat bulanan
-  @GET('/history/{month}/{year}')
+  /// Mengambil riwayat presensi berdasarkan bulan dan tahun
+  @GET('/attendance/history/{month}/{year}')
   Future<HttpResponse<dynamic>> getAttendanceByMonthYear({
     @Path('month') required String month,
     @Path('year') required String year,

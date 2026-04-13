@@ -4,35 +4,38 @@ import 'package:geolocator/geolocator.dart';
 import 'package:ibm_presensi_app/core/helper/dialog_helper.dart';
 
 class LocationHelper {
+  /// Mengecek apakah izin lokasi sudah diberikan
   static Future<bool> isGrantedLocationPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    // Gunakan pengecekan yang lebih aman untuk status denied
-    return !(permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever);
+    final permission = await Geolocator.checkPermission();
+    return permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse;
   }
 
+  /// Mengecek apakah GPS di HP aktif
   static Future<bool> isEnabledLocationService() async {
     return await Geolocator.isLocationServiceEnabled();
   }
 
-  static Future<bool> openLocationSetting() async {
-    return await Geolocator.openLocationSettings();
-  }
-
+  /// Meminta izin lokasi secara cerdas
   static Future<bool> showDialogLocationPermission(BuildContext context) async {
+    bool serviceEnabled = await isEnabledLocationService();
+    if (!serviceEnabled) {
+      if (context.mounted) {
+        DialogHelper.showSnackbar(
+            context: context,
+            text: 'GPS Anda tidak aktif. Mohon aktifkan GPS.');
+      }
+      return false;
+    }
+
     LocationPermission permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-
       if (permission == LocationPermission.denied) {
-        // Gunakan context.mounted untuk keamanan jika proses request lama
-        if (context.mounted) {
+        if (context.mounted)
           DialogHelper.showSnackbar(
-            context: context,
-            text: 'Perizinan Lokasi Ditolak',
-          );
-        }
+              context: context, text: 'Izin lokasi dibutuhkan untuk absen.');
         return false;
       }
     }
@@ -40,10 +43,8 @@ class LocationHelper {
     if (permission == LocationPermission.deniedForever) {
       if (context.mounted) {
         DialogHelper.showSnackbar(
-          context: context,
-          text:
-              'Perizinan lokasi ditolak permanen. Silakan aktifkan di pengaturan.',
-        );
+            context: context,
+            text: 'Izin lokasi ditolak permanen. Silakan ubah di Pengaturan.');
       }
       await Geolocator.openAppSettings();
       return false;
@@ -52,6 +53,21 @@ class LocationHelper {
     return true;
   }
 
+  /// Mendapatkan lokasi saat ini dengan akurasi tinggi (PENTING untuk Absen)
+  static Future<Position?> getCurrentPosition() async {
+    try {
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy
+            .high, // Akurasi tinggi agar tidak meleset dari pagar Depo
+        timeLimit:
+            const Duration(seconds: 10), // Cegah aplikasi hang jika GPS lemot
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Menghitung apakah user berada di dalam radius kantor
   static bool isLocationInCircle(CircleOSM circle, GeoPoint currentLocation) {
     double distance = Geolocator.distanceBetween(
       currentLocation.latitude,
@@ -60,7 +76,8 @@ class LocationHelper {
       circle.centerPoint.longitude,
     );
 
-    // Hasil distance adalah dalam satuan METER
-    return distance <= circle.radius;
+    // Memberikan toleransi 5-10 meter untuk akurasi GPS yang goyang
+    const double tolerance = 5.0;
+    return distance <= (circle.radius + tolerance);
   }
 }

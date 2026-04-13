@@ -4,22 +4,27 @@ part 'leave.g.dart';
 part 'leave.freezed.dart';
 
 @freezed
-sealed class Leave with _$Leave {
-  // 1. ParamEntity: Digunakan saat Form Cuti di-submit ke Server
+class Leave with _$Leave {
+  // 1. ParamEntity: Untuk submit data ke server Laravel PT IBM
   const factory Leave.paramEntity({
     @JsonKey(name: 'start_date') required String startDate,
     @JsonKey(name: 'end_date') required String endDate,
     required String reason,
-    // TIPS: Tambahkan 'type' (Cuti, Izin, Sakit) jika API membutuhkannya
+    @Default('Cuti') String type, // Tambahkan tipe: Cuti, Izin, atau Sakit
   }) = LeaveParamEntity;
 
-  // 2. Entity: Digunakan untuk menampilkan Daftar Riwayat Cuti di UI
+  // 2. Entity: Untuk merender riwayat di UI Dashboard/Leave History
   const factory Leave.entity({
     required int id,
     @JsonKey(name: 'start_date') required String startDate,
     @JsonKey(name: 'end_date') required String endDate,
     required String reason,
-    required String status, // 'pending', 'approved', 'rejected'
+
+    /// Status pengajuan: 'pending', 'approved', 'rejected'
+    @Default('pending') String status,
+
+    /// Nama Admin yang menyetujui (Opsional)
+    @JsonKey(name: 'approved_by') String? approvedBy,
   }) = LeaveEntity;
 
   factory Leave.fromJson(Map<String, dynamic> json) => _$LeaveFromJson(json);

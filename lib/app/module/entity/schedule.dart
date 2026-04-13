@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+// Pastikan path import ini benar mengarah ke file user.dart di atas
+import 'package:ibm_presensi_app/app/module/entity/user.dart';
 
 part 'schedule.g.dart';
 part 'schedule.freezed.dart';
@@ -6,7 +8,12 @@ part 'schedule.freezed.dart';
 @freezed
 class ScheduleEntity with _$ScheduleEntity {
   const factory ScheduleEntity({
-    @JsonKey(name: 'is_wfa') required bool isWfa,
+    @JsonKey(name: 'is_wfa') @Default(false) bool isWfa,
+    @JsonKey(name: 'is_banned')
+    @Default(false)
+    bool isBanned, // Tambahkan ini untuk proteksi banned
+
+    UserEntity? user,
     required OfficeEntity office,
     required ShiftEntity shift,
   }) = _ScheduleEntity;
@@ -18,10 +25,10 @@ class ScheduleEntity with _$ScheduleEntity {
 @freezed
 class OfficeEntity with _$OfficeEntity {
   const factory OfficeEntity({
-    required String name,
+    @Default("Kantor IBM") String name,
     required double latitude,
     required double longitude,
-    required double radius, // Penting untuk Geofencing
+    @Default(100.0) double radius,
   }) = _OfficeEntity;
 
   factory OfficeEntity.fromJson(Map<String, dynamic> json) =>
@@ -31,9 +38,9 @@ class OfficeEntity with _$OfficeEntity {
 @freezed
 class ShiftEntity with _$ShiftEntity {
   const factory ShiftEntity({
-    required String name,
-    @JsonKey(name: 'start_time') required String startTime,
-    @JsonKey(name: 'end_time') required String endTime,
+    @Default("Shift Normal") String name,
+    @JsonKey(name: 'start_time') @Default("08:30") String startTime,
+    @JsonKey(name: 'end_time') @Default("17:30") String endTime,
   }) = _ShiftEntity;
 
   factory ShiftEntity.fromJson(Map<String, dynamic> json) =>

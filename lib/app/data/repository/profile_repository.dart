@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart'; // Jangan lupa import ini untuk debugPrint
+import 'package:flutter/foundation.dart';
 import 'package:ibm_presensi_app/app/data/source/profile_api_service.dart';
 import 'package:ibm_presensi_app/app/module/entity/profile.dart';
 import 'package:ibm_presensi_app/app/module/repository/profile_repository.dart';
@@ -11,14 +11,14 @@ class ProfileRepositoryImpl extends ProfileRepository {
   @override
   Future<DataState<ProfileEntity>> updateProfile(ProfileParamUpdate param) {
     return handleResponse(
-      () => _profileApiService.updateProfile(
+      apiCall: () => _profileApiService.updateProfile(
         name: param.name,
         image: param.image,
         oldPassword: param.oldPassword,
         newPassword: param.newPassword,
       ),
-      (json) {
-        // json sudah berupa objek profil langsung, bukan wrapper!
+      mapDataSuccess: (json) {
+        // Mapping langsung ke Entity agar UI mendapatkan data terbaru
         return ProfileEntity.fromJson(json);
       },
     );
@@ -27,15 +27,17 @@ class ProfileRepositoryImpl extends ProfileRepository {
   @override
   Future<DataState<String>> getProfilePhoto() {
     return handleResponse(
-      () => _profileApiService.getProfilePhoto(),
-      (json) {
-        final url = json['data'];
+      apiCall: () => _profileApiService.getProfilePhoto(),
+      mapDataSuccess: (json) {
+        // Laravel biasanya membungkus URL di dalam field 'data'
+        final String? url = json is Map ? json['data'] : json.toString();
 
-        if (url == null || url.toString().isEmpty) {
-          throw 'Foto profil tidak ditemukan.';
+        if (url == null || url.isEmpty) {
+          if (kDebugMode) debugPrint("PROFILE_REPO: URL Foto Kosong/Null");
+          return ""; // Kembalikan string kosong agar UI menampilkan placeholder
         }
 
-        return url.toString();
+        return url;
       },
     );
   }

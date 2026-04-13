@@ -9,10 +9,10 @@ part of 'profile.dart';
 _$ProfileEntityImpl _$$ProfileEntityImplFromJson(Map<String, dynamic> json) =>
     _$ProfileEntityImpl(
       id: (json['id'] as num?)?.toInt() ?? 0,
-      name: json['name'] as String? ?? "",
+      name: json['name'] as String? ?? "Karyawan IBM",
       email: json['email'] as String? ?? "",
       image: json['image'] as String?,
-      joinDate: json['join_date'] as String?,
+      joinDate: json['join_date'] as String? ?? "-",
       position: json['position'] as Map<String, dynamic>?,
     );
 

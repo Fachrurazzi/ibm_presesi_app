@@ -1,11 +1,10 @@
-import 'dart:async';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/module/repository/attendance_repository.dart';
 import 'package:ibm_presensi_app/core/network/data_state.dart';
 import 'package:ibm_presensi_app/core/use_case/app_use_case.dart';
 
-// PERBAIKAN: Hilangkan Future di dalam kurung siku < >.
-// Dan tambahkan tipe data kembalian (misal bool) agar Notifier lebih mudah memprosesnya.
+/// Use Case untuk mengirim data presensi (Check-in atau Check-out).
+/// Mengirimkan parameter lokasi (lat/long), alamat, dan foto wajah.
 class AttendanceSendUseCase
     extends AppUseCase<DataState<bool>, AttendanceParamEntity> {
   final AttendanceRepository _attendanceRepository;
@@ -14,7 +13,7 @@ class AttendanceSendUseCase
 
   @override
   Future<DataState<bool>> call({required AttendanceParamEntity param}) {
-    // Menghilangkan '!' dengan menggunakan 'required' pada parameter
+    // Meminta repository untuk melakukan POST data ke server
     return _attendanceRepository.sendAttendance(param);
   }
 }

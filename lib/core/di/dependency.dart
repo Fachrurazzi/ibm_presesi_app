@@ -27,13 +27,15 @@ import 'package:ibm_presensi_app/app/module/use_case/attendance_get_by_month_yea
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_this_month.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_send.dart';
 import 'package:ibm_presensi_app/app/module/use_case/auth_login.dart';
+import 'package:ibm_presensi_app/app/module/use_case/auth_update_password.dart'; // BARU
+import 'package:ibm_presensi_app/app/module/use_case/auth_register_face.dart'; // BARU
 import 'package:ibm_presensi_app/app/module/use_case/leave_get_history.dart';
 import 'package:ibm_presensi_app/app/module/use_case/leave_send.dart';
 import 'package:ibm_presensi_app/app/module/use_case/schedule_banned.dart';
 import 'package:ibm_presensi_app/app/module/use_case/schedule_get.dart';
 import 'package:ibm_presensi_app/app/module/use_case/update_profile.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_today.dart';
-import 'package:ibm_presensi_app/app/module/use_case/profile_get_photo.dart'; // BARU
+import 'package:ibm_presensi_app/app/module/use_case/profile_get_photo.dart';
 
 // Notifiers
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_notifier.dart';
@@ -41,6 +43,7 @@ import 'package:ibm_presensi_app/app/presentation/face_recognition/face_recognit
 import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/leave/leave_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/login/login_notifier.dart';
+import 'package:ibm_presensi_app/app/presentation/onboarding/change_password_notifier.dart'; // BARU
 import 'package:ibm_presensi_app/app/presentation/map/map_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/profile/profile_notifier.dart';
 
@@ -52,28 +55,37 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 final sl = GetIt.instance;
 
 Future<void> initDependency() async {
-  // --- Core / Dio ---
-  Dio dio = Dio(
-    BaseOptions(
-      baseUrl: AppConfig.BASE_URL,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-    ),
-  );
+  // ==========================================
+  // 1. CORE & NETWORK (Pondasi)
+  // ==========================================
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: AppConfig.BASE_URL,
+        connectTimeout:
+            const Duration(seconds: 15), // Dipercepat agar responsif
+        receiveTimeout: const Duration(seconds: 15),
+        validateStatus: (status) =>
+            status! < 500, // Handle error manual di Interceptor
+      ),
+    );
 
-  dio.interceptors.add(AppInterceptor());
-  dio.interceptors.add(
-    PrettyDioLogger(
-      requestBody: true,
-      requestHeader: true,
-      responseBody: true,
-      responseHeader: true,
-      compact: true,
-    ),
-  );
-  sl.registerSingleton<Dio>(dio);
+    dio.interceptors.addAll([
+      AppInterceptor(),
+      PrettyDioLogger(
+        requestHeader: true,
+        requestBody: true,
+        responseBody: true,
+        compact: true,
+      ),
+    ]);
 
-  // --- API Services (Tetap Singleton) ---
+    return dio;
+  });
+
+  // ==========================================
+  // 2. DATA SOURCES (API Services)
+  // ==========================================
   sl.registerLazySingleton<AuthApiService>(() => AuthApiService(sl()));
   sl.registerLazySingleton<AttendanceApiService>(
       () => AttendanceApiService(sl()));
@@ -81,7 +93,9 @@ Future<void> initDependency() async {
   sl.registerLazySingleton<LeaveApiService>(() => LeaveApiService(sl()));
   sl.registerLazySingleton<ProfileApiService>(() => ProfileApiService(sl()));
 
-  // --- Repositories (Tetap Singleton) ---
+  // ==========================================
+  // 3. REPOSITORIES (Data Layer Implementation)
+  // ==========================================
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
   sl.registerLazySingleton<AttendanceRepository>(
       () => AttendanceRepositoryImpl(sl()));
@@ -91,51 +105,44 @@ Future<void> initDependency() async {
   sl.registerLazySingleton<ProfileRepository>(
       () => ProfileRepositoryImpl(sl()));
 
-  // --- Use Cases (Tetap Singleton) ---
-  sl.registerLazySingleton<AuthLoginUseCase>(() => AuthLoginUseCase(sl()));
-  sl.registerLazySingleton<AttendanceGetTodayUseCase>(
-      () => AttendanceGetTodayUseCase(sl()));
-  sl.registerLazySingleton<AttendanceGetMonthUseCase>(
-      () => AttendanceGetMonthUseCase(sl()));
-  sl.registerLazySingleton<ScheduleGetUseCase>(() => ScheduleGetUseCase(sl()));
-  sl.registerLazySingleton<AttendanceSendUseCase>(
-      () => AttendanceSendUseCase(sl()));
-  sl.registerLazySingleton<AttendanceGetByMonthYear>(
-      () => AttendanceGetByMonthYear(sl()));
-  sl.registerLazySingleton<ScheduleBannedUseCase>(
-      () => ScheduleBannedUseCase(sl()));
-  sl.registerLazySingleton<LeaveSendUseCase>(() => LeaveSendUseCase(sl()));
-  sl.registerLazySingleton<LeaveGetHistoryUseCase>(
-      () => LeaveGetHistoryUseCase(sl()));
-  sl.registerLazySingleton<UpdateProfileUseCase>(
-      () => UpdateProfileUseCase(sl()));
-  sl.registerLazySingleton<ProfileGetPhotoUseCase>(
-      () => ProfileGetPhotoUseCase(sl()));
+  // ==========================================
+  // 4. USE CASES (Domain Layer Logic)
+  // ==========================================
+  // Auth
+  sl.registerLazySingleton(() => AuthLoginUseCase(sl()));
+  sl.registerLazySingleton(() => AuthUpdatePasswordUseCase(sl()));
+  sl.registerLazySingleton(() => AuthRegisterFaceUseCase(sl()));
 
-  // --- Providers / Notifiers ---
+  // Attendance
+  sl.registerLazySingleton(() => AttendanceGetTodayUseCase(sl()));
+  sl.registerLazySingleton(() => AttendanceGetMonthUseCase(sl()));
+  sl.registerLazySingleton(() => AttendanceSendUseCase(sl()));
+  sl.registerLazySingleton(() => AttendanceGetByMonthYear(sl()));
 
-  // Login: Pakai Factory (Setiap buka login harus bersih)
-  sl.registerFactory<LoginNotifier>(() => LoginNotifier(sl()));
+  // Schedule & Profile
+  sl.registerLazySingleton(() => ScheduleGetUseCase(sl()));
+  sl.registerLazySingleton(() => ScheduleBannedUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
+  sl.registerLazySingleton(() => ProfileGetPhotoUseCase(sl()));
 
-  // Home: Pakai LazySingleton (Agar data dashboard tidak hilang/re-fetch terus)
+  // Leave
+  sl.registerLazySingleton(() => LeaveSendUseCase(sl()));
+  sl.registerLazySingleton(() => LeaveGetHistoryUseCase(sl()));
+
+  // ==========================================
+  // 5. NOTIFIERS (Presentation Layer State)
+  // ==========================================
+
+  // GLOBAL STATE (Tetap Hidup/Singleton)
   sl.registerLazySingleton<HomeNotifier>(
-    () => HomeNotifier(
-      sl<AttendanceGetTodayUseCase>(),
-      sl<AttendanceGetMonthUseCase>(),
-      sl<ScheduleGetUseCase>(),
-      sl<ProfileGetPhotoUseCase>(),
-      sl<ScheduleBannedUseCase>(),
-    ),
-  );
-
-  // Profile: Pakai LazySingleton (KUNCI AGAR FOTO & POSISI SINKRON!)
+      () => HomeNotifier(sl(), sl(), sl(), sl(), sl()));
   sl.registerLazySingleton<ProfileNotifier>(() => ProfileNotifier(sl()));
 
-  // Halaman lain tetap Factory (Data sementara)
-  sl.registerFactory<MapNotifier>(() => MapNotifier(sl(), sl(), sl()));
-  sl.registerFactory<DetailAttendanceNotifier>(
-      () => DetailAttendanceNotifier(sl()));
-  sl.registerFactory<FaceRecognitionNotifier>(
-      () => FaceRecognitionNotifier(sl(), sl()));
-  sl.registerFactory<LeaveNotifier>(() => LeaveNotifier(sl(), sl()));
+  // SCREEN STATE (Reset tiap buka/Factory)
+  sl.registerFactory(() => LoginNotifier(sl()));
+  sl.registerFactory(() => ChangePasswordNotifier(sl()));
+  sl.registerFactory(() => MapNotifier(sl(), sl(), sl()));
+  sl.registerFactory(() => DetailAttendanceNotifier(sl()));
+  sl.registerFactory(() => FaceRecognitionNotifier(sl(), sl()));
+  sl.registerFactory(() => LeaveNotifier(sl(), sl()));
 }

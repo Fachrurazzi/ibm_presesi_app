@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:safe_device/safe_device.dart';
 import 'package:flutter/foundation.dart';
@@ -9,7 +8,9 @@ import 'package:ibm_presensi_app/app/module/use_case/attendance_get_this_month.d
 import 'package:ibm_presensi_app/app/module/use_case/schedule_get.dart';
 import 'package:ibm_presensi_app/app/module/use_case/profile_get_photo.dart';
 import 'package:ibm_presensi_app/app/module/use_case/schedule_banned.dart';
+import 'package:ibm_presensi_app/app/presentation/profile/profile_notifier.dart'; // Import ProfileNotifier
 import 'package:ibm_presensi_app/core/constant/constant.dart';
+import 'package:ibm_presensi_app/core/di/dependency.dart';
 import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
 import 'package:ibm_presensi_app/core/helper/notification_helper.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
@@ -34,29 +35,37 @@ class HomeNotifier extends AppProvider {
   }
 
   // --- State Variables ---
-  String _name = '';
+  String _name = 'User IBM';
   String? _photoUrl;
-  String _positionName = '';
+  String _positionName = 'Karyawan IBM';
+  String _officeName = 'PT Intiboga Mandiri';
   bool _isLeaves = false;
   bool _isEmulator = false;
   int _timeNotification = 5;
   int _totalLunchMoney = 0;
   int _leaveQuota = 0;
+  String homeError = "";
+  bool isRefreshSuccess = false;
+
+  Timer? _timer;
+  String _workingDuration = "0j 0m";
 
   AttendanceEntity? _attendanceToday;
   List<AttendanceEntity> _listAttendanceThisMonth = [];
   ScheduleEntity? _schedule;
 
   final List<DropdownMenuEntry<int>> _listEditNotification = [
-    const DropdownMenuEntry<int>(value: 5, label: '5 Menit'),
-    const DropdownMenuEntry<int>(value: 15, label: '15 Menit'),
-    const DropdownMenuEntry<int>(value: 30, label: '30 Menit'),
+    const DropdownMenuEntry<int>(value: 5, label: '5 Menit Sebelum'),
+    const DropdownMenuEntry<int>(value: 10, label: '10 Menit Sebelum'),
+    const DropdownMenuEntry<int>(value: 15, label: '15 Menit Sebelum'),
+    const DropdownMenuEntry<int>(value: 30, label: '30 Menit Sebelum'),
   ];
 
   // --- Getters ---
   String get name => _name;
   String? get photoUrl => _photoUrl;
   String get positionName => _positionName;
+  String get officeName => _officeName;
   bool get isEmulator => _isEmulator;
   bool get isLeaves => _isLeaves;
   int get totalLunchMoney => _totalLunchMoney;
@@ -68,82 +77,137 @@ class HomeNotifier extends AppProvider {
   int get timeNotification => _timeNotification;
   List<DropdownMenuEntry<int>> get listEditNotification =>
       _listEditNotification;
+  String get workingDuration => _workingDuration;
 
   @override
   Future<void> init() async {
-    // --- RESET RAM STATE ---
-    _name = '';
-    _photoUrl = null;
-    _positionName = '';
-    _attendanceToday = null;
-    _listAttendanceThisMonth = [];
-    _schedule = null;
-    _totalLunchMoney = 0;
-    _leaveQuota = 0;
+    debugPrint("🚀 HOME_INIT: Sinkronisasi data dimulai...");
 
     await checkDeviceSecurity();
-
     if (_isEmulator) {
       await _scheduleBannedUseCase();
       notifyListeners();
       return;
     }
 
-    debugPrint("HOME_INIT: Memuat data lokal...");
-    _name =
-        await SharedPreferencesHelper.getString(AppPreferences.USER_NAME) ?? '';
-    _positionName =
-        await SharedPreferencesHelper.getString(AppPreferences.POSITION_NAME) ??
-            'Karyawan';
-    _leaveQuota =
-        await SharedPreferencesHelper.getInt(AppPreferences.LEAVE_QUOTA) ?? 0;
-
-    // Baca data dari storage sebagai fallback awal
-    String? savedUrl =
-        await SharedPreferencesHelper.getString(AppPreferences.IMAGE_URL);
-    _photoUrl = _sanitizeUrl(savedUrl);
-
-    notifyListeners();
-
-    // Langsung refresh data dari server untuk memastikan foto & jadwal paling akurat
+    _loadDataLokal();
     await refreshData();
+    _startLiveTimer();
   }
 
-  void updateUserData(
-      {String? newName, String? newPhoto, String? newPosition}) {
-    if (newName != null) _name = newName;
-    if (newPosition != null) _positionName = newPosition;
-    if (newPhoto != null) _photoUrl = newPhoto;
+  void _startLiveTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _calculateWorkDuration();
+    });
+    _calculateWorkDuration();
+  }
 
-    // Memicu rebuild pada HomeScreen dengan URL yang benar-benar baru
+  // --- REVISI: Kalkulasi Durasi Kerja Lebih Stabil ---
+  void _calculateWorkDuration() {
+    if (_attendanceToday != null &&
+        _attendanceToday!.startTime != null &&
+        _attendanceToday!.startTime != "--:--" &&
+        _attendanceToday!.startTime!.isNotEmpty) {
+      try {
+        final startTimeStr = _attendanceToday!.startTime!;
+        final now = DateTime.now();
+
+        // Parsing HH:mm menjadi DateTime hari ini
+        final parts = startTimeStr.split(':');
+        final startDateTime = DateTime(now.year, now.month, now.day,
+            int.parse(parts[0]), int.parse(parts[1]));
+
+        if (now.isAfter(startDateTime)) {
+          final diff = now.difference(startDateTime);
+          final hours = diff.inHours;
+          final minutes = diff.inMinutes % 60;
+          _workingDuration = "${hours}j ${minutes}m";
+        } else {
+          _workingDuration = "0j 0m";
+        }
+      } catch (e) {
+        debugPrint("🚨 DURASI_ERROR: $e");
+        _workingDuration = "0j 0m";
+      }
+    } else {
+      _workingDuration = "0j 0m";
+    }
     notifyListeners();
   }
 
-  Future<void> checkDeviceSecurity() async {
-    bool isReal = await SafeDevice.isRealDevice;
-    bool isMock = await SafeDevice.isMockLocation;
-    bool isRoot = await SafeDevice.isJailBroken;
+  // --- FIX BUG 1: PROTECTION LAYER ---
+  void _loadDataLokal() {
+    final localName =
+        SharedPreferencesHelper.getString(AppPreferences.USER_NAME);
+    final localPos =
+        SharedPreferencesHelper.getString(AppPreferences.POSITION_NAME);
+    final localOffice =
+        SharedPreferencesHelper.getString(AppPreferences.OFFICE_NAME);
+    final localPhoto =
+        SharedPreferencesHelper.getString(AppPreferences.IMAGE_URL);
 
-    _isEmulator = ((!isReal || isMock || isRoot) && !kDebugMode);
+    if (localName != null && localName.isNotEmpty) _name = localName;
+    if (localPos != null && localPos.isNotEmpty) _positionName = localPos;
+    if (localOffice != null && localOffice.isNotEmpty)
+      _officeName = localOffice;
+
+    _leaveQuota =
+        SharedPreferencesHelper.getInt(AppPreferences.LEAVE_QUOTA) ?? 0;
+    _timeNotification =
+        SharedPreferencesHelper.getInt(AppPreferences.NOTIF_SETTING) ?? 5;
+
+    if (localPhoto != null && localPhoto.isNotEmpty) {
+      _photoUrl = _sanitizeUrl(localPhoto);
+    }
+
     notifyListeners();
   }
 
+  // --- FIX BUG 2: DATA INTEGRITY & JOIN DATE SYNC ---
   Future<void> refreshData() async {
     if (_isEmulator) return;
 
     try {
-      debugPrint("HOME_REFRESH: Sinkronisasi data ke server...");
+      isRefreshSuccess = false;
+      homeError = "";
+
       final response = await _scheduleGetUseCase();
 
       if (response.success && response.data != null) {
         _schedule = response.data;
+        final user = _schedule?.user;
 
-        // Selalu ambil sisa cuti terbaru jika ada dalam storage
-        _leaveQuota =
-            await SharedPreferencesHelper.getInt(AppPreferences.LEAVE_QUOTA) ??
-                0;
+        if (user != null) {
+          // UPDATE RAM
+          _name = user.name ?? _name;
+          _positionName = user.position?.name ?? _positionName;
+          _leaveQuota = user.leaveQuota ?? 0;
 
-        // Jalankan pengambilan data secara paralel agar performa maksimal
+          // REVISI KRUSIAL: Sinkronisasi Join Date ke Storage
+          // Karena Join Date sering absen di Login, kita amankan di sini
+          if (user.joinDate != null && user.joinDate!.isNotEmpty) {
+            await SharedPreferencesHelper.setString(
+                AppPreferences.JOIN_DATE, user.joinDate!);
+
+            // Beritahu ProfileNotifier untuk update UI
+            if (sl.isRegistered<ProfileNotifier>()) {
+              sl<ProfileNotifier>().init();
+            }
+          }
+        }
+
+        if (_schedule?.office != null) {
+          _officeName = _schedule!.office.name;
+          // Simpan office name agar saat buka app data lokal sudah benar
+          await SharedPreferencesHelper.setString(
+              AppPreferences.OFFICE_NAME, _officeName);
+        }
+
+        if (_schedule?.shift != null) {
+          await setNotification();
+        }
+
         await Future.wait([
           _getPhotoUrl(),
           _getAttendanceToday(),
@@ -151,154 +215,132 @@ class HomeNotifier extends AppProvider {
           _getNotificationPermission(),
         ]);
 
-        if (_schedule?.office != null) {
-          await SharedPreferencesHelper.setString(
-              AppPreferences.OFFICE_NAME, _schedule!.office.name);
-        }
-        if (_schedule?.shift != null) {
-          await SharedPreferencesHelper.setString(
-              AppPreferences.START_SHIFT, _schedule!.shift.startTime);
-          await SharedPreferencesHelper.setString(
-              AppPreferences.END_SHIFT, _schedule!.shift.endTime);
-          setNotification();
-        }
-
-        debugPrint("HOME_REFRESH: Berhasil. Foto URL: $_photoUrl");
+        _calculateWorkDuration();
+        isRefreshSuccess = true;
       } else {
         _handleErrorResponse(response.message);
       }
     } catch (e) {
-      debugPrint("HOME_REFRESH_FATAL_ERROR: $e");
+      debugPrint("🚨 REFRESH_ERROR: $e");
+      homeError = "Gagal sinkronisasi data server";
     } finally {
       notifyListeners();
     }
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void updateUserData(
+      {String? newName, String? newPhoto, String? newPosition}) {
+    if (newName != null) _name = newName;
+    if (newPosition != null) _positionName = newPosition;
+    if (newPhoto != null) _photoUrl = _sanitizeUrl(newPhoto);
+    notifyListeners();
+  }
+
+  Future<void> checkDeviceSecurity() async {
+    bool isReal = await SafeDevice.isRealDevice;
+    bool isMock = await SafeDevice.isMockLocation;
+    bool isRoot = await SafeDevice.isJailBroken;
+    _isEmulator = ((!isReal || isMock || isRoot) && !kDebugMode);
+    notifyListeners();
+  }
+
   void _handleErrorResponse(String message) {
     String msg = message.toLowerCase();
-    if (msg.contains('ditangguhkan') ||
-        msg.contains('banned') ||
-        msg.contains('blokir')) {
+    homeError = message;
+    if (msg.contains('banned') || msg.contains('blokir')) {
       _isEmulator = true;
     } else if (msg.contains('cuti')) {
       _isLeaves = true;
     }
   }
 
-  // --- LOGIKA SANITIZE URL ---
   String? _sanitizeUrl(String? url) {
     if (url == null || url.isEmpty) return null;
-    String clean = url;
-
-    // Bersihkan v= jika terbaca dari storage agar tidak merusak base URL
-    if (clean.contains('?v=')) clean = clean.split('?v=').first;
-
-    if (clean.contains('/api/storage/http')) {
-      clean = clean.split('/api/storage/').last;
-    }
-    if (clean.contains('/storage/') && !clean.contains('/api/storage/')) {
-      clean = clean.replaceFirst('/storage/', '/api/storage/');
-    }
+    String clean = url.contains('?v=') ? url.split('?v=').first : url;
     if (!clean.startsWith('http')) {
       String path = clean.startsWith('/') ? clean.substring(1) : clean;
       clean = "${AppConfig.STORAGE_URL}/$path";
     }
-
-    // Bersihkan double slash hasil penggabungan URL
-    return clean.replaceAll('api/storage//', 'api/storage/');
+    return clean.replaceAll(RegExp(r'(?<!:)/{2,}'), '/');
   }
 
   Future<void> _getPhotoUrl() async {
-    try {
-      // Ambil URL terbaru dari server
-      final response = await _profileGetPhotoUseCase();
-
-      if (response.success && response.data != null) {
-        String rawPath = response.data.toString();
-
-        if (rawPath.isNotEmpty) {
-          // Pastikan menggunakan fungsi _sanitizeUrl yang sudah Anda buat!
-          // Fungsi ini sangat kuat untuk mencegah format URL yang berantakan.
-          String cleanUrl = _sanitizeUrl(rawPath) ?? "";
-
-          if (cleanUrl.isNotEmpty) {
-            // Trik Cache-Buster agar Flutter selalu memuat ulang gambar
-            String uniqueUrl =
-                "$cleanUrl?v=${DateTime.now().millisecondsSinceEpoch}";
-
-            // Simpan ke storage untuk fallback
-            await SharedPreferencesHelper.setString(
-                AppPreferences.IMAGE_URL, uniqueUrl);
-
-            // Update state
-            _photoUrl = uniqueUrl;
-            debugPrint(
-                "HOME_REFRESH: Berhasil UPDATE. Foto URL BARU: $_photoUrl");
-
-            // Beri tahu UI untuk render ulang
-            notifyListeners();
-          }
-        }
+    final response = await _profileGetPhotoUseCase();
+    if (response.success && response.data != null) {
+      String? cleanUrl = _sanitizeUrl(response.data.toString());
+      if (cleanUrl != null) {
+        _photoUrl = "$cleanUrl?v=${DateTime.now().millisecondsSinceEpoch}";
       }
-    } catch (e) {
-      debugPrint("🚨 PHOTO_GET_ERROR: $e");
     }
   }
 
   Future<void> _getAttendanceToday() async {
     final response = await _attendanceGetTodayUseCase();
-    if (response.success) {
-      _attendanceToday = response.data;
-    }
+    if (response.success) _attendanceToday = response.data;
   }
 
   Future<void> _getAttendanceThisMonth() async {
     final response = await _attendanceGetMonthUseCase();
-    if (response.success) {
-      List<AttendanceEntity> data = response.data ?? [];
-      data.sort((a, b) => (b.date ?? "").compareTo(a.date ?? ""));
-      _listAttendanceThisMonth = data;
-      _totalLunchMoney =
-          data.fold(0, (sum, item) => sum + (item.lunchMoney ?? 0));
+    if (response.success && response.data != null) {
+      final List<AttendanceEntity> rawList = response.data!;
+      _listAttendanceThisMonth = List<AttendanceEntity>.from(rawList);
+      _listAttendanceThisMonth
+          .sort((a, b) => (b.date ?? "").compareTo(a.date ?? ""));
+      _totalLunchMoney = _listAttendanceThisMonth.fold(
+          0, (sum, item) => sum + (item.lunchMoney ?? 0));
+    } else {
+      _listAttendanceThisMonth = [];
     }
   }
 
   Future<void> _getNotificationPermission() async {
-    bool granted = await NotificationHelper.isPermissionGranted();
-    if (!granted) await NotificationHelper.requestPermission();
+    if (!await NotificationHelper.isPermissionGranted()) {
+      await NotificationHelper.requestPermission();
+    }
   }
 
   Future<void> setNotification() async {
-    await NotificationHelper.cancelAll();
-    final startShift =
-        await SharedPreferencesHelper.getString(AppPreferences.START_SHIFT) ??
-            '';
-    final endShift =
-        await SharedPreferencesHelper.getString(AppPreferences.END_SHIFT) ?? '';
-    if (startShift.isEmpty || endShift.isEmpty) return;
-
     try {
+      await NotificationHelper.cancelAll();
+      final startShift =
+          SharedPreferencesHelper.getString(AppPreferences.START_SHIFT) ?? '';
+      final endShift =
+          SharedPreferencesHelper.getString(AppPreferences.END_SHIFT) ?? '';
+
+      if (startShift.isEmpty ||
+          endShift.isEmpty ||
+          !startShift.contains(':') ||
+          startShift == "--:--") return;
+
       DateTime startDt = DateTimeHelper.parseDateTime(
               dateTimeString: startShift, format: 'HH:mm')
           .subtract(Duration(minutes: _timeNotification));
+
       await NotificationHelper.scheduleNotification(
-          id: 'start'.hashCode,
-          title: 'Pengingat Masuk',
-          body: 'Ayo absen sekarang, shift dimulai pukul $startShift',
+          id: 101,
+          title: 'Presensi Masuk 🏢',
+          body: 'Shift dimulai jam $startShift. Segera absen!',
           hour: startDt.hour,
           minutes: startDt.minute);
 
       DateTime endDt = DateTimeHelper.parseDateTime(
               dateTimeString: endShift, format: 'HH:mm')
           .subtract(Duration(minutes: _timeNotification));
+
       await NotificationHelper.scheduleNotification(
-          id: 'end'.hashCode,
-          title: 'Pengingat Pulang',
-          body: 'Sudah pukul $endShift, jangan lupa absen keluar ya!',
+          id: 102,
+          title: 'Presensi Pulang 🏠',
+          body: 'Jam pulang ($endShift) sudah dekat. Jangan lupa absen!',
           hour: endDt.hour,
           minutes: endDt.minute);
     } catch (e) {
-      debugPrint("Gagal set notifikasi: $e");
+      debugPrint("🚨 NOTIF_ERROR: $e");
     }
   }
 
@@ -309,5 +351,29 @@ class HomeNotifier extends AppProvider {
     await setNotification();
     hideLoading();
     notifyListeners();
+  }
+
+  // --- REVISI: Clean Logout ---
+  Future<void> logout(BuildContext context) async {
+    _timer?.cancel();
+    _timer = null;
+
+    showLoading();
+    await SharedPreferencesHelper.logout();
+
+    _name = 'User IBM';
+    _photoUrl = null;
+    _positionName = 'Karyawan IBM';
+    _officeName = 'PT Intiboga Mandiri';
+    _attendanceToday = null;
+    _listAttendanceThisMonth = [];
+    _schedule = null;
+    _totalLunchMoney = 0;
+    _workingDuration = "0j 0m";
+    hideLoading();
+
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
   }
 }

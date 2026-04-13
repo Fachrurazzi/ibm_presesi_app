@@ -1,95 +1,66 @@
-import 'package:flutter/foundation.dart'; // Untuk kDebugMode dan debugPrint
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferencesHelper {
-  static SharedPreferences? _prefsInstance;
+  static SharedPreferences? _prefs;
 
-  // Singleton pattern
-  static Future<SharedPreferences> _getPrefs() async {
-    _prefsInstance ??= await SharedPreferences.getInstance();
-    return _prefsInstance!;
+  /// WAJIB: Panggil ini di main.dart sebelum runApp()
+  /// Contoh: await SharedPreferencesHelper.init();
+  static Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+    if (kDebugMode) debugPrint("STORAGE_HELPER: Engine Ready ✅");
   }
 
-  // --- SETTERS ---
+  // --- PRIVATE GETTER (Internal) ---
+  static SharedPreferences get _p {
+    if (_prefs == null) {
+      throw Exception(
+          "SharedPreferencesHelper belum diinisialisasi! Panggil init() di main.dart");
+    }
+    return _prefs!;
+  }
+
+  // --- SETTERS (Dibuat saderhana & konsisten) ---
 
   static Future<bool> setInt(String key, int value) async {
-    final pref = await _getPrefs();
-    return await pref.setInt(key, value);
+    final result = await _p.setInt(key, value);
+    _log("Write Int", key, value.toString(), result);
+    return result;
   }
 
   static Future<bool> setBool(String key, bool value) async {
-    final pref = await _getPrefs();
-    final result = await pref.setBool(key, value);
-    if (kDebugMode) {
-      debugPrint("STORAGE_HELPER: Menulis [$key] -> $value | Sukses: $result");
-    }
+    final result = await _p.setBool(key, value);
+    _log("Write Bool", key, value.toString(), result);
     return result;
   }
 
   static Future<bool> setString(String key, String? value) async {
-    if (value == null) {
-      if (kDebugMode) {
-        debugPrint("STORAGE_HELPER: Gagal menulis [$key] karena value NULL");
-      }
-      return false;
-    }
-
-    final pref = await _getPrefs();
-    final result = await pref.setString(key, value);
-
-    if (kDebugMode) {
-      if (key == 'auth_token' || key == 'password') {
-        debugPrint(
-            "STORAGE_HELPER_SYNC: Berhasil menulis [$key] -> ***HIDDEN*** | Sukses: $result");
-      } else {
-        debugPrint(
-            "STORAGE_HELPER_SYNC: Berhasil menulis [$key] -> $value | Sukses: $result");
-      }
-    }
-
+    if (value == null) return false;
+    final result = await _p.setString(key, value);
+    _log("Write String", key, value, result);
     return result;
   }
 
-  // --- GETTERS ---
+  // --- GETTERS (Sekarang bersifat sinkron/Instant!) ---
 
-  static Future<int?> getInt(String key) async {
-    final pref = await _getPrefs();
-    return pref.getInt(key);
-  }
+  static int? getInt(String key) => _p.getInt(key);
 
-  static Future<bool?> getBool(String key) async {
-    final pref = await _getPrefs();
-    final value = pref.getBool(key);
-    if (kDebugMode) {
-      debugPrint("STORAGE_HELPER: Membaca [$key] -> $value");
-    }
-    return value;
-  }
+  static bool? getBool(String key) => _p.getBool(key);
 
-  static Future<String?> getString(String key) async {
-    final pref = await _getPrefs();
-    final value = pref.getString(key);
-
-    if (kDebugMode) {
-      if (key == 'auth_token' || key == 'password') {
-        debugPrint("STORAGE_HELPER: Membaca [$key] -> ***HIDDEN***");
-      } else {
-        debugPrint("STORAGE_HELPER: Membaca [$key] -> $value");
-      }
-    }
-
-    return value;
-  }
+  static String? getString(String key) => _p.getString(key);
 
   // --- ACTIONS ---
 
-  static Future<bool> remove(String key) async {
-    final pref = await _getPrefs();
-    return await pref.remove(key);
-  }
+  static Future<bool> remove(String key) async => await _p.remove(key);
 
-  static Future<bool> logout() async {
-    final pref = await _getPrefs();
-    return await pref.clear();
+  static Future<bool> logout() async => await _p.clear();
+
+  /// Helper untuk logging yang lebih bersih
+  static void _log(String action, String key, String value, bool success) {
+    if (kDebugMode) {
+      String displayValue =
+          (key.contains('token') || key.contains('password')) ? "***" : value;
+      debugPrint("STORAGE: $action [$key] -> $displayValue | Status: $success");
+    }
   }
 }

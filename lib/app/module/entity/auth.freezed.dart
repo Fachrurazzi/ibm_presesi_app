@@ -20,21 +20,73 @@ Auth _$AuthFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Auth {
+  @JsonKey(name: 'id')
+  String? get id => throw _privateConstructorUsedError;
   String? get email => throw _privateConstructorUsedError;
   String? get password => throw _privateConstructorUsedError;
+  String? get name => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get position => throw _privateConstructorUsedError;
+  @JsonKey(name: 'position_name')
+  String? get positionName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_default_password')
+  bool get isDefaultPassword => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_face_registered')
+  bool get isFaceRegistered => throw _privateConstructorUsedError;
+  @JsonKey(name: 'image_url')
+  String get imageUrl => throw _privateConstructorUsedError;
+  @JsonKey(name: 'join_date')
+  String? get joinDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'access_token')
+  String? get accessToken => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String? email, String? password) entity,
+    required TResult Function(
+            @JsonKey(name: 'id') String? id,
+            String? email,
+            String? password,
+            String? name,
+            Map<String, dynamic>? position,
+            @JsonKey(name: 'position_name') String? positionName,
+            @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+            @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
+            @JsonKey(name: 'image_url') String imageUrl,
+            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'access_token') String? accessToken)
+        entity,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String? email, String? password)? entity,
+    TResult? Function(
+            @JsonKey(name: 'id') String? id,
+            String? email,
+            String? password,
+            String? name,
+            Map<String, dynamic>? position,
+            @JsonKey(name: 'position_name') String? positionName,
+            @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+            @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
+            @JsonKey(name: 'image_url') String imageUrl,
+            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'access_token') String? accessToken)?
+        entity,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String? email, String? password)? entity,
+    TResult Function(
+            @JsonKey(name: 'id') String? id,
+            String? email,
+            String? password,
+            String? name,
+            Map<String, dynamic>? position,
+            @JsonKey(name: 'position_name') String? positionName,
+            @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+            @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
+            @JsonKey(name: 'image_url') String imageUrl,
+            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'access_token') String? accessToken)?
+        entity,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -64,7 +116,18 @@ abstract class $AuthCopyWith<$Res> {
   factory $AuthCopyWith(Auth value, $Res Function(Auth) then) =
       _$AuthCopyWithImpl<$Res, Auth>;
   @useResult
-  $Res call({String? email, String? password});
+  $Res call(
+      {@JsonKey(name: 'id') String? id,
+      String? email,
+      String? password,
+      String? name,
+      Map<String, dynamic>? position,
+      @JsonKey(name: 'position_name') String? positionName,
+      @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+      @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
+      @JsonKey(name: 'image_url') String imageUrl,
+      @JsonKey(name: 'join_date') String? joinDate,
+      @JsonKey(name: 'access_token') String? accessToken});
 }
 
 /// @nodoc
@@ -80,10 +143,23 @@ class _$AuthCopyWithImpl<$Res, $Val extends Auth>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
     Object? email = freezed,
     Object? password = freezed,
+    Object? name = freezed,
+    Object? position = freezed,
+    Object? positionName = freezed,
+    Object? isDefaultPassword = null,
+    Object? isFaceRegistered = null,
+    Object? imageUrl = null,
+    Object? joinDate = freezed,
+    Object? accessToken = freezed,
   }) {
     return _then(_value.copyWith(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
       email: freezed == email
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
@@ -91,6 +167,38 @@ class _$AuthCopyWithImpl<$Res, $Val extends Auth>
       password: freezed == password
           ? _value.password
           : password // ignore: cast_nullable_to_non_nullable
+              as String?,
+      name: freezed == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String?,
+      position: freezed == position
+          ? _value.position
+          : position // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      positionName: freezed == positionName
+          ? _value.positionName
+          : positionName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isDefaultPassword: null == isDefaultPassword
+          ? _value.isDefaultPassword
+          : isDefaultPassword // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isFaceRegistered: null == isFaceRegistered
+          ? _value.isFaceRegistered
+          : isFaceRegistered // ignore: cast_nullable_to_non_nullable
+              as bool,
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      joinDate: freezed == joinDate
+          ? _value.joinDate
+          : joinDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      accessToken: freezed == accessToken
+          ? _value.accessToken
+          : accessToken // ignore: cast_nullable_to_non_nullable
               as String?,
     ) as $Val);
   }
@@ -103,7 +211,18 @@ abstract class _$$AuthEntityImplCopyWith<$Res> implements $AuthCopyWith<$Res> {
       __$$AuthEntityImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? email, String? password});
+  $Res call(
+      {@JsonKey(name: 'id') String? id,
+      String? email,
+      String? password,
+      String? name,
+      Map<String, dynamic>? position,
+      @JsonKey(name: 'position_name') String? positionName,
+      @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+      @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
+      @JsonKey(name: 'image_url') String imageUrl,
+      @JsonKey(name: 'join_date') String? joinDate,
+      @JsonKey(name: 'access_token') String? accessToken});
 }
 
 /// @nodoc
@@ -117,10 +236,23 @@ class __$$AuthEntityImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
     Object? email = freezed,
     Object? password = freezed,
+    Object? name = freezed,
+    Object? position = freezed,
+    Object? positionName = freezed,
+    Object? isDefaultPassword = null,
+    Object? isFaceRegistered = null,
+    Object? imageUrl = null,
+    Object? joinDate = freezed,
+    Object? accessToken = freezed,
   }) {
     return _then(_$AuthEntityImpl(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
       email: freezed == email
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
@@ -129,26 +261,104 @@ class __$$AuthEntityImplCopyWithImpl<$Res>
           ? _value.password
           : password // ignore: cast_nullable_to_non_nullable
               as String?,
+      name: freezed == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String?,
+      position: freezed == position
+          ? _value._position
+          : position // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      positionName: freezed == positionName
+          ? _value.positionName
+          : positionName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isDefaultPassword: null == isDefaultPassword
+          ? _value.isDefaultPassword
+          : isDefaultPassword // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isFaceRegistered: null == isFaceRegistered
+          ? _value.isFaceRegistered
+          : isFaceRegistered // ignore: cast_nullable_to_non_nullable
+              as bool,
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      joinDate: freezed == joinDate
+          ? _value.joinDate
+          : joinDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      accessToken: freezed == accessToken
+          ? _value.accessToken
+          : accessToken // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$AuthEntityImpl implements AuthEntity {
-  _$AuthEntityImpl({required this.email, required this.password});
+class _$AuthEntityImpl extends AuthEntity {
+  const _$AuthEntityImpl(
+      {@JsonKey(name: 'id') this.id,
+      required this.email,
+      required this.password,
+      this.name,
+      final Map<String, dynamic>? position,
+      @JsonKey(name: 'position_name') this.positionName,
+      @JsonKey(name: 'is_default_password') this.isDefaultPassword = false,
+      @JsonKey(name: 'is_face_registered') this.isFaceRegistered = false,
+      @JsonKey(name: 'image_url') this.imageUrl = '',
+      @JsonKey(name: 'join_date') this.joinDate,
+      @JsonKey(name: 'access_token') this.accessToken})
+      : _position = position,
+        super._();
 
   factory _$AuthEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$AuthEntityImplFromJson(json);
 
   @override
+  @JsonKey(name: 'id')
+  final String? id;
+  @override
   final String? email;
   @override
   final String? password;
+  @override
+  final String? name;
+  final Map<String, dynamic>? _position;
+  @override
+  Map<String, dynamic>? get position {
+    final value = _position;
+    if (value == null) return null;
+    if (_position is EqualUnmodifiableMapView) return _position;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  @override
+  @JsonKey(name: 'position_name')
+  final String? positionName;
+  @override
+  @JsonKey(name: 'is_default_password')
+  final bool isDefaultPassword;
+  @override
+  @JsonKey(name: 'is_face_registered')
+  final bool isFaceRegistered;
+  @override
+  @JsonKey(name: 'image_url')
+  final String imageUrl;
+  @override
+  @JsonKey(name: 'join_date')
+  final String? joinDate;
+  @override
+  @JsonKey(name: 'access_token')
+  final String? accessToken;
 
   @override
   String toString() {
-    return 'Auth.entity(email: $email, password: $password)';
+    return 'Auth.entity(id: $id, email: $email, password: $password, name: $name, position: $position, positionName: $positionName, isDefaultPassword: $isDefaultPassword, isFaceRegistered: $isFaceRegistered, imageUrl: $imageUrl, joinDate: $joinDate, accessToken: $accessToken)';
   }
 
   @override
@@ -156,14 +366,41 @@ class _$AuthEntityImpl implements AuthEntity {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AuthEntityImpl &&
+            (identical(other.id, id) || other.id == id) &&
             (identical(other.email, email) || other.email == email) &&
             (identical(other.password, password) ||
-                other.password == password));
+                other.password == password) &&
+            (identical(other.name, name) || other.name == name) &&
+            const DeepCollectionEquality().equals(other._position, _position) &&
+            (identical(other.positionName, positionName) ||
+                other.positionName == positionName) &&
+            (identical(other.isDefaultPassword, isDefaultPassword) ||
+                other.isDefaultPassword == isDefaultPassword) &&
+            (identical(other.isFaceRegistered, isFaceRegistered) ||
+                other.isFaceRegistered == isFaceRegistered) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
+            (identical(other.joinDate, joinDate) ||
+                other.joinDate == joinDate) &&
+            (identical(other.accessToken, accessToken) ||
+                other.accessToken == accessToken));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, email, password);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      email,
+      password,
+      name,
+      const DeepCollectionEquality().hash(_position),
+      positionName,
+      isDefaultPassword,
+      isFaceRegistered,
+      imageUrl,
+      joinDate,
+      accessToken);
 
   @JsonKey(ignore: true)
   @override
@@ -174,27 +411,66 @@ class _$AuthEntityImpl implements AuthEntity {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(String? email, String? password) entity,
+    required TResult Function(
+            @JsonKey(name: 'id') String? id,
+            String? email,
+            String? password,
+            String? name,
+            Map<String, dynamic>? position,
+            @JsonKey(name: 'position_name') String? positionName,
+            @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+            @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
+            @JsonKey(name: 'image_url') String imageUrl,
+            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'access_token') String? accessToken)
+        entity,
   }) {
-    return entity(email, password);
+    return entity(id, email, password, name, position, positionName,
+        isDefaultPassword, isFaceRegistered, imageUrl, joinDate, accessToken);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(String? email, String? password)? entity,
+    TResult? Function(
+            @JsonKey(name: 'id') String? id,
+            String? email,
+            String? password,
+            String? name,
+            Map<String, dynamic>? position,
+            @JsonKey(name: 'position_name') String? positionName,
+            @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+            @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
+            @JsonKey(name: 'image_url') String imageUrl,
+            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'access_token') String? accessToken)?
+        entity,
   }) {
-    return entity?.call(email, password);
+    return entity?.call(id, email, password, name, position, positionName,
+        isDefaultPassword, isFaceRegistered, imageUrl, joinDate, accessToken);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(String? email, String? password)? entity,
+    TResult Function(
+            @JsonKey(name: 'id') String? id,
+            String? email,
+            String? password,
+            String? name,
+            Map<String, dynamic>? position,
+            @JsonKey(name: 'position_name') String? positionName,
+            @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+            @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
+            @JsonKey(name: 'image_url') String imageUrl,
+            @JsonKey(name: 'join_date') String? joinDate,
+            @JsonKey(name: 'access_token') String? accessToken)?
+        entity,
     required TResult orElse(),
   }) {
     if (entity != null) {
-      return entity(email, password);
+      return entity(id, email, password, name, position, positionName,
+          isDefaultPassword, isFaceRegistered, imageUrl, joinDate, accessToken);
     }
     return orElse();
   }
@@ -235,18 +511,54 @@ class _$AuthEntityImpl implements AuthEntity {
   }
 }
 
-abstract class AuthEntity implements Auth {
-  factory AuthEntity(
-      {required final String? email,
-      required final String? password}) = _$AuthEntityImpl;
+abstract class AuthEntity extends Auth {
+  const factory AuthEntity(
+          {@JsonKey(name: 'id') final String? id,
+          required final String? email,
+          required final String? password,
+          final String? name,
+          final Map<String, dynamic>? position,
+          @JsonKey(name: 'position_name') final String? positionName,
+          @JsonKey(name: 'is_default_password') final bool isDefaultPassword,
+          @JsonKey(name: 'is_face_registered') final bool isFaceRegistered,
+          @JsonKey(name: 'image_url') final String imageUrl,
+          @JsonKey(name: 'join_date') final String? joinDate,
+          @JsonKey(name: 'access_token') final String? accessToken}) =
+      _$AuthEntityImpl;
+  const AuthEntity._() : super._();
 
   factory AuthEntity.fromJson(Map<String, dynamic> json) =
       _$AuthEntityImpl.fromJson;
 
   @override
+  @JsonKey(name: 'id')
+  String? get id;
+  @override
   String? get email;
   @override
   String? get password;
+  @override
+  String? get name;
+  @override
+  Map<String, dynamic>? get position;
+  @override
+  @JsonKey(name: 'position_name')
+  String? get positionName;
+  @override
+  @JsonKey(name: 'is_default_password')
+  bool get isDefaultPassword;
+  @override
+  @JsonKey(name: 'is_face_registered')
+  bool get isFaceRegistered;
+  @override
+  @JsonKey(name: 'image_url')
+  String get imageUrl;
+  @override
+  @JsonKey(name: 'join_date')
+  String? get joinDate;
+  @override
+  @JsonKey(name: 'access_token')
+  String? get accessToken;
   @override
   @JsonKey(ignore: true)
   _$$AuthEntityImplCopyWith<_$AuthEntityImpl> get copyWith =>

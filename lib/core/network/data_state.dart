@@ -1,18 +1,10 @@
-import 'dart:async'; // Untuk FutureOr
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:retrofit/retrofit.dart';
 
-// --- BASE RESPONSE (Jika kamu punya file sendiri, pastikan isinya sinkron) ---
-abstract class BaseResponse {
-  final bool success;
-  final String message;
-
-  BaseResponse({required this.success, required this.message});
-}
-
-// --- DATA STATE ---
-// Class utama untuk membungkus hasil dari Repository ke UseCase/UI
+// --- DATA STATE (Pola Result/Either untuk UI) ---
 abstract class DataState<T> {
   final bool success;
   final String message;
@@ -29,67 +21,84 @@ class ErrorState<T> extends DataState<T> {
   ErrorState({required super.message}) : super(success: false);
 }
 
-// --- HANDLE RESPONSE FUNCTION ---
-// Fungsi sakti yang menghubungkan ApiService (dynamic) dengan Repository
-Future<DataState<T>> handleResponse<T>(
-  // Menggunakan dynamic agar cocok dengan ApiService yang sudah kita revisi
-  Future<HttpResponse<dynamic>> Function() apiCall,
-  FutureOr<T> Function(dynamic json) mapDataSuccess,
-) async {
+// --- HANDLE RESPONSE (Fungsi Sakti Penengah API & Repo) ---
+Future<DataState<T>> handleResponse<T>({
+  required Future<HttpResponse<dynamic>> Function() apiCall,
+  required FutureOr<T> Function(dynamic json) mapDataSuccess,
+}) async {
   try {
-    final HttpResponse<dynamic> httpResponse = await apiCall();
-    final int statusCode = httpResponse.response.statusCode ?? 0;
+    final httpResponse = await apiCall();
+    final statusCode = httpResponse.response.statusCode ?? 0;
 
-    // 1. Cek Status Code HTTP (200-299)
+    // 1. Validasi HTTP Range 200-299
     if (statusCode >= 200 && statusCode < 300) {
-      final dynamic responseData = httpResponse.data;
+      final dynamic responseBody = httpResponse.data;
 
-      // 2. Parsing logika Success/Message dari Laravel PT INTIBOGA MANDIRI
-      // Kita cek apakah responseData berbentuk Map (JSON standar)
+      // Default values
       bool isSuccess = true;
-      String serverMessage = 'Success';
-      dynamic rawData = responseData;
+      String serverMessage = 'Berhasil';
+      dynamic rawData = responseBody;
 
-      if (responseData is Map<String, dynamic>) {
-        isSuccess = responseData['success'] ?? true;
-        serverMessage = responseMapMessage(responseData);
-        rawData = responseData['data'] ?? responseData;
+      // 2. Ekstraksi JSON dari Laravel PT IBM
+      if (responseBody is Map<String, dynamic>) {
+        isSuccess = responseBody['success'] ?? true;
+        serverMessage =
+            responseBody['message'] ?? responseBody['msg'] ?? 'Berhasil';
+        rawData = responseBody['data'] ?? responseBody;
       }
 
       if (isSuccess) {
-        // 3. Eksekusi Mapper (Bisa asinkron jika perlu simpan SharedPreferences)
+        // 3. Mapping data ke Entity (Clean Architecture)
         final T mappedData = await mapDataSuccess(rawData);
         return SuccessState(message: serverMessage, data: mappedData);
       } else {
         return ErrorState(message: serverMessage);
       }
     } else {
-      // Jika status code 4xx atau 5xx
-      throw DioException(
-        response: httpResponse.response,
-        requestOptions: httpResponse.response.requestOptions,
-      );
+      // Jika status code di luar 2xx (401, 404, 500)
+      return ErrorState(message: _parseResponseError(httpResponse.response));
     }
   } on DioException catch (e) {
-    // 4. Handle Error Network / Server
-    return ErrorState(message: parseDioError(e));
+    return ErrorState(message: _parseDioError(e));
   } catch (e) {
-    // 5. Handle Error Parsing / Logic Client
-    return ErrorState(message: "Client Error: ${e.toString()}");
+    debugPrint("🚨 CLIENT_LOGIC_ERROR: $e");
+    return ErrorState(message: "Terjadi kesalahan sistem internal.");
   }
 }
 
-// --- HELPER UNTUK PARSING PESAN ---
-String responseMapMessage(Map<String, dynamic> map) {
-  if (map.containsKey('message')) return map['message'];
-  if (map.containsKey('msg')) return map['msg'];
-  return 'Success';
+// --- HELPER PARSING ERROR ---
+
+String _parseResponseError(Response response) {
+  final dynamic data = response.data;
+  if (data is Map<String, dynamic>) {
+    return data['message'] ??
+        data['msg'] ??
+        "Gagal memproses permintaan (Code: ${response.statusCode})";
+  }
+  return "Server error (Code: ${response.statusCode})";
 }
 
-String parseDioError(DioException e) {
-  final dynamic errorBody = e.response?.data;
-  if (errorBody is Map<String, dynamic>) {
-    return errorBody['message'] ?? e.message ?? "Server Error";
+String _parseDioError(DioException e) {
+  switch (e.type) {
+    case DioExceptionType.connectionTimeout:
+      return "Koneksi terputus. Pastikan internet Anda stabil.";
+    case DioExceptionType.sendTimeout:
+      return "Gagal mengirim data ke server. Silakan coba lagi.";
+    case DioExceptionType.receiveTimeout:
+      return "Server terlalu lama merespon. Silakan coba lagi.";
+    case DioExceptionType.cancel:
+      return "Permintaan dibatalkan.";
+    case DioExceptionType.badResponse:
+      final dynamic errorBody = e.response?.data;
+      if (errorBody is Map<String, dynamic>) {
+        return errorBody['message'] ??
+            errorBody['msg'] ??
+            "Terjadi kesalahan pada server.";
+      }
+      return "Server memberikan respon yang salah (Code: ${e.response?.statusCode})";
+    case DioExceptionType.connectionError:
+      return "Tidak ada koneksi internet. Periksa paket data atau Wi-Fi Anda.";
+    default:
+      return "Gagal terhubung ke server (Network Error).";
   }
-  return e.message ?? "Connection Error";
 }

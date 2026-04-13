@@ -3,30 +3,33 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'attendance.g.dart';
 part 'attendance.freezed.dart';
 
-@Freezed(unionKey: 'runtimeType', fallbackUnion: 'entity')
-sealed class Attendance with _$Attendance {
-  // Entity untuk menerima data dari Laravel (History & Today)
+@freezed
+class Attendance with _$Attendance {
+  // 1. DATA ENTITY (Hasil parsing dari Laravel)
   const factory Attendance.entity({
     int? id,
-    @JsonKey(name: 'start_time') required String startTime,
-    @JsonKey(name: 'end_time') required String endTime,
+    // REVISI: Tambahkan tanda tanya (?) agar boleh null jika belum absen
+    @JsonKey(name: 'start_time') String? startTime, 
+    @JsonKey(name: 'end_time') String? endTime,
     String? date,
-    @JsonKey(name: 'is_late') bool? isLate,
-    @JsonKey(name: 'lunch_money') int? lunchMoney,
-    @JsonKey(name: 'lunch_money_label') String? lunchMoneyLabel,
+    @JsonKey(name: 'is_late') @Default(false) bool isLate,
+    @JsonKey(name: 'lunch_money') @Default(0) int lunchMoney,
+    @JsonKey(name: 'lunch_money_label') @Default('Rp 0') String lunchMoneyLabel,
+
+    // Jam kerja seharusnya
     @JsonKey(name: 'schedule_start') String? scheduleStart,
     @JsonKey(name: 'schedule_end') String? scheduleEnd,
   }) = AttendanceEntity;
 
-  // Param untuk kirim data Check-in / Check-out (Hanya Koordinat)
+  // 2. PARAM ENTITY (Untuk kirim Absensi/Store)
   const factory Attendance.paramEntity({
     required double latitude,
     required double longitude,
-    String? address,
-    // Hapus photo dari sini jika tidak dikirim saat Store Absensi
+    @Default('') String address,
+    @Default('') String image, 
   }) = AttendanceParamEntity;
 
-  // Param untuk filter History Bulanan
+  // 3. PARAM GET ENTITY (Untuk filter riwayat)
   const factory Attendance.paramGetEntity({
     required int month,
     required int year,

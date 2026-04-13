@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // <--- TAMBAHKAN INI UNTUK FORMAT RUPIAH
+import 'package:intl/intl.dart';
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/module/use_case/attendance_get_by_month_year.dart';
+import 'package:ibm_presensi_app/app/module/use_case/attendance_get_today.dart'; // Import param entity jika perlu
 import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/provider/app_provider.dart';
@@ -11,11 +12,9 @@ class DetailAttendanceNotifier extends AppProvider {
   final AttendanceGetByMonthYear _attendanceGetByMonthYear;
 
   DetailAttendanceNotifier(this._attendanceGetByMonthYear) {
-    // Ambil waktu sekarang untuk default pencarian
     final now = DateTime.now();
     _selectedMonth = now.month;
     _selectedYear = now.year;
-
     init();
   }
 
@@ -33,24 +32,16 @@ class DetailAttendanceNotifier extends AppProvider {
   bool get isPusat => _isPusat;
   bool get isWfa => _isWfa;
 
-  // --- TAMBAHAN: GETTER UNTUK HITUNG TOTAL ---
+  /// Hitung total akumulasi uang makan
   String get totalUangMakan {
-    int total = 0;
-    for (var item in _listAttendance) {
-      total += (item.lunchMoney ?? 0);
-    }
-
-    // Format ke "150.000"
-    final formatter = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: '',
-      decimalDigits: 0,
-    );
-
-    return formatter.format(total).trim();
+    int total =
+        _listAttendance.fold(0, (sum, item) => sum + (item.lunchMoney ?? 0));
+    return NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0)
+        .format(total)
+        .trim();
   }
 
-  // List dropdown entries (Static)
+  // List Dropdown Month & Year (Tetap sama)
   final List<DropdownMenuEntry<int>> monthListDropdown = [
     const DropdownMenuEntry(value: 1, label: 'Januari'),
     const DropdownMenuEntry(value: 2, label: 'Februari'),
@@ -73,47 +64,44 @@ class DetailAttendanceNotifier extends AppProvider {
 
   @override
   void init() {
-    _checkOffice();
-    Future.delayed(Duration.zero, () => search());
+    _syncLocalData();
+    search();
+  }
+
+  /// Ambil data kantor secara instant dari SharedPreferences
+  void _syncLocalData() {
+    final office =
+        SharedPreferencesHelper.getString(AppPreferences.OFFICE_NAME) ?? "";
+    _isPusat = office.toLowerCase().contains("pusat");
+
+    // IS_WFA biasanya disimpan di SharedPreferences saat login/home_refresh
+    _isWfa = SharedPreferencesHelper.getBool('IS_WFA') ?? false;
+    notifyListeners();
   }
 
   void onMonthSelected(int? val) {
-    if (val != null) {
+    if (val != null && val != _selectedMonth) {
       _selectedMonth = val;
       notifyListeners();
+      search();
     }
   }
 
   void onYearSelected(int? val) {
-    if (val != null) {
+    if (val != null && val != _selectedYear) {
       _selectedYear = val;
       notifyListeners();
+      search();
     }
   }
 
-  Future<void> _checkOffice() async {
-    final office =
-        await SharedPreferencesHelper.getString(AppPreferences.OFFICE_NAME) ??
-            "";
-    _isPusat = office.toLowerCase().contains("pusat");
-
-    try {
-      _isWfa = await SharedPreferencesHelper.getBool('IS_WFA') ?? false;
-    } catch (e) {
-      _isWfa = false;
-    }
-
-    notifyListeners();
-  }
-
+  /// Ambil data riwayat presensi dari server
   Future<void> search() async {
     errorMessage = '';
     showLoading();
 
-    _listAttendance = [];
-    notifyListeners();
-
     try {
+      // Gunakan param entity yang sesuai dengan UseCase kamu
       final response = await _attendanceGetByMonthYear(
         param: AttendanceParamGetEntity(
           month: _selectedMonth,
@@ -123,13 +111,14 @@ class DetailAttendanceNotifier extends AppProvider {
 
       if (response.success) {
         _listAttendance = response.data ?? [];
-        // Sorting: Tanggal terbaru di posisi paling atas
+        // Sorting: Tanggal terbaru ke terlama
         _listAttendance.sort((a, b) => (b.date ?? "").compareTo(a.date ?? ""));
       } else {
         errorMessage = response.message;
       }
     } catch (e) {
-      errorMessage = "Gagal memuat data dari server PT Intiboga";
+      debugPrint("🚨 SEARCH_ERROR: $e");
+      errorMessage = "Gagal memuat data riwayat";
     } finally {
       hideLoading();
       notifyListeners();

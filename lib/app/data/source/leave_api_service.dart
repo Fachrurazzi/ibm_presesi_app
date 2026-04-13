@@ -1,19 +1,19 @@
 import 'package:dio/dio.dart';
-import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:retrofit/retrofit.dart';
 
 part 'leave_api_service.g.dart';
 
-@RestApi(baseUrl: AppConfig.BASE_URL)
+@RestApi() // BaseURL dikelola terpusat di dependency.dart
 abstract class LeaveApiService {
-  factory LeaveApiService(Dio dio) = _LeaveApiService;
+  factory LeaveApiService(Dio dio, {String baseUrl}) = _LeaveApiService;
 
-  // Gunakan dynamic agar Retrofit tidak mencoba memanggil .fromJson() secara otomatis
-  @POST('/leaves')
-  Future<HttpResponse<dynamic>> send(
-      {@Body() required Map<String, dynamic> body});
+  /// Mengirim pengajuan izin/cuti ke server
+  @POST('/leaves/store')
+  Future<HttpResponse<dynamic>> send({
+    @Body() required Map<String, dynamic> body,
+  });
 
-  // Tambahkan ini untuk ambil list riwayat cuti
-  @GET('/leaves')
+  /// Mengambil daftar riwayat pengajuan cuti karyawan
+  @GET('/leaves/history')
   Future<HttpResponse<dynamic>> getHistory();
 }

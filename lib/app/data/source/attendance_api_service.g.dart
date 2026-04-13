@@ -13,9 +13,7 @@ class _AttendanceApiService implements AttendanceApiService {
     this._dio, {
     this.baseUrl,
     this.errorLogger,
-  }) {
-    baseUrl ??= 'http://192.168.100.83:8000/api/v1';
-  }
+  });
 
   final Dio _dio;
 
@@ -36,7 +34,7 @@ class _AttendanceApiService implements AttendanceApiService {
     )
         .compose(
           _dio.options,
-          '/today',
+          '/attendance/today',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -66,7 +64,7 @@ class _AttendanceApiService implements AttendanceApiService {
     )
         .compose(
           _dio.options,
-          '/store',
+          '/attendance/store',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -97,7 +95,7 @@ class _AttendanceApiService implements AttendanceApiService {
     )
         .compose(
           _dio.options,
-          '/history/${month}/${year}',
+          '/attendance/history/${month}/${year}',
           queryParameters: queryParameters,
           data: _data,
         )

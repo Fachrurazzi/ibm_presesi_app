@@ -1,5 +1,7 @@
+import 'package:elegant_notification/elegant_notification.dart';
+import 'package:elegant_notification/resources/arrays.dart';
 import 'package:flutter/material.dart';
-import 'package:ibm_presensi_app/app/presentation/home/home_screen.dart';
+import 'package:flutter/services.dart';
 import 'package:ibm_presensi_app/app/presentation/login/login_notifier.dart';
 import 'package:ibm_presensi_app/core/widget/app_widget.dart';
 
@@ -8,163 +10,243 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
 
   @override
   void checkVariableAfterUi(BuildContext context) {
-    if (notifier.isLoged) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+    // --- LOGIKA PENTING: JANGAN DIUBAH ---
+    if (notifier.onboardingStep.isNotEmpty) {
+      HapticFeedback.lightImpact();
+      final String route = notifier.onboardingStep;
+      notifier.clearOnboardingStep();
+      Navigator.pushReplacementNamed(context, route);
+    }
+
+    if (notifier.loginError.isNotEmpty) {
+      _showErrorNotification(context, notifier.loginError);
+      notifier.loginError = "";
     }
   }
 
-  @override
-  void checkVariableBeforeUi(BuildContext context) {
-    if (notifier.errorMessage.isNotEmpty) {
-      final msg = notifier.errorMessage;
-      notifier.errorMessage = "";
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(msg),
-              backgroundColor: Colors.redAccent,
-              behavior: SnackBarBehavior.floating),
-        );
-      });
-    }
+  void _showErrorNotification(BuildContext context, String message) {
+    ElegantNotification.error(
+      width: MediaQuery.of(context).size.width * 0.9,
+      notificationMargin: MediaQuery.of(context).padding.top + 10,
+      position: Alignment.topCenter,
+      animation: AnimationType.fromTop,
+      title: const Text("Akses Ditolak",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      description: Text(message,
+          style: const TextStyle(fontSize: 12),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis),
+      showProgressIndicator: false,
+      borderRadius: BorderRadius.circular(15),
+      displayCloseButton: false,
+    ).show(context);
   }
+
+  @override
+  void checkVariableBeforeUi(BuildContext context) {}
 
   @override
   Widget bodyBuild(BuildContext context) {
     final theme = Theme.of(context);
-    // 1. Ambil ukuran layar pengguna
-    final screenWidth = MediaQuery.of(context).size.width;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // 2. Lingkaran Background yang Dinamis (Lebih besar di layar besar)
-          Positioned(
-            top: -screenWidth * 0.15,
-            right: -screenWidth * 0.1,
-            child: CircleAvatar(
-                // Jari-jari disesuaikan dengan persentase lebar layar, tapi diberi batas maksimal
-                radius: screenWidth * 0.35 > 200 ? 200 : screenWidth * 0.35,
-                backgroundColor: theme.colorScheme.primary.withOpacity(0.05)),
-          ),
+      backgroundColor:
+          const Color(0xFFFBFBFE), // Background sedikit kebiruan agar modern
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.dark,
+        child: Stack(
+          children: [
+            // 1. Dekorasi Background Modern (Gradient Blobs)
+            _buildBackgroundDecorator(size, theme),
 
-          // 3. Konten Utama
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: Center(
-                  // 4. KUNCI RESPONSIVE: Batasi lebar maksimal form untuk Tablet/Layar Lebar
+            // 2. Konten Utama
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 400),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Logo Section
-                        Hero(
-                          tag: 'logo',
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 30,
-                                    offset: const Offset(0, 10))
-                              ],
-                            ),
-                            child: Image.asset('assets/images/logo_ibm.png',
-                                width: 90),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        Text("Selamat Datang",
-                            style: theme.textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w900)),
-                        const SizedBox(height: 8),
-                        Text(
-                            "Silakan login untuk mencatat kehadiran harian Anda",
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(color: Colors.grey)),
-
+                        _buildHeader(),
                         const SizedBox(height: 48),
 
-                        // Email Field
+                        // Input Email
                         _buildInputField(
                           controller: notifier.emailController,
                           label: "Email Karyawan",
-                          icon: Icons.email_outlined,
-                          hint: "user@ibm.com",
-                          keyboardType:
-                              TextInputType.emailAddress, // Tambahkan ini
-                          textInputAction: TextInputAction.next,
+                          icon: Icons.alternate_email_rounded,
+                          hint: "nama@intibogamandiri.com",
+                          keyboardType: TextInputType.emailAddress,
                         ),
                         const SizedBox(height: 20),
 
-                        // Password Field
+                        // Input Password
                         _buildInputField(
                           controller: notifier.passwordController,
                           label: "Kata Sandi",
-                          icon: Icons.lock_open_rounded,
+                          icon: Icons.lock_outline_rounded,
                           hint: "••••••••",
                           isPassword: true,
                           obscureText: !notifier.isShowPassword,
-                          textInputAction: TextInputAction.done,
                           onToggleVisible: () => notifier.isShowPassword =
                               !notifier.isShowPassword,
                           onSubmitted: (_) => notifier.login(),
                         ),
 
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 48),
 
-                        // Login Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 58,
-                          child: FilledButton(
-                            onPressed: notifier.isLoading
-                                ? null
-                                : () => notifier.login(),
-                            style: FilledButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18)),
-                              elevation: 0,
-                            ),
-                            child: notifier.isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                        color: Colors.white, strokeWidth: 3))
-                                : const Text("MASUK",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 1)),
-                          ),
-                        ),
+                        // Tombol Login
+                        _buildLoginButton(theme),
 
-                        const SizedBox(height: 40),
-                        Text("© ${DateTime.now().year} PT Intiboga Mandiri",
-                            style: theme.textTheme.labelSmall
-                                ?.copyWith(color: Colors.grey.shade400)),
+                        const SizedBox(height: 32),
+                        _buildFooter(theme),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- REVISI: DEKORASI BACKGROUND LEBIH HALUS ---
+  Widget _buildBackgroundDecorator(Size size, ThemeData theme) {
+    return Stack(
+      children: [
+        Positioned(
+          top: -size.width * 0.4,
+          right: -size.width * 0.2,
+          child: Container(
+            width: size.width * 0.8,
+            height: size.width * 0.8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  theme.primaryColor.withOpacity(0.12),
+                  theme.primaryColor.withOpacity(0.0),
+                ],
+              ),
+            ),
           ),
+        ),
+        Positioned(
+          bottom: -size.width * 0.3,
+          left: -size.width * 0.3,
+          child: Container(
+            width: size.width * 0.7,
+            height: size.width * 0.7,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  theme.primaryColor.withOpacity(0.08),
+                  theme.primaryColor.withOpacity(0.0),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Hero(
+          tag: 'logo_ibm_main',
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.06),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+            child: Image.asset(
+              'assets/images/logo_ibm.png',
+              width: 75,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.business_rounded,
+                  size: 70,
+                  color: Colors.blue),
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+        const Text(
+          "IBM Presensi",
+          style: TextStyle(
+              fontWeight: FontWeight.w900, fontSize: 28, letterSpacing: -1),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          "Sistem Kehadiran Internal Karyawan\nPT Intiboga Mandiri",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: Colors.blueGrey,
+              fontSize: 13,
+              height: 1.6,
+              fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginButton(ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [theme.primaryColor, theme.primaryColor.withBlue(220)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.primaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          )
         ],
+      ),
+      child: ElevatedButton(
+        onPressed: notifier.isLoading ? null : () => notifier.login(),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        child: notifier.isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2))
+            : const Text(
+                "MASUK KE SISTEM",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1),
+              ),
       ),
     );
   }
@@ -178,48 +260,65 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
     bool obscureText = false,
     VoidCallback? onToggleVisible,
     TextInputType? keyboardType,
-    TextInputAction? textInputAction,
     Function(String)? onSubmitted,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: const EdgeInsets.only(left: 4, bottom: 10),
           child: Text(label,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  color: Colors.black87)),
         ),
         TextField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
-          textInputAction: textInputAction,
           onSubmitted: onSubmitted,
-          autocorrect: !isPassword,
-          enableSuggestions: !isPassword,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(icon, size: 20),
+            hintStyle: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 14,
+                fontWeight: FontWeight.normal),
+            prefixIcon: Icon(icon, size: 20, color: Colors.blueGrey.shade300),
             suffixIcon: isPassword
                 ? IconButton(
                     icon: Icon(
-                        obscureText ? Icons.visibility_off : Icons.visibility,
+                        obscureText
+                            ? Icons.visibility_off_rounded
+                            : Icons.visibility_rounded,
+                        color: Colors.blueGrey.shade300,
                         size: 20),
                     onPressed: onToggleVisible)
                 : null,
             filled: true,
-            fillColor: Colors.grey.shade50,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: BorderSide(color: Colors.grey.shade200)),
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.all(20),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
-                borderSide: BorderSide(color: Colors.grey.shade200)),
-            contentPadding: const EdgeInsets.all(20),
+                borderSide: BorderSide(color: Colors.grey.shade100, width: 2)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(color: Colors.blue, width: 2)),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFooter(ThemeData theme) {
+    return Text(
+      "© ${DateTime.now().year} IT Support - PT Intiboga Mandiri",
+      style: TextStyle(
+          color: Colors.grey.shade400,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5),
     );
   }
 

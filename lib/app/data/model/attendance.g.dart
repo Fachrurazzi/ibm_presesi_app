@@ -12,9 +12,11 @@ _$AttendanceModelImpl _$$AttendanceModelImplFromJson(
       today: json['today'] == null
           ? null
           : AttendanceEntity.fromJson(json['today'] as Map<String, dynamic>),
-      thisMonth: (json['this_month'] as List<dynamic>)
-          .map((e) => AttendanceEntity.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      thisMonth: (json['this_month'] as List<dynamic>?)
+              ?.map((e) => AttendanceEntity.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      message: json['message'] as String?,
     );
 
 Map<String, dynamic> _$$AttendanceModelImplToJson(
@@ -22,4 +24,5 @@ Map<String, dynamic> _$$AttendanceModelImplToJson(
     <String, dynamic>{
       'today': instance.today,
       'this_month': instance.thisMonth,
+      'message': instance.message,
     };

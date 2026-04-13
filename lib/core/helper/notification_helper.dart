@@ -1,46 +1,54 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart';
 import 'package:timezone/data/latest.dart';
 
 class NotificationHelper {
-  static FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  static Future<void> configurateLocalTimeZone() async {
+  static Future<void> initNotification() async {
     initializeTimeZones();
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-    // Gunakan try-catch karena terkadang nama timezone di HP tidak match dengan database library
     try {
+      final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
       setLocalLocation(getLocation(currentTimeZone));
     } catch (e) {
-      setLocalLocation(
-          getLocation('Asia/Jakarta')); // Fallback ke WIB jika gagal
+      // Fallback ke WITA (Banjarmasin)
+      setLocalLocation(getLocation('Asia/Makassar'));
     }
-  }
 
-  static Future<void> initNotification() async {
-    await configurateLocalTimeZone();
-
-    AndroidInitializationSettings androidInitializationSettings =
-        const AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    DarwinInitializationSettings darwinInitializationSettings =
-        const DarwinInitializationSettings(
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
       requestAlertPermission: true,
     );
 
-    InitializationSettings settings = InitializationSettings(
-        android: androidInitializationSettings,
-        iOS: darwinInitializationSettings);
+    await _plugin.initialize(
+      const InitializationSettings(android: androidSettings, iOS: iosSettings),
+    );
 
-    await flutterLocalNotificationsPlugin.initialize(settings);
+    if (kDebugMode) debugPrint("NOTIF_HELPER: Engine Ready 🔔");
   }
 
-  static scheduleNotification({
+  /// --- INI FUNGSI YANG TADI HILANG / BELUM ADA ---
+  static Future<bool> isPermissionGranted() async {
+    if (Platform.isAndroid) {
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      return await android?.areNotificationsEnabled() ?? false;
+    } else if (Platform.isIOS) {
+      // Untuk iOS, status permission biasanya dicek saat request
+      return true;
+    }
+    return false;
+  }
+
+  /// Menjadwalkan pengingat absen (Masuk/Pulang)
+  static Future<void> scheduleNotification({
     required int id,
     required String title,
     required String body,
@@ -51,73 +59,56 @@ class NotificationHelper {
     var scheduledDate =
         TZDateTime(local, now.year, now.month, now.day, hour, minutes);
 
-    // LOGIKA KRUSIAL: Jika waktu yang dijadwalkan sudah lewat hari ini,
-    // maka jadwalkan untuk BESOK agar tidak langsung muncul saat ini juga.
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
 
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      const NotificationDetails(
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledDate,
+        const NotificationDetails(
           android: AndroidNotificationDetails(
-            'ibm_channel_id', // Gunakan ID channel yang unik
-            'IBM Presensi Notifications',
+            'ibm_presence_channel',
+            'IBM Presensi Reminders',
+            channelDescription: 'Notifikasi pengingat jadwal kerja PT IBM',
             importance: Importance.max,
             priority: Priority.high,
+            showWhen: true,
           ),
-          iOS: DarwinNotificationDetails()),
-      androidScheduleMode: AndroidScheduleMode
-          .exactAllowWhileIdle, // Pastikan muncul tepat waktu
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+      if (kDebugMode)
+        debugPrint("NOTIF_HELPER: Set notif ID $id jam $hour:$minutes");
+    } catch (e) {
+      debugPrint("🚨 NOTIF_HELPER_ERROR: $e");
+    }
   }
 
-  static cancelAll() async {
-    await flutterLocalNotificationsPlugin.cancelAll();
-  }
+  static Future<void> cancelAll() async => await _plugin.cancelAll();
 
   static Future<bool> requestPermission() async {
     if (Platform.isIOS) {
-      return await flutterLocalNotificationsPlugin
+      return await _plugin
               .resolvePlatformSpecificImplementation<
                   IOSFlutterLocalNotificationsPlugin>()
               ?.requestPermissions(alert: true, sound: true, badge: true) ??
           false;
-    } else if (Platform.isAndroid) {
-      // Untuk Android 13 (API 33) ke atas wajib minta izin secara runtime
-      final androidImplementation =
-          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
-      return await androidImplementation?.requestNotificationsPermission() ??
-          false;
-    }
-    return false;
-  }
-
-  static Future<bool> isPermissionGranted() async {
-    bool isGranted = false;
-
-    if (Platform.isIOS) {
-      final permission = await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
-          ?.checkPermissions();
-
-      isGranted = permission?.isEnabled ?? false;
-    } else if (Platform.isAndroid) {
-      isGranted = await flutterLocalNotificationsPlugin
-              .resolvePlatformSpecificImplementation<
-                  AndroidFlutterLocalNotificationsPlugin>()
-              ?.areNotificationsEnabled() ??
-          false;
     }
 
-    return isGranted;
+    if (Platform.isAndroid) {
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      // Request permission khusus Android 13+ (API 33)
+      return await android?.requestNotificationsPermission() ?? false;
+    }
+    return true;
   }
 }

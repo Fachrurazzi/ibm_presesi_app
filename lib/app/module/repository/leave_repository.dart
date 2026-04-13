@@ -2,10 +2,11 @@ import 'package:ibm_presensi_app/app/module/entity/leave.dart';
 import 'package:ibm_presensi_app/core/network/data_state.dart';
 
 abstract class LeaveRepository {
-  // TIPS: Tambahkan tipe kembalian bool (atau LeaveEntity)
-  // agar Notifier tahu dengan pasti jika pengajuan BERHASIL.
+  /// Mengirimkan formulir pengajuan cuti/izin/sakit ke server.
+  /// Mengembalikan [DataSuccess(true)] jika data berhasil masuk ke database Laravel.
   Future<DataState<bool>> send(LeaveParamEntity param);
 
-  // 2. Ambil Riwayat Pengajuan Cuti (PENTING: Agar list muncul di UI)
+  /// Mengambil daftar riwayat pengajuan cuti milik karyawan.
+  /// Digunakan untuk menampilkan list 'Pending', 'Approved', atau 'Rejected'.
   Future<DataState<List<LeaveEntity>>> getHistory();
 }

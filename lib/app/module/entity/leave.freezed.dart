@@ -36,43 +36,55 @@ mixin _$Leave {
   String get reason => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)
+    required TResult Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)
         paramEntity,
     required TResult Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)
         entity,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)?
+    TResult? Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)?
         paramEntity,
     TResult? Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)?
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)?
         entity,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)?
+    TResult Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)?
         paramEntity,
     TResult Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)?
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)?
         entity,
     required TResult orElse(),
   }) =>
@@ -157,7 +169,8 @@ abstract class _$$LeaveParamEntityImplCopyWith<$Res>
   $Res call(
       {@JsonKey(name: 'start_date') String startDate,
       @JsonKey(name: 'end_date') String endDate,
-      String reason});
+      String reason,
+      String type});
 }
 
 /// @nodoc
@@ -174,6 +187,7 @@ class __$$LeaveParamEntityImplCopyWithImpl<$Res>
     Object? startDate = null,
     Object? endDate = null,
     Object? reason = null,
+    Object? type = null,
   }) {
     return _then(_$LeaveParamEntityImpl(
       startDate: null == startDate
@@ -188,6 +202,10 @@ class __$$LeaveParamEntityImplCopyWithImpl<$Res>
           ? _value.reason
           : reason // ignore: cast_nullable_to_non_nullable
               as String,
+      type: null == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -199,6 +217,7 @@ class _$LeaveParamEntityImpl implements LeaveParamEntity {
       {@JsonKey(name: 'start_date') required this.startDate,
       @JsonKey(name: 'end_date') required this.endDate,
       required this.reason,
+      this.type = 'Cuti',
       final String? $type})
       : $type = $type ?? 'paramEntity';
 
@@ -213,13 +232,16 @@ class _$LeaveParamEntityImpl implements LeaveParamEntity {
   final String endDate;
   @override
   final String reason;
+  @override
+  @JsonKey()
+  final String type;
 
   @JsonKey(name: 'runtimeType')
   final String $type;
 
   @override
   String toString() {
-    return 'Leave.paramEntity(startDate: $startDate, endDate: $endDate, reason: $reason)';
+    return 'Leave.paramEntity(startDate: $startDate, endDate: $endDate, reason: $reason, type: $type)';
   }
 
   @override
@@ -230,12 +252,14 @@ class _$LeaveParamEntityImpl implements LeaveParamEntity {
             (identical(other.startDate, startDate) ||
                 other.startDate == startDate) &&
             (identical(other.endDate, endDate) || other.endDate == endDate) &&
-            (identical(other.reason, reason) || other.reason == reason));
+            (identical(other.reason, reason) || other.reason == reason) &&
+            (identical(other.type, type) || other.type == type));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, startDate, endDate, reason);
+  int get hashCode =>
+      Object.hash(runtimeType, startDate, endDate, reason, type);
 
   @JsonKey(ignore: true)
   @override
@@ -247,54 +271,66 @@ class _$LeaveParamEntityImpl implements LeaveParamEntity {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)
+    required TResult Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)
         paramEntity,
     required TResult Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)
         entity,
   }) {
-    return paramEntity(startDate, endDate, reason);
+    return paramEntity(startDate, endDate, reason, type);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)?
+    TResult? Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)?
         paramEntity,
     TResult? Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)?
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)?
         entity,
   }) {
-    return paramEntity?.call(startDate, endDate, reason);
+    return paramEntity?.call(startDate, endDate, reason, type);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)?
+    TResult Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)?
         paramEntity,
     TResult Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)?
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)?
         entity,
     required TResult orElse(),
   }) {
     if (paramEntity != null) {
-      return paramEntity(startDate, endDate, reason);
+      return paramEntity(startDate, endDate, reason, type);
     }
     return orElse();
   }
@@ -342,7 +378,8 @@ abstract class LeaveParamEntity implements Leave {
   const factory LeaveParamEntity(
       {@JsonKey(name: 'start_date') required final String startDate,
       @JsonKey(name: 'end_date') required final String endDate,
-      required final String reason}) = _$LeaveParamEntityImpl;
+      required final String reason,
+      final String type}) = _$LeaveParamEntityImpl;
 
   factory LeaveParamEntity.fromJson(Map<String, dynamic> json) =
       _$LeaveParamEntityImpl.fromJson;
@@ -355,6 +392,7 @@ abstract class LeaveParamEntity implements Leave {
   String get endDate;
   @override
   String get reason;
+  String get type;
   @override
   @JsonKey(ignore: true)
   _$$LeaveParamEntityImplCopyWith<_$LeaveParamEntityImpl> get copyWith =>
@@ -374,7 +412,8 @@ abstract class _$$LeaveEntityImplCopyWith<$Res>
       @JsonKey(name: 'start_date') String startDate,
       @JsonKey(name: 'end_date') String endDate,
       String reason,
-      String status});
+      String status,
+      @JsonKey(name: 'approved_by') String? approvedBy});
 }
 
 /// @nodoc
@@ -393,6 +432,7 @@ class __$$LeaveEntityImplCopyWithImpl<$Res>
     Object? endDate = null,
     Object? reason = null,
     Object? status = null,
+    Object? approvedBy = freezed,
   }) {
     return _then(_$LeaveEntityImpl(
       id: null == id
@@ -415,6 +455,10 @@ class __$$LeaveEntityImplCopyWithImpl<$Res>
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
               as String,
+      approvedBy: freezed == approvedBy
+          ? _value.approvedBy
+          : approvedBy // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -427,7 +471,8 @@ class _$LeaveEntityImpl implements LeaveEntity {
       @JsonKey(name: 'start_date') required this.startDate,
       @JsonKey(name: 'end_date') required this.endDate,
       required this.reason,
-      required this.status,
+      this.status = 'pending',
+      @JsonKey(name: 'approved_by') this.approvedBy,
       final String? $type})
       : $type = $type ?? 'entity';
 
@@ -444,15 +489,23 @@ class _$LeaveEntityImpl implements LeaveEntity {
   final String endDate;
   @override
   final String reason;
+
+  /// Status pengajuan: 'pending', 'approved', 'rejected'
   @override
+  @JsonKey()
   final String status;
+
+  /// Nama Admin yang menyetujui (Opsional)
+  @override
+  @JsonKey(name: 'approved_by')
+  final String? approvedBy;
 
   @JsonKey(name: 'runtimeType')
   final String $type;
 
   @override
   String toString() {
-    return 'Leave.entity(id: $id, startDate: $startDate, endDate: $endDate, reason: $reason, status: $status)';
+    return 'Leave.entity(id: $id, startDate: $startDate, endDate: $endDate, reason: $reason, status: $status, approvedBy: $approvedBy)';
   }
 
   @override
@@ -465,13 +518,15 @@ class _$LeaveEntityImpl implements LeaveEntity {
                 other.startDate == startDate) &&
             (identical(other.endDate, endDate) || other.endDate == endDate) &&
             (identical(other.reason, reason) || other.reason == reason) &&
-            (identical(other.status, status) || other.status == status));
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.approvedBy, approvedBy) ||
+                other.approvedBy == approvedBy));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, startDate, endDate, reason, status);
+  int get hashCode => Object.hash(
+      runtimeType, id, startDate, endDate, reason, status, approvedBy);
 
   @JsonKey(ignore: true)
   @override
@@ -482,54 +537,66 @@ class _$LeaveEntityImpl implements LeaveEntity {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)
+    required TResult Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)
         paramEntity,
     required TResult Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)
         entity,
   }) {
-    return entity(id, startDate, endDate, reason, status);
+    return entity(id, startDate, endDate, reason, status, approvedBy);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)?
+    TResult? Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)?
         paramEntity,
     TResult? Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)?
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)?
         entity,
   }) {
-    return entity?.call(id, startDate, endDate, reason, status);
+    return entity?.call(id, startDate, endDate, reason, status, approvedBy);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'start_date') String startDate,
-            @JsonKey(name: 'end_date') String endDate, String reason)?
+    TResult Function(
+            @JsonKey(name: 'start_date') String startDate,
+            @JsonKey(name: 'end_date') String endDate,
+            String reason,
+            String type)?
         paramEntity,
     TResult Function(
             int id,
             @JsonKey(name: 'start_date') String startDate,
             @JsonKey(name: 'end_date') String endDate,
             String reason,
-            String status)?
+            String status,
+            @JsonKey(name: 'approved_by') String? approvedBy)?
         entity,
     required TResult orElse(),
   }) {
     if (entity != null) {
-      return entity(id, startDate, endDate, reason, status);
+      return entity(id, startDate, endDate, reason, status, approvedBy);
     }
     return orElse();
   }
@@ -575,11 +642,13 @@ class _$LeaveEntityImpl implements LeaveEntity {
 
 abstract class LeaveEntity implements Leave {
   const factory LeaveEntity(
-      {required final int id,
-      @JsonKey(name: 'start_date') required final String startDate,
-      @JsonKey(name: 'end_date') required final String endDate,
-      required final String reason,
-      required final String status}) = _$LeaveEntityImpl;
+          {required final int id,
+          @JsonKey(name: 'start_date') required final String startDate,
+          @JsonKey(name: 'end_date') required final String endDate,
+          required final String reason,
+          final String status,
+          @JsonKey(name: 'approved_by') final String? approvedBy}) =
+      _$LeaveEntityImpl;
 
   factory LeaveEntity.fromJson(Map<String, dynamic> json) =
       _$LeaveEntityImpl.fromJson;
@@ -593,7 +662,13 @@ abstract class LeaveEntity implements Leave {
   String get endDate;
   @override
   String get reason;
+
+  /// Status pengajuan: 'pending', 'approved', 'rejected'
   String get status;
+
+  /// Nama Admin yang menyetujui (Opsional)
+  @JsonKey(name: 'approved_by')
+  String? get approvedBy;
   @override
   @JsonKey(ignore: true)
   _$$LeaveEntityImplCopyWith<_$LeaveEntityImpl> get copyWith =>

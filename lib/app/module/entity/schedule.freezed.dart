@@ -22,6 +22,10 @@ ScheduleEntity _$ScheduleEntityFromJson(Map<String, dynamic> json) {
 mixin _$ScheduleEntity {
   @JsonKey(name: 'is_wfa')
   bool get isWfa => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_banned')
+  bool get isBanned =>
+      throw _privateConstructorUsedError; // Tambahkan ini untuk proteksi banned
+  UserEntity? get user => throw _privateConstructorUsedError;
   OfficeEntity get office => throw _privateConstructorUsedError;
   ShiftEntity get shift => throw _privateConstructorUsedError;
 
@@ -39,9 +43,12 @@ abstract class $ScheduleEntityCopyWith<$Res> {
   @useResult
   $Res call(
       {@JsonKey(name: 'is_wfa') bool isWfa,
+      @JsonKey(name: 'is_banned') bool isBanned,
+      UserEntity? user,
       OfficeEntity office,
       ShiftEntity shift});
 
+  $UserEntityCopyWith<$Res>? get user;
   $OfficeEntityCopyWith<$Res> get office;
   $ShiftEntityCopyWith<$Res> get shift;
 }
@@ -60,6 +67,8 @@ class _$ScheduleEntityCopyWithImpl<$Res, $Val extends ScheduleEntity>
   @override
   $Res call({
     Object? isWfa = null,
+    Object? isBanned = null,
+    Object? user = freezed,
     Object? office = null,
     Object? shift = null,
   }) {
@@ -68,6 +77,14 @@ class _$ScheduleEntityCopyWithImpl<$Res, $Val extends ScheduleEntity>
           ? _value.isWfa
           : isWfa // ignore: cast_nullable_to_non_nullable
               as bool,
+      isBanned: null == isBanned
+          ? _value.isBanned
+          : isBanned // ignore: cast_nullable_to_non_nullable
+              as bool,
+      user: freezed == user
+          ? _value.user
+          : user // ignore: cast_nullable_to_non_nullable
+              as UserEntity?,
       office: null == office
           ? _value.office
           : office // ignore: cast_nullable_to_non_nullable
@@ -77,6 +94,18 @@ class _$ScheduleEntityCopyWithImpl<$Res, $Val extends ScheduleEntity>
           : shift // ignore: cast_nullable_to_non_nullable
               as ShiftEntity,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $UserEntityCopyWith<$Res>? get user {
+    if (_value.user == null) {
+      return null;
+    }
+
+    return $UserEntityCopyWith<$Res>(_value.user!, (value) {
+      return _then(_value.copyWith(user: value) as $Val);
+    });
   }
 
   @override
@@ -106,9 +135,13 @@ abstract class _$$ScheduleEntityImplCopyWith<$Res>
   @useResult
   $Res call(
       {@JsonKey(name: 'is_wfa') bool isWfa,
+      @JsonKey(name: 'is_banned') bool isBanned,
+      UserEntity? user,
       OfficeEntity office,
       ShiftEntity shift});
 
+  @override
+  $UserEntityCopyWith<$Res>? get user;
   @override
   $OfficeEntityCopyWith<$Res> get office;
   @override
@@ -127,6 +160,8 @@ class __$$ScheduleEntityImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? isWfa = null,
+    Object? isBanned = null,
+    Object? user = freezed,
     Object? office = null,
     Object? shift = null,
   }) {
@@ -135,6 +170,14 @@ class __$$ScheduleEntityImplCopyWithImpl<$Res>
           ? _value.isWfa
           : isWfa // ignore: cast_nullable_to_non_nullable
               as bool,
+      isBanned: null == isBanned
+          ? _value.isBanned
+          : isBanned // ignore: cast_nullable_to_non_nullable
+              as bool,
+      user: freezed == user
+          ? _value.user
+          : user // ignore: cast_nullable_to_non_nullable
+              as UserEntity?,
       office: null == office
           ? _value.office
           : office // ignore: cast_nullable_to_non_nullable
@@ -151,7 +194,9 @@ class __$$ScheduleEntityImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$ScheduleEntityImpl implements _ScheduleEntity {
   const _$ScheduleEntityImpl(
-      {@JsonKey(name: 'is_wfa') required this.isWfa,
+      {@JsonKey(name: 'is_wfa') this.isWfa = false,
+      @JsonKey(name: 'is_banned') this.isBanned = false,
+      this.user,
       required this.office,
       required this.shift});
 
@@ -162,13 +207,19 @@ class _$ScheduleEntityImpl implements _ScheduleEntity {
   @JsonKey(name: 'is_wfa')
   final bool isWfa;
   @override
+  @JsonKey(name: 'is_banned')
+  final bool isBanned;
+// Tambahkan ini untuk proteksi banned
+  @override
+  final UserEntity? user;
+  @override
   final OfficeEntity office;
   @override
   final ShiftEntity shift;
 
   @override
   String toString() {
-    return 'ScheduleEntity(isWfa: $isWfa, office: $office, shift: $shift)';
+    return 'ScheduleEntity(isWfa: $isWfa, isBanned: $isBanned, user: $user, office: $office, shift: $shift)';
   }
 
   @override
@@ -177,13 +228,17 @@ class _$ScheduleEntityImpl implements _ScheduleEntity {
         (other.runtimeType == runtimeType &&
             other is _$ScheduleEntityImpl &&
             (identical(other.isWfa, isWfa) || other.isWfa == isWfa) &&
+            (identical(other.isBanned, isBanned) ||
+                other.isBanned == isBanned) &&
+            (identical(other.user, user) || other.user == user) &&
             (identical(other.office, office) || other.office == office) &&
             (identical(other.shift, shift) || other.shift == shift));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, isWfa, office, shift);
+  int get hashCode =>
+      Object.hash(runtimeType, isWfa, isBanned, user, office, shift);
 
   @JsonKey(ignore: true)
   @override
@@ -202,7 +257,9 @@ class _$ScheduleEntityImpl implements _ScheduleEntity {
 
 abstract class _ScheduleEntity implements ScheduleEntity {
   const factory _ScheduleEntity(
-      {@JsonKey(name: 'is_wfa') required final bool isWfa,
+      {@JsonKey(name: 'is_wfa') final bool isWfa,
+      @JsonKey(name: 'is_banned') final bool isBanned,
+      final UserEntity? user,
       required final OfficeEntity office,
       required final ShiftEntity shift}) = _$ScheduleEntityImpl;
 
@@ -212,6 +269,11 @@ abstract class _ScheduleEntity implements ScheduleEntity {
   @override
   @JsonKey(name: 'is_wfa')
   bool get isWfa;
+  @override
+  @JsonKey(name: 'is_banned')
+  bool get isBanned;
+  @override // Tambahkan ini untuk proteksi banned
+  UserEntity? get user;
   @override
   OfficeEntity get office;
   @override
@@ -339,21 +401,23 @@ class __$$OfficeEntityImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$OfficeEntityImpl implements _OfficeEntity {
   const _$OfficeEntityImpl(
-      {required this.name,
+      {this.name = "Kantor IBM",
       required this.latitude,
       required this.longitude,
-      required this.radius});
+      this.radius = 100.0});
 
   factory _$OfficeEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$OfficeEntityImplFromJson(json);
 
   @override
+  @JsonKey()
   final String name;
   @override
   final double latitude;
   @override
   final double longitude;
   @override
+  @JsonKey()
   final double radius;
 
   @override
@@ -395,10 +459,10 @@ class _$OfficeEntityImpl implements _OfficeEntity {
 
 abstract class _OfficeEntity implements OfficeEntity {
   const factory _OfficeEntity(
-      {required final String name,
+      {final String name,
       required final double latitude,
       required final double longitude,
-      required final double radius}) = _$OfficeEntityImpl;
+      final double radius}) = _$OfficeEntityImpl;
 
   factory _OfficeEntity.fromJson(Map<String, dynamic> json) =
       _$OfficeEntityImpl.fromJson;
@@ -531,14 +595,15 @@ class __$$ShiftEntityImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$ShiftEntityImpl implements _ShiftEntity {
   const _$ShiftEntityImpl(
-      {required this.name,
-      @JsonKey(name: 'start_time') required this.startTime,
-      @JsonKey(name: 'end_time') required this.endTime});
+      {this.name = "Shift Normal",
+      @JsonKey(name: 'start_time') this.startTime = "08:30",
+      @JsonKey(name: 'end_time') this.endTime = "17:30"});
 
   factory _$ShiftEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$ShiftEntityImplFromJson(json);
 
   @override
+  @JsonKey()
   final String name;
   @override
   @JsonKey(name: 'start_time')
@@ -583,10 +648,9 @@ class _$ShiftEntityImpl implements _ShiftEntity {
 
 abstract class _ShiftEntity implements ShiftEntity {
   const factory _ShiftEntity(
-          {required final String name,
-          @JsonKey(name: 'start_time') required final String startTime,
-          @JsonKey(name: 'end_time') required final String endTime}) =
-      _$ShiftEntityImpl;
+      {final String name,
+      @JsonKey(name: 'start_time') final String startTime,
+      @JsonKey(name: 'end_time') final String endTime}) = _$ShiftEntityImpl;
 
   factory _ShiftEntity.fromJson(Map<String, dynamic> json) =
       _$ShiftEntityImpl.fromJson;

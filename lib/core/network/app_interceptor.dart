@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 
@@ -8,16 +9,20 @@ class AppInterceptor extends Interceptor {
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
-  ) async {
-    options.headers['accept'] = 'application/json';
+  ) {
+    // 1. Setup Headers standar
+    options.headers['Accept'] = 'application/json';
+    options.connectTimeout =
+        const Duration(seconds: 15); // Tambahkan timeout biar gak hang
+    options.receiveTimeout = const Duration(seconds: 15);
 
-    // CATATAN: Pastikan PREF_AUTH sesuai dengan yang ada di constant.dart
-    // Jika kamu sudah mengubahnya ke AppPreferences.AUTH_TOKEN, sesuaikan di sini.
+    // 2. Ambil Token secara INSTAN (Tanpa await karena sudah init di main)
     final authToken =
-        await SharedPreferencesHelper.getString(AppPreferences.AUTH_TOKEN);
+        SharedPreferencesHelper.getString(AppPreferences.AUTH_TOKEN);
 
-    if (authToken?.isNotEmpty ?? false) {
+    if (authToken != null && authToken.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $authToken';
+      // debugPrint("NETWORK_LOG: Sending request with token...");
     }
 
     return super.onRequest(options, handler);
@@ -28,30 +33,36 @@ class AppInterceptor extends Interceptor {
     Response response,
     ResponseInterceptorHandler handler,
   ) {
-    // LOGIKA SUDAH BENAR: Menerima 200 dan 201
-    if (response.statusCode != HttpStatus.ok &&
-        response.statusCode != HttpStatus.created) {
-      // Mengarahkan response "error" agar tetap bisa dibaca oleh handleResponse
-      return handler.resolve(
-        Response(
-          data: response.data,
-          requestOptions: response.requestOptions,
-          statusCode:
-              response.statusCode, // Penting untuk debugging di handleResponse
-        ),
-      );
+    // Memastikan status code 200 dan 201 dianggap sukses
+    final successCodes = [HttpStatus.ok, HttpStatus.created];
+
+    if (!successCodes.contains(response.statusCode)) {
+      // Jika error, kita resolve agar tidak melempar Exception yang bikin crash
+      return handler.resolve(response);
     }
+
     super.onResponse(response, handler);
   }
 
-  // Tips: Tambahkan onError untuk handle jika token expired (401)
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401) {
-      // Di sini kamu bisa tambahkan logika Logout otomatis
-      // atau redirect ke login jika token sudah tidak valid
-      print("Token Expired atau Tidak Valid");
+    final statusCode = err.response?.statusCode;
+
+    // 3. AUTO-LOGOUT jika Token Expired (401)
+    if (statusCode == 401) {
+      debugPrint("🚨 SESSION_EXPIRED: Token tidak valid, membersihkan sesi...");
+
+      // Bersihkan data lokal
+      SharedPreferencesHelper.logout();
+
+      // Tips: Kamu bisa gunakan event bus atau stream untuk mentrigger
+      // redirect ke LoginScreen dari sini jika diperlukan.
     }
+
+    // Logging error sederhana agar gampang debug di terminal
+    debugPrint(
+        "🚨 NETWORK_ERROR [${err.requestOptions.path}]: $statusCode - ${err.message}");
+
     super.onError(err, handler);
   }
 }

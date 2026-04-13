@@ -2,17 +2,19 @@ import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/core/network/data_state.dart';
 
 abstract class AttendanceRepository {
-  // 1. Ambil absen hari ini (Bisa null jika belum absen)
+  /// Mengambil data presensi hari ini (Check-in & Check-out)
+  /// Mengembalikan null jika karyawan belum melakukan aksi presensi hari ini.
   Future<DataState<AttendanceEntity?>> getToday();
 
-  // 2. Ambil riwayat bulan ini
+  /// Mengambil daftar riwayat presensi khusus untuk bulan berjalan.
   Future<DataState<List<AttendanceEntity>>> getThisMonth();
 
-  // 3. Kirim data absen (Check-in/Check-out)
-  // TIPS: Tambahkan tipe kembalian (misal bool) agar Notifier tahu sukses/tidaknya dengan jelas
+  /// Mengirim data presensi baru (Store).
+  /// [param] berisi koordinat, alamat, dan foto wajah (base64/file).
   Future<DataState<bool>> sendAttendance(AttendanceParamEntity param);
 
-  // 4. Filter riwayat berdasarkan bulan dan tahun
+  /// Mengambil data riwayat berdasarkan filter bulan dan tahun tertentu.
+  /// Digunakan pada fitur rekap absen bulanan.
   Future<DataState<List<AttendanceEntity>>> getByMonthYear(
       AttendanceParamGetEntity param);
 }

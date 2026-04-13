@@ -56,6 +56,7 @@ dependencies:
   # FIX: Versi camera disesuaikan untuk kompatibilitas Flutter SDK 3.22 (Dart 3.4.x)
   camera: 0.10.5+9
   google_mlkit_face_detection: ^0.11.0
+  elegant_notification: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -79,20 +80,24 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo_ibm.png"
+  image_path: "assets/images/icon_ibm.png"
   min_sdk_android: 21
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/logo_ibm.png"
+  adaptive_icon_foreground: "assets/images/icon_ibm.png"
 
 # The following section is specific to Flutter packages.
 flutter_native_splash:
-  color: "#FFFFFF"
-  image: "assets/images/logo_ibm.png"
-  branding: "assets/images/logo_ibm.png"
+  color: "#ffffff" # Warna background splash
+  image: assets/images/logo_ibm.png # Path logo kamu
 
+  # KUNCI AGAR TIDAK BERULANG & TETAP DI TENGAH:
+  android_gravity: center
+  ios_content_mode: center
+
+  # Agar tidak lonjong di Android (menjaga aspect ratio):
   android_12:
-    image: "assets/images/logo_ibm.png"
-    color: "#FFFFFF"
+    image: assets/images/logo_ibm.png
+    color: "#ffffff"
 
   fullscreen: true
 

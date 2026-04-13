@@ -14,75 +14,41 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-Auth _$AuthFromJson(Map<String, dynamic> json) {
-  return AuthModel.fromJson(json);
+AuthModel _$AuthModelFromJson(Map<String, dynamic> json) {
+  return _AuthModel.fromJson(json);
 }
 
 /// @nodoc
-mixin _$Auth {
+mixin _$AuthModel {
   @JsonKey(name: 'access_token')
-  String get accessToken => throw _privateConstructorUsedError;
+  String? get accessToken => throw _privateConstructorUsedError;
   @JsonKey(name: 'token_type')
   String get tokenType => throw _privateConstructorUsedError;
   UserModel? get user => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel? user)
-        model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel? user)?
-        model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel? user)?
-        model,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(AuthModel value) model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(AuthModel value)? model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(AuthModel value)? model,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $AuthCopyWith<Auth> get copyWith => throw _privateConstructorUsedError;
+  $AuthModelCopyWith<AuthModel> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $AuthCopyWith<$Res> {
-  factory $AuthCopyWith(Auth value, $Res Function(Auth) then) =
-      _$AuthCopyWithImpl<$Res, Auth>;
+abstract class $AuthModelCopyWith<$Res> {
+  factory $AuthModelCopyWith(AuthModel value, $Res Function(AuthModel) then) =
+      _$AuthModelCopyWithImpl<$Res, AuthModel>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'access_token') String accessToken,
+      {@JsonKey(name: 'access_token') String? accessToken,
       @JsonKey(name: 'token_type') String tokenType,
       UserModel? user});
+
+  $UserModelCopyWith<$Res>? get user;
 }
 
 /// @nodoc
-class _$AuthCopyWithImpl<$Res, $Val extends Auth>
-    implements $AuthCopyWith<$Res> {
-  _$AuthCopyWithImpl(this._value, this._then);
+class _$AuthModelCopyWithImpl<$Res, $Val extends AuthModel>
+    implements $AuthModelCopyWith<$Res> {
+  _$AuthModelCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -92,15 +58,15 @@ class _$AuthCopyWithImpl<$Res, $Val extends Auth>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? accessToken = null,
+    Object? accessToken = freezed,
     Object? tokenType = null,
     Object? user = freezed,
   }) {
     return _then(_value.copyWith(
-      accessToken: null == accessToken
+      accessToken: freezed == accessToken
           ? _value.accessToken
           : accessToken // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       tokenType: null == tokenType
           ? _value.tokenType
           : tokenType // ignore: cast_nullable_to_non_nullable
@@ -111,24 +77,40 @@ class _$AuthCopyWithImpl<$Res, $Val extends Auth>
               as UserModel?,
     ) as $Val);
   }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $UserModelCopyWith<$Res>? get user {
+    if (_value.user == null) {
+      return null;
+    }
+
+    return $UserModelCopyWith<$Res>(_value.user!, (value) {
+      return _then(_value.copyWith(user: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
-abstract class _$$AuthModelImplCopyWith<$Res> implements $AuthCopyWith<$Res> {
+abstract class _$$AuthModelImplCopyWith<$Res>
+    implements $AuthModelCopyWith<$Res> {
   factory _$$AuthModelImplCopyWith(
           _$AuthModelImpl value, $Res Function(_$AuthModelImpl) then) =
       __$$AuthModelImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'access_token') String accessToken,
+      {@JsonKey(name: 'access_token') String? accessToken,
       @JsonKey(name: 'token_type') String tokenType,
       UserModel? user});
+
+  @override
+  $UserModelCopyWith<$Res>? get user;
 }
 
 /// @nodoc
 class __$$AuthModelImplCopyWithImpl<$Res>
-    extends _$AuthCopyWithImpl<$Res, _$AuthModelImpl>
+    extends _$AuthModelCopyWithImpl<$Res, _$AuthModelImpl>
     implements _$$AuthModelImplCopyWith<$Res> {
   __$$AuthModelImplCopyWithImpl(
       _$AuthModelImpl _value, $Res Function(_$AuthModelImpl) _then)
@@ -137,15 +119,15 @@ class __$$AuthModelImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? accessToken = null,
+    Object? accessToken = freezed,
     Object? tokenType = null,
     Object? user = freezed,
   }) {
     return _then(_$AuthModelImpl(
-      accessToken: null == accessToken
+      accessToken: freezed == accessToken
           ? _value.accessToken
           : accessToken // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       tokenType: null == tokenType
           ? _value.tokenType
           : tokenType // ignore: cast_nullable_to_non_nullable
@@ -160,10 +142,10 @@ class __$$AuthModelImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$AuthModelImpl implements AuthModel {
-  _$AuthModelImpl(
-      {@JsonKey(name: 'access_token') this.accessToken = '',
-      @JsonKey(name: 'token_type') this.tokenType = '',
+class _$AuthModelImpl implements _AuthModel {
+  const _$AuthModelImpl(
+      {@JsonKey(name: 'access_token') this.accessToken,
+      @JsonKey(name: 'token_type') this.tokenType = 'Bearer',
       this.user});
 
   factory _$AuthModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -171,7 +153,7 @@ class _$AuthModelImpl implements AuthModel {
 
   @override
   @JsonKey(name: 'access_token')
-  final String accessToken;
+  final String? accessToken;
   @override
   @JsonKey(name: 'token_type')
   final String tokenType;
@@ -180,7 +162,7 @@ class _$AuthModelImpl implements AuthModel {
 
   @override
   String toString() {
-    return 'Auth.model(accessToken: $accessToken, tokenType: $tokenType, user: $user)';
+    return 'AuthModel(accessToken: $accessToken, tokenType: $tokenType, user: $user)';
   }
 
   @override
@@ -192,81 +174,18 @@ class _$AuthModelImpl implements AuthModel {
                 other.accessToken == accessToken) &&
             (identical(other.tokenType, tokenType) ||
                 other.tokenType == tokenType) &&
-            const DeepCollectionEquality().equals(other.user, user));
+            (identical(other.user, user) || other.user == user));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, accessToken, tokenType,
-      const DeepCollectionEquality().hash(user));
+  int get hashCode => Object.hash(runtimeType, accessToken, tokenType, user);
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$AuthModelImplCopyWith<_$AuthModelImpl> get copyWith =>
       __$$AuthModelImplCopyWithImpl<_$AuthModelImpl>(this, _$identity);
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel? user)
-        model,
-  }) {
-    return model(accessToken, tokenType, user);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel? user)?
-        model,
-  }) {
-    return model?.call(accessToken, tokenType, user);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(@JsonKey(name: 'access_token') String accessToken,
-            @JsonKey(name: 'token_type') String tokenType, UserModel? user)?
-        model,
-    required TResult orElse(),
-  }) {
-    if (model != null) {
-      return model(accessToken, tokenType, user);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(AuthModel value) model,
-  }) {
-    return model(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(AuthModel value)? model,
-  }) {
-    return model?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(AuthModel value)? model,
-    required TResult orElse(),
-  }) {
-    if (model != null) {
-      return model(this);
-    }
-    return orElse();
-  }
 
   @override
   Map<String, dynamic> toJson() {
@@ -276,18 +195,18 @@ class _$AuthModelImpl implements AuthModel {
   }
 }
 
-abstract class AuthModel implements Auth {
-  factory AuthModel(
-      {@JsonKey(name: 'access_token') final String accessToken,
+abstract class _AuthModel implements AuthModel {
+  const factory _AuthModel(
+      {@JsonKey(name: 'access_token') final String? accessToken,
       @JsonKey(name: 'token_type') final String tokenType,
       final UserModel? user}) = _$AuthModelImpl;
 
-  factory AuthModel.fromJson(Map<String, dynamic> json) =
+  factory _AuthModel.fromJson(Map<String, dynamic> json) =
       _$AuthModelImpl.fromJson;
 
   @override
   @JsonKey(name: 'access_token')
-  String get accessToken;
+  String? get accessToken;
   @override
   @JsonKey(name: 'token_type')
   String get tokenType;
@@ -299,109 +218,70 @@ abstract class AuthModel implements Auth {
       throw _privateConstructorUsedError;
 }
 
-User _$UserFromJson(Map<String, dynamic> json) {
-  return UserModel.fromJson(json);
+UserModel _$UserModelFromJson(Map<String, dynamic> json) {
+  return _UserModel.fromJson(json);
 }
 
 /// @nodoc
-mixin _$User {
-  int get id => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
-  String get email => throw _privateConstructorUsedError;
+mixin _$UserModel {
+// Gunakan int? atau default yang masuk akal, jangan 0 jika id itu penting
+  int? get id =>
+      throw _privateConstructorUsedError; // Jangan beri default kosong jika kita ingin validasi data dari server
+  String? get name => throw _privateConstructorUsedError;
+  String? get email => throw _privateConstructorUsedError;
   @JsonKey(name: 'image')
   String? get image => throw _privateConstructorUsedError;
+  @JsonKey(name: 'image_url')
+  String? get imageUrl =>
+      throw _privateConstructorUsedError; // Relasi Objek Position
   PositionModel? get position =>
-      throw _privateConstructorUsedError; // Menggunakan objek Position nullable
+      throw _privateConstructorUsedError; // Backup field position_name
+  @JsonKey(name: 'position_name')
+  String? get positionName => throw _privateConstructorUsedError;
   @JsonKey(name: 'join_date')
-  String get joinDate => throw _privateConstructorUsedError;
+  String? get joinDate => throw _privateConstructorUsedError;
   @JsonKey(name: 'leave_quota')
-  int get leaveQuota => throw _privateConstructorUsedError;
+  int? get leaveQuota => throw _privateConstructorUsedError;
   @JsonKey(name: 'cashable_leave')
-  int get cashableLeave => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(
-            int id,
-            String name,
-            String email,
-            @JsonKey(name: 'image') String? image,
-            PositionModel? position,
-            @JsonKey(name: 'join_date') String joinDate,
-            @JsonKey(name: 'leave_quota') int leaveQuota,
-            @JsonKey(name: 'cashable_leave') int cashableLeave)
-        model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(
-            int id,
-            String name,
-            String email,
-            @JsonKey(name: 'image') String? image,
-            PositionModel? position,
-            @JsonKey(name: 'join_date') String joinDate,
-            @JsonKey(name: 'leave_quota') int leaveQuota,
-            @JsonKey(name: 'cashable_leave') int cashableLeave)?
-        model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(
-            int id,
-            String name,
-            String email,
-            @JsonKey(name: 'image') String? image,
-            PositionModel? position,
-            @JsonKey(name: 'join_date') String joinDate,
-            @JsonKey(name: 'leave_quota') int leaveQuota,
-            @JsonKey(name: 'cashable_leave') int cashableLeave)?
-        model,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(UserModel value) model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(UserModel value)? model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(UserModel value)? model,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+  int? get cashableLeave =>
+      throw _privateConstructorUsedError; // --- ONBOARDING STATUS PT IBM ---
+  @JsonKey(name: 'is_default_password')
+  bool get isDefaultPassword => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_face_registered')
+  bool get isFaceRegistered => throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $UserCopyWith<User> get copyWith => throw _privateConstructorUsedError;
+  $UserModelCopyWith<UserModel> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $UserCopyWith<$Res> {
-  factory $UserCopyWith(User value, $Res Function(User) then) =
-      _$UserCopyWithImpl<$Res, User>;
+abstract class $UserModelCopyWith<$Res> {
+  factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) then) =
+      _$UserModelCopyWithImpl<$Res, UserModel>;
   @useResult
   $Res call(
-      {int id,
-      String name,
-      String email,
+      {int? id,
+      String? name,
+      String? email,
       @JsonKey(name: 'image') String? image,
+      @JsonKey(name: 'image_url') String? imageUrl,
       PositionModel? position,
-      @JsonKey(name: 'join_date') String joinDate,
-      @JsonKey(name: 'leave_quota') int leaveQuota,
-      @JsonKey(name: 'cashable_leave') int cashableLeave});
+      @JsonKey(name: 'position_name') String? positionName,
+      @JsonKey(name: 'join_date') String? joinDate,
+      @JsonKey(name: 'leave_quota') int? leaveQuota,
+      @JsonKey(name: 'cashable_leave') int? cashableLeave,
+      @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+      @JsonKey(name: 'is_face_registered') bool isFaceRegistered});
+
+  $PositionModelCopyWith<$Res>? get position;
 }
 
 /// @nodoc
-class _$UserCopyWithImpl<$Res, $Val extends User>
-    implements $UserCopyWith<$Res> {
-  _$UserCopyWithImpl(this._value, this._then);
+class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
+    implements $UserModelCopyWith<$Res> {
+  _$UserModelCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -411,73 +291,113 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
-    Object? name = null,
-    Object? email = null,
+    Object? id = freezed,
+    Object? name = freezed,
+    Object? email = freezed,
     Object? image = freezed,
+    Object? imageUrl = freezed,
     Object? position = freezed,
-    Object? joinDate = null,
-    Object? leaveQuota = null,
-    Object? cashableLeave = null,
+    Object? positionName = freezed,
+    Object? joinDate = freezed,
+    Object? leaveQuota = freezed,
+    Object? cashableLeave = freezed,
+    Object? isDefaultPassword = null,
+    Object? isFaceRegistered = null,
   }) {
     return _then(_value.copyWith(
-      id: null == id
+      id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      name: null == name
+              as int?,
+      name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      email: null == email
+              as String?,
+      email: freezed == email
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       image: freezed == image
           ? _value.image
           : image // ignore: cast_nullable_to_non_nullable
+              as String?,
+      imageUrl: freezed == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       position: freezed == position
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
               as PositionModel?,
-      joinDate: null == joinDate
+      positionName: freezed == positionName
+          ? _value.positionName
+          : positionName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      joinDate: freezed == joinDate
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
-              as String,
-      leaveQuota: null == leaveQuota
+              as String?,
+      leaveQuota: freezed == leaveQuota
           ? _value.leaveQuota
           : leaveQuota // ignore: cast_nullable_to_non_nullable
-              as int,
-      cashableLeave: null == cashableLeave
+              as int?,
+      cashableLeave: freezed == cashableLeave
           ? _value.cashableLeave
           : cashableLeave // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
+      isDefaultPassword: null == isDefaultPassword
+          ? _value.isDefaultPassword
+          : isDefaultPassword // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isFaceRegistered: null == isFaceRegistered
+          ? _value.isFaceRegistered
+          : isFaceRegistered // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $PositionModelCopyWith<$Res>? get position {
+    if (_value.position == null) {
+      return null;
+    }
+
+    return $PositionModelCopyWith<$Res>(_value.position!, (value) {
+      return _then(_value.copyWith(position: value) as $Val);
+    });
   }
 }
 
 /// @nodoc
-abstract class _$$UserModelImplCopyWith<$Res> implements $UserCopyWith<$Res> {
+abstract class _$$UserModelImplCopyWith<$Res>
+    implements $UserModelCopyWith<$Res> {
   factory _$$UserModelImplCopyWith(
           _$UserModelImpl value, $Res Function(_$UserModelImpl) then) =
       __$$UserModelImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
-      {int id,
-      String name,
-      String email,
+      {int? id,
+      String? name,
+      String? email,
       @JsonKey(name: 'image') String? image,
+      @JsonKey(name: 'image_url') String? imageUrl,
       PositionModel? position,
-      @JsonKey(name: 'join_date') String joinDate,
-      @JsonKey(name: 'leave_quota') int leaveQuota,
-      @JsonKey(name: 'cashable_leave') int cashableLeave});
+      @JsonKey(name: 'position_name') String? positionName,
+      @JsonKey(name: 'join_date') String? joinDate,
+      @JsonKey(name: 'leave_quota') int? leaveQuota,
+      @JsonKey(name: 'cashable_leave') int? cashableLeave,
+      @JsonKey(name: 'is_default_password') bool isDefaultPassword,
+      @JsonKey(name: 'is_face_registered') bool isFaceRegistered});
+
+  @override
+  $PositionModelCopyWith<$Res>? get position;
 }
 
 /// @nodoc
 class __$$UserModelImplCopyWithImpl<$Res>
-    extends _$UserCopyWithImpl<$Res, _$UserModelImpl>
+    extends _$UserModelCopyWithImpl<$Res, _$UserModelImpl>
     implements _$$UserModelImplCopyWith<$Res> {
   __$$UserModelImplCopyWithImpl(
       _$UserModelImpl _value, $Res Function(_$UserModelImpl) _then)
@@ -486,96 +406,133 @@ class __$$UserModelImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
-    Object? name = null,
-    Object? email = null,
+    Object? id = freezed,
+    Object? name = freezed,
+    Object? email = freezed,
     Object? image = freezed,
+    Object? imageUrl = freezed,
     Object? position = freezed,
-    Object? joinDate = null,
-    Object? leaveQuota = null,
-    Object? cashableLeave = null,
+    Object? positionName = freezed,
+    Object? joinDate = freezed,
+    Object? leaveQuota = freezed,
+    Object? cashableLeave = freezed,
+    Object? isDefaultPassword = null,
+    Object? isFaceRegistered = null,
   }) {
     return _then(_$UserModelImpl(
-      id: null == id
+      id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      name: null == name
+              as int?,
+      name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      email: null == email
+              as String?,
+      email: freezed == email
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       image: freezed == image
           ? _value.image
           : image // ignore: cast_nullable_to_non_nullable
+              as String?,
+      imageUrl: freezed == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       position: freezed == position
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
               as PositionModel?,
-      joinDate: null == joinDate
+      positionName: freezed == positionName
+          ? _value.positionName
+          : positionName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      joinDate: freezed == joinDate
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
-              as String,
-      leaveQuota: null == leaveQuota
+              as String?,
+      leaveQuota: freezed == leaveQuota
           ? _value.leaveQuota
           : leaveQuota // ignore: cast_nullable_to_non_nullable
-              as int,
-      cashableLeave: null == cashableLeave
+              as int?,
+      cashableLeave: freezed == cashableLeave
           ? _value.cashableLeave
           : cashableLeave // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
+      isDefaultPassword: null == isDefaultPassword
+          ? _value.isDefaultPassword
+          : isDefaultPassword // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isFaceRegistered: null == isFaceRegistered
+          ? _value.isFaceRegistered
+          : isFaceRegistered // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$UserModelImpl implements UserModel {
-  _$UserModelImpl(
-      {this.id = 0,
-      this.name = '',
-      this.email = '',
+class _$UserModelImpl implements _UserModel {
+  const _$UserModelImpl(
+      {this.id,
+      this.name,
+      this.email,
       @JsonKey(name: 'image') this.image,
+      @JsonKey(name: 'image_url') this.imageUrl,
       this.position,
-      @JsonKey(name: 'join_date') this.joinDate = '',
-      @JsonKey(name: 'leave_quota') this.leaveQuota = 0,
-      @JsonKey(name: 'cashable_leave') this.cashableLeave = 0});
+      @JsonKey(name: 'position_name') this.positionName,
+      @JsonKey(name: 'join_date') this.joinDate,
+      @JsonKey(name: 'leave_quota') this.leaveQuota,
+      @JsonKey(name: 'cashable_leave') this.cashableLeave,
+      @JsonKey(name: 'is_default_password') this.isDefaultPassword = false,
+      @JsonKey(name: 'is_face_registered') this.isFaceRegistered = false});
 
   factory _$UserModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserModelImplFromJson(json);
 
+// Gunakan int? atau default yang masuk akal, jangan 0 jika id itu penting
   @override
-  @JsonKey()
-  final int id;
+  final int? id;
+// Jangan beri default kosong jika kita ingin validasi data dari server
   @override
-  @JsonKey()
-  final String name;
+  final String? name;
   @override
-  @JsonKey()
-  final String email;
+  final String? email;
   @override
   @JsonKey(name: 'image')
   final String? image;
   @override
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
+// Relasi Objek Position
+  @override
   final PositionModel? position;
-// Menggunakan objek Position nullable
+// Backup field position_name
+  @override
+  @JsonKey(name: 'position_name')
+  final String? positionName;
   @override
   @JsonKey(name: 'join_date')
-  final String joinDate;
+  final String? joinDate;
   @override
   @JsonKey(name: 'leave_quota')
-  final int leaveQuota;
+  final int? leaveQuota;
   @override
   @JsonKey(name: 'cashable_leave')
-  final int cashableLeave;
+  final int? cashableLeave;
+// --- ONBOARDING STATUS PT IBM ---
+  @override
+  @JsonKey(name: 'is_default_password')
+  final bool isDefaultPassword;
+  @override
+  @JsonKey(name: 'is_face_registered')
+  final bool isFaceRegistered;
 
   @override
   String toString() {
-    return 'User.model(id: $id, name: $name, email: $email, image: $image, position: $position, joinDate: $joinDate, leaveQuota: $leaveQuota, cashableLeave: $cashableLeave)';
+    return 'UserModel(id: $id, name: $name, email: $email, image: $image, imageUrl: $imageUrl, position: $position, positionName: $positionName, joinDate: $joinDate, leaveQuota: $leaveQuota, cashableLeave: $cashableLeave, isDefaultPassword: $isDefaultPassword, isFaceRegistered: $isFaceRegistered)';
   }
 
   @override
@@ -587,13 +544,22 @@ class _$UserModelImpl implements UserModel {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.email, email) || other.email == email) &&
             (identical(other.image, image) || other.image == image) &&
-            const DeepCollectionEquality().equals(other.position, position) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
+            (identical(other.position, position) ||
+                other.position == position) &&
+            (identical(other.positionName, positionName) ||
+                other.positionName == positionName) &&
             (identical(other.joinDate, joinDate) ||
                 other.joinDate == joinDate) &&
             (identical(other.leaveQuota, leaveQuota) ||
                 other.leaveQuota == leaveQuota) &&
             (identical(other.cashableLeave, cashableLeave) ||
-                other.cashableLeave == cashableLeave));
+                other.cashableLeave == cashableLeave) &&
+            (identical(other.isDefaultPassword, isDefaultPassword) ||
+                other.isDefaultPassword == isDefaultPassword) &&
+            (identical(other.isFaceRegistered, isFaceRegistered) ||
+                other.isFaceRegistered == isFaceRegistered));
   }
 
   @JsonKey(ignore: true)
@@ -604,102 +570,20 @@ class _$UserModelImpl implements UserModel {
       name,
       email,
       image,
-      const DeepCollectionEquality().hash(position),
+      imageUrl,
+      position,
+      positionName,
       joinDate,
       leaveQuota,
-      cashableLeave);
+      cashableLeave,
+      isDefaultPassword,
+      isFaceRegistered);
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$UserModelImplCopyWith<_$UserModelImpl> get copyWith =>
       __$$UserModelImplCopyWithImpl<_$UserModelImpl>(this, _$identity);
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(
-            int id,
-            String name,
-            String email,
-            @JsonKey(name: 'image') String? image,
-            PositionModel? position,
-            @JsonKey(name: 'join_date') String joinDate,
-            @JsonKey(name: 'leave_quota') int leaveQuota,
-            @JsonKey(name: 'cashable_leave') int cashableLeave)
-        model,
-  }) {
-    return model(
-        id, name, email, image, position, joinDate, leaveQuota, cashableLeave);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(
-            int id,
-            String name,
-            String email,
-            @JsonKey(name: 'image') String? image,
-            PositionModel? position,
-            @JsonKey(name: 'join_date') String joinDate,
-            @JsonKey(name: 'leave_quota') int leaveQuota,
-            @JsonKey(name: 'cashable_leave') int cashableLeave)?
-        model,
-  }) {
-    return model?.call(
-        id, name, email, image, position, joinDate, leaveQuota, cashableLeave);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(
-            int id,
-            String name,
-            String email,
-            @JsonKey(name: 'image') String? image,
-            PositionModel? position,
-            @JsonKey(name: 'join_date') String joinDate,
-            @JsonKey(name: 'leave_quota') int leaveQuota,
-            @JsonKey(name: 'cashable_leave') int cashableLeave)?
-        model,
-    required TResult orElse(),
-  }) {
-    if (model != null) {
-      return model(id, name, email, image, position, joinDate, leaveQuota,
-          cashableLeave);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(UserModel value) model,
-  }) {
-    return model(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(UserModel value)? model,
-  }) {
-    return model?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(UserModel value)? model,
-    required TResult orElse(),
-  }) {
-    if (model != null) {
-      return model(this);
-    }
-    return orElse();
-  }
 
   @override
   Map<String, dynamic> toJson() {
@@ -709,105 +593,92 @@ class _$UserModelImpl implements UserModel {
   }
 }
 
-abstract class UserModel implements User {
-  factory UserModel(
-          {final int id,
-          final String name,
-          final String email,
+abstract class _UserModel implements UserModel {
+  const factory _UserModel(
+          {final int? id,
+          final String? name,
+          final String? email,
           @JsonKey(name: 'image') final String? image,
+          @JsonKey(name: 'image_url') final String? imageUrl,
           final PositionModel? position,
-          @JsonKey(name: 'join_date') final String joinDate,
-          @JsonKey(name: 'leave_quota') final int leaveQuota,
-          @JsonKey(name: 'cashable_leave') final int cashableLeave}) =
+          @JsonKey(name: 'position_name') final String? positionName,
+          @JsonKey(name: 'join_date') final String? joinDate,
+          @JsonKey(name: 'leave_quota') final int? leaveQuota,
+          @JsonKey(name: 'cashable_leave') final int? cashableLeave,
+          @JsonKey(name: 'is_default_password') final bool isDefaultPassword,
+          @JsonKey(name: 'is_face_registered') final bool isFaceRegistered}) =
       _$UserModelImpl;
 
-  factory UserModel.fromJson(Map<String, dynamic> json) =
+  factory _UserModel.fromJson(Map<String, dynamic> json) =
       _$UserModelImpl.fromJson;
 
+  @override // Gunakan int? atau default yang masuk akal, jangan 0 jika id itu penting
+  int? get id;
+  @override // Jangan beri default kosong jika kita ingin validasi data dari server
+  String? get name;
   @override
-  int get id;
-  @override
-  String get name;
-  @override
-  String get email;
+  String? get email;
   @override
   @JsonKey(name: 'image')
   String? get image;
   @override
+  @JsonKey(name: 'image_url')
+  String? get imageUrl;
+  @override // Relasi Objek Position
   PositionModel? get position;
-  @override // Menggunakan objek Position nullable
+  @override // Backup field position_name
+  @JsonKey(name: 'position_name')
+  String? get positionName;
+  @override
   @JsonKey(name: 'join_date')
-  String get joinDate;
+  String? get joinDate;
   @override
   @JsonKey(name: 'leave_quota')
-  int get leaveQuota;
+  int? get leaveQuota;
   @override
   @JsonKey(name: 'cashable_leave')
-  int get cashableLeave;
+  int? get cashableLeave;
+  @override // --- ONBOARDING STATUS PT IBM ---
+  @JsonKey(name: 'is_default_password')
+  bool get isDefaultPassword;
+  @override
+  @JsonKey(name: 'is_face_registered')
+  bool get isFaceRegistered;
   @override
   @JsonKey(ignore: true)
   _$$UserModelImplCopyWith<_$UserModelImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
-Position _$PositionFromJson(Map<String, dynamic> json) {
-  return PositionModel.fromJson(json);
+PositionModel _$PositionModelFromJson(Map<String, dynamic> json) {
+  return _PositionModel.fromJson(json);
 }
 
 /// @nodoc
-mixin _$Position {
-  int get id => throw _privateConstructorUsedError;
+mixin _$PositionModel {
+  int? get id =>
+      throw _privateConstructorUsedError; // Default 'Karyawan IBM' boleh tetap ada sebagai fallback UI
   String get name => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int id, String name) model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int id, String name)? model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int id, String name)? model,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(PositionModel value) model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(PositionModel value)? model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(PositionModel value)? model,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $PositionCopyWith<Position> get copyWith =>
+  $PositionModelCopyWith<PositionModel> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $PositionCopyWith<$Res> {
-  factory $PositionCopyWith(Position value, $Res Function(Position) then) =
-      _$PositionCopyWithImpl<$Res, Position>;
+abstract class $PositionModelCopyWith<$Res> {
+  factory $PositionModelCopyWith(
+          PositionModel value, $Res Function(PositionModel) then) =
+      _$PositionModelCopyWithImpl<$Res, PositionModel>;
   @useResult
-  $Res call({int id, String name});
+  $Res call({int? id, String name});
 }
 
 /// @nodoc
-class _$PositionCopyWithImpl<$Res, $Val extends Position>
-    implements $PositionCopyWith<$Res> {
-  _$PositionCopyWithImpl(this._value, this._then);
+class _$PositionModelCopyWithImpl<$Res, $Val extends PositionModel>
+    implements $PositionModelCopyWith<$Res> {
+  _$PositionModelCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -817,14 +688,14 @@ class _$PositionCopyWithImpl<$Res, $Val extends Position>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? id = freezed,
     Object? name = null,
   }) {
     return _then(_value.copyWith(
-      id: null == id
+      id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -835,18 +706,18 @@ class _$PositionCopyWithImpl<$Res, $Val extends Position>
 
 /// @nodoc
 abstract class _$$PositionModelImplCopyWith<$Res>
-    implements $PositionCopyWith<$Res> {
+    implements $PositionModelCopyWith<$Res> {
   factory _$$PositionModelImplCopyWith(
           _$PositionModelImpl value, $Res Function(_$PositionModelImpl) then) =
       __$$PositionModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, String name});
+  $Res call({int? id, String name});
 }
 
 /// @nodoc
 class __$$PositionModelImplCopyWithImpl<$Res>
-    extends _$PositionCopyWithImpl<$Res, _$PositionModelImpl>
+    extends _$PositionModelCopyWithImpl<$Res, _$PositionModelImpl>
     implements _$$PositionModelImplCopyWith<$Res> {
   __$$PositionModelImplCopyWithImpl(
       _$PositionModelImpl _value, $Res Function(_$PositionModelImpl) _then)
@@ -855,14 +726,14 @@ class __$$PositionModelImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? id = freezed,
     Object? name = null,
   }) {
     return _then(_$PositionModelImpl(
-      id: null == id
+      id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -873,22 +744,22 @@ class __$$PositionModelImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$PositionModelImpl implements PositionModel {
-  _$PositionModelImpl({this.id = 0, this.name = 'Anggota IBM'});
+class _$PositionModelImpl implements _PositionModel {
+  const _$PositionModelImpl({this.id, this.name = 'Karyawan IBM'});
 
   factory _$PositionModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$PositionModelImplFromJson(json);
 
   @override
-  @JsonKey()
-  final int id;
+  final int? id;
+// Default 'Karyawan IBM' boleh tetap ada sebagai fallback UI
   @override
   @JsonKey()
   final String name;
 
   @override
   String toString() {
-    return 'Position.model(id: $id, name: $name)';
+    return 'PositionModel(id: $id, name: $name)';
   }
 
   @override
@@ -911,62 +782,6 @@ class _$PositionModelImpl implements PositionModel {
       __$$PositionModelImplCopyWithImpl<_$PositionModelImpl>(this, _$identity);
 
   @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int id, String name) model,
-  }) {
-    return model(id, name);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int id, String name)? model,
-  }) {
-    return model?.call(id, name);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int id, String name)? model,
-    required TResult orElse(),
-  }) {
-    if (model != null) {
-      return model(id, name);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(PositionModel value) model,
-  }) {
-    return model(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(PositionModel value)? model,
-  }) {
-    return model?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(PositionModel value)? model,
-    required TResult orElse(),
-  }) {
-    if (model != null) {
-      return model(this);
-    }
-    return orElse();
-  }
-
-  @override
   Map<String, dynamic> toJson() {
     return _$$PositionModelImplToJson(
       this,
@@ -974,16 +789,16 @@ class _$PositionModelImpl implements PositionModel {
   }
 }
 
-abstract class PositionModel implements Position {
-  factory PositionModel({final int id, final String name}) =
+abstract class _PositionModel implements PositionModel {
+  const factory _PositionModel({final int? id, final String name}) =
       _$PositionModelImpl;
 
-  factory PositionModel.fromJson(Map<String, dynamic> json) =
+  factory _PositionModel.fromJson(Map<String, dynamic> json) =
       _$PositionModelImpl.fromJson;
 
   @override
-  int get id;
-  @override
+  int? get id;
+  @override // Default 'Karyawan IBM' boleh tetap ada sebagai fallback UI
   String get name;
   @override
   @JsonKey(ignore: true)

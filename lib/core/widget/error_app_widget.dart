@@ -6,84 +6,119 @@ import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 class ErrorAppWidget extends StatelessWidget {
   final String description;
   final void Function() onPressDefaultButton;
-  final FilledButton? alternatifButton;
+  final Widget? alternatifButton; // Menggunakan Widget agar lebih fleksibel
 
   const ErrorAppWidget({
     super.key,
     required this.description,
     required this.onPressDefaultButton,
-    this.alternatifButton, // Dibuat opsional (tanpa required) agar lebih fleksibel
+    this.alternatifButton,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Mengecek apakah error disebabkan oleh masalah autentikasi
+    final theme = Theme.of(context);
+
+    // Mengecek kondisi Auth secara case-insensitive
     final bool isUnauthenticated = description.contains('401') ||
-        description.toLowerCase().contains('unauthenticated');
+        description.toLowerCase().contains('unauthenticated') ||
+        description.toLowerCase().contains('token');
 
-    return Padding(
-      padding: const EdgeInsets.all(
-          24.0), // Beri padding agar teks tidak mepet layar
-      child: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment:
-              CrossAxisAlignment.center, // Pastikan semua di tengah
-          children: [
-            Icon(
-              isUnauthenticated ? Icons.lock_person : Icons.error_outline,
-              size: 100,
-              color: Theme.of(context)
-                  .colorScheme
-                  .error, // Gunakan warna error dari tema
-            ),
-            const SizedBox(height: 24),
-            Text(
-              isUnauthenticated ? "Sesi Berakhir" : "Terjadi Kesalahan",
-              style: GlobalHelper.getTextStyle(
-                context: context,
-                appTextStyle: AppTextStyle.HEADLINE_SMALL,
-              )?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: GlobalHelper.getTextStyle(
-                context: context,
-                appTextStyle: AppTextStyle.BODY_MEDIUM,
+    return Center(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Ilustrasi Icon dengan efek lingkaran halus di belakangnya
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: (isUnauthenticated
+                          ? Colors.orange
+                          : theme.colorScheme.error)
+                      .withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isUnauthenticated
+                      ? Icons.lock_clock_rounded
+                      : Icons.cloud_off_rounded,
+                  size: 80,
+                  color: isUnauthenticated
+                      ? Colors.orange
+                      : theme.colorScheme.error,
+                ),
               ),
-              textAlign: TextAlign.center, // Teks deskripsi rata tengah
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-            // LOGIKA TOMBOL
-            alternatifButton ??
-                (isUnauthenticated
-                    ? FilledButton.icon(
-                        onPressed: () async {
-                          await SharedPreferencesHelper.logout();
-                          if (context.mounted) {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => LoginScreen()),
-                              (route) => false,
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.login),
-                        label: const Text('Login Kembali'),
-                      )
-                    : FilledButton.icon(
-                        onPressed: onPressDefaultButton,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text("Coba Lagi"),
-                      )),
-          ],
+              // Judul Error
+              Text(
+                isUnauthenticated ? "Sesi Berakhir" : "Koneksi Terputus",
+                style: GlobalHelper.getTextStyle(
+                  context: context,
+                  appTextStyle: AppTextStyle.HEADLINE_SMALL,
+                )?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Deskripsi Error (Dibatasi agar tidak merusak UI jika terlalu panjang)
+              Text(
+                description,
+                style: GlobalHelper.getTextStyle(
+                  context: context,
+                  appTextStyle: AppTextStyle.BODY_MEDIUM,
+                )?.copyWith(color: Colors.black54, height: 1.5),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 40),
+
+              // LOGIKA TOMBOL AKSI
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: alternatifButton ??
+                    (isUnauthenticated
+                        ? OutlinedButton.icon(
+                            onPressed: () => _handleLogout(context),
+                            style: OutlinedButton.styleFrom(
+                              side:
+                                  BorderSide(color: theme.colorScheme.primary),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.logout_rounded, size: 20),
+                            label: const Text('LOGIN KEMBALI',
+                                style: TextStyle(fontWeight: FontWeight.w900)),
+                          )
+                        : FilledButton.icon(
+                            onPressed: onPressDefaultButton,
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.refresh_rounded, size: 20),
+                            label: const Text("COBA LAGI",
+                                style: TextStyle(fontWeight: FontWeight.w900)),
+                          )),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  /// Helper untuk membersihkan sesi dan navigasi ke Login
+  Future<void> _handleLogout(BuildContext context) async {
+    await SharedPreferencesHelper.logout();
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
   }
 }

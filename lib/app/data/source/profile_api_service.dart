@@ -1,25 +1,25 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:ibm_presensi_app/core/constant/constant.dart'; // Import AppConfig
 import 'package:retrofit/retrofit.dart';
 
 part 'profile_api_service.g.dart';
 
-@RestApi(baseUrl: AppConfig.BASE_URL) // Tambahkan baseUrl global di sini
+@RestApi() // BaseURL terpusat di dependency.dart (DI)
 abstract class ProfileApiService {
   factory ProfileApiService(Dio dio, {String baseUrl}) = _ProfileApiService;
 
-  // 1. UPDATE PROFIL (Nama, Foto, Password)
+  /// Memperbarui profil karyawan (Nama, Foto, dan Password)
+  /// Menggunakan MultiPart karena ada pengiriman File gambar fisik
   @POST('/profile/update')
   @MultiPart()
-  Future<HttpResponse> updateProfile({
+  Future<HttpResponse<dynamic>> updateProfile({
     @Part(name: 'name') required String name,
     @Part(name: 'image') File? image,
     @Part(name: 'old_password') String? oldPassword,
     @Part(name: 'new_password') String? newPassword,
   });
 
-  // 2. AMBIL FOTO SAJA (Method Baru)
+  /// Mengambil URL foto profil terbaru secara terpisah
   @GET('/profile/photo')
   Future<HttpResponse<dynamic>> getProfilePhoto();
 }

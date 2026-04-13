@@ -14,75 +14,44 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-Attendance _$AttendanceFromJson(Map<String, dynamic> json) {
-  return AttendanceModel.fromJson(json);
+AttendanceModel _$AttendanceModelFromJson(Map<String, dynamic> json) {
+  return _AttendanceModel.fromJson(json);
 }
 
 /// @nodoc
-mixin _$Attendance {
-  AttendanceEntity? get today =>
-      throw _privateConstructorUsedError; // Boleh null jika user belum absen hari ini
+mixin _$AttendanceModel {
+  /// Data absen hari ini (Bisa null jika karyawan belum absen sama sekali)
+  AttendanceEntity? get today => throw _privateConstructorUsedError;
+
+  /// Riwayat absen bulan berjalan (Gunakan List kosong [] sebagai default)
   @JsonKey(name: 'this_month')
   List<AttendanceEntity> get thisMonth => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(AttendanceEntity? today,
-            @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth)
-        model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(AttendanceEntity? today,
-            @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth)?
-        model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(AttendanceEntity? today,
-            @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth)?
-        model,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(AttendanceModel value) model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(AttendanceModel value)? model,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(AttendanceModel value)? model,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
+
+  /// Tips: Tambahkan status server jika diperlukan untuk debugging
+  String? get message => throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $AttendanceCopyWith<Attendance> get copyWith =>
+  $AttendanceModelCopyWith<AttendanceModel> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $AttendanceCopyWith<$Res> {
-  factory $AttendanceCopyWith(
-          Attendance value, $Res Function(Attendance) then) =
-      _$AttendanceCopyWithImpl<$Res, Attendance>;
+abstract class $AttendanceModelCopyWith<$Res> {
+  factory $AttendanceModelCopyWith(
+          AttendanceModel value, $Res Function(AttendanceModel) then) =
+      _$AttendanceModelCopyWithImpl<$Res, AttendanceModel>;
   @useResult
   $Res call(
       {AttendanceEntity? today,
-      @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth});
+      @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth,
+      String? message});
 }
 
 /// @nodoc
-class _$AttendanceCopyWithImpl<$Res, $Val extends Attendance>
-    implements $AttendanceCopyWith<$Res> {
-  _$AttendanceCopyWithImpl(this._value, this._then);
+class _$AttendanceModelCopyWithImpl<$Res, $Val extends AttendanceModel>
+    implements $AttendanceModelCopyWith<$Res> {
+  _$AttendanceModelCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -94,6 +63,7 @@ class _$AttendanceCopyWithImpl<$Res, $Val extends Attendance>
   $Res call({
     Object? today = freezed,
     Object? thisMonth = null,
+    Object? message = freezed,
   }) {
     return _then(_value.copyWith(
       today: freezed == today
@@ -104,13 +74,17 @@ class _$AttendanceCopyWithImpl<$Res, $Val extends Attendance>
           ? _value.thisMonth
           : thisMonth // ignore: cast_nullable_to_non_nullable
               as List<AttendanceEntity>,
+      message: freezed == message
+          ? _value.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
 
 /// @nodoc
 abstract class _$$AttendanceModelImplCopyWith<$Res>
-    implements $AttendanceCopyWith<$Res> {
+    implements $AttendanceModelCopyWith<$Res> {
   factory _$$AttendanceModelImplCopyWith(_$AttendanceModelImpl value,
           $Res Function(_$AttendanceModelImpl) then) =
       __$$AttendanceModelImplCopyWithImpl<$Res>;
@@ -118,12 +92,13 @@ abstract class _$$AttendanceModelImplCopyWith<$Res>
   @useResult
   $Res call(
       {AttendanceEntity? today,
-      @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth});
+      @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth,
+      String? message});
 }
 
 /// @nodoc
 class __$$AttendanceModelImplCopyWithImpl<$Res>
-    extends _$AttendanceCopyWithImpl<$Res, _$AttendanceModelImpl>
+    extends _$AttendanceModelCopyWithImpl<$Res, _$AttendanceModelImpl>
     implements _$$AttendanceModelImplCopyWith<$Res> {
   __$$AttendanceModelImplCopyWithImpl(
       _$AttendanceModelImpl _value, $Res Function(_$AttendanceModelImpl) _then)
@@ -134,6 +109,7 @@ class __$$AttendanceModelImplCopyWithImpl<$Res>
   $Res call({
     Object? today = freezed,
     Object? thisMonth = null,
+    Object? message = freezed,
   }) {
     return _then(_$AttendanceModelImpl(
       today: freezed == today
@@ -144,27 +120,35 @@ class __$$AttendanceModelImplCopyWithImpl<$Res>
           ? _value._thisMonth
           : thisMonth // ignore: cast_nullable_to_non_nullable
               as List<AttendanceEntity>,
+      message: freezed == message
+          ? _value.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$AttendanceModelImpl implements AttendanceModel {
-  _$AttendanceModelImpl(
+class _$AttendanceModelImpl implements _AttendanceModel {
+  const _$AttendanceModelImpl(
       {this.today,
       @JsonKey(name: 'this_month')
-      required final List<AttendanceEntity> thisMonth})
+      final List<AttendanceEntity> thisMonth = const [],
+      this.message})
       : _thisMonth = thisMonth;
 
   factory _$AttendanceModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$AttendanceModelImplFromJson(json);
 
+  /// Data absen hari ini (Bisa null jika karyawan belum absen sama sekali)
   @override
   final AttendanceEntity? today;
-// Boleh null jika user belum absen hari ini
+
+  /// Riwayat absen bulan berjalan (Gunakan List kosong [] sebagai default)
   final List<AttendanceEntity> _thisMonth;
-// Boleh null jika user belum absen hari ini
+
+  /// Riwayat absen bulan berjalan (Gunakan List kosong [] sebagai default)
   @override
   @JsonKey(name: 'this_month')
   List<AttendanceEntity> get thisMonth {
@@ -173,9 +157,13 @@ class _$AttendanceModelImpl implements AttendanceModel {
     return EqualUnmodifiableListView(_thisMonth);
   }
 
+  /// Tips: Tambahkan status server jika diperlukan untuk debugging
+  @override
+  final String? message;
+
   @override
   String toString() {
-    return 'Attendance.model(today: $today, thisMonth: $thisMonth)';
+    return 'AttendanceModel(today: $today, thisMonth: $thisMonth, message: $message)';
   }
 
   @override
@@ -185,7 +173,8 @@ class _$AttendanceModelImpl implements AttendanceModel {
             other is _$AttendanceModelImpl &&
             const DeepCollectionEquality().equals(other.today, today) &&
             const DeepCollectionEquality()
-                .equals(other._thisMonth, _thisMonth));
+                .equals(other._thisMonth, _thisMonth) &&
+            (identical(other.message, message) || other.message == message));
   }
 
   @JsonKey(ignore: true)
@@ -193,7 +182,8 @@ class _$AttendanceModelImpl implements AttendanceModel {
   int get hashCode => Object.hash(
       runtimeType,
       const DeepCollectionEquality().hash(today),
-      const DeepCollectionEquality().hash(_thisMonth));
+      const DeepCollectionEquality().hash(_thisMonth),
+      message);
 
   @JsonKey(ignore: true)
   @override
@@ -203,68 +193,6 @@ class _$AttendanceModelImpl implements AttendanceModel {
           this, _$identity);
 
   @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(AttendanceEntity? today,
-            @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth)
-        model,
-  }) {
-    return model(today, thisMonth);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(AttendanceEntity? today,
-            @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth)?
-        model,
-  }) {
-    return model?.call(today, thisMonth);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(AttendanceEntity? today,
-            @JsonKey(name: 'this_month') List<AttendanceEntity> thisMonth)?
-        model,
-    required TResult orElse(),
-  }) {
-    if (model != null) {
-      return model(today, thisMonth);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(AttendanceModel value) model,
-  }) {
-    return model(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(AttendanceModel value)? model,
-  }) {
-    return model?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(AttendanceModel value)? model,
-    required TResult orElse(),
-  }) {
-    if (model != null) {
-      return model(this);
-    }
-    return orElse();
-  }
-
-  @override
   Map<String, dynamic> toJson() {
     return _$$AttendanceModelImplToJson(
       this,
@@ -272,20 +200,28 @@ class _$AttendanceModelImpl implements AttendanceModel {
   }
 }
 
-abstract class AttendanceModel implements Attendance {
-  factory AttendanceModel(
+abstract class _AttendanceModel implements AttendanceModel {
+  const factory _AttendanceModel(
       {final AttendanceEntity? today,
-      @JsonKey(name: 'this_month')
-      required final List<AttendanceEntity> thisMonth}) = _$AttendanceModelImpl;
+      @JsonKey(name: 'this_month') final List<AttendanceEntity> thisMonth,
+      final String? message}) = _$AttendanceModelImpl;
 
-  factory AttendanceModel.fromJson(Map<String, dynamic> json) =
+  factory _AttendanceModel.fromJson(Map<String, dynamic> json) =
       _$AttendanceModelImpl.fromJson;
 
   @override
+
+  /// Data absen hari ini (Bisa null jika karyawan belum absen sama sekali)
   AttendanceEntity? get today;
-  @override // Boleh null jika user belum absen hari ini
+  @override
+
+  /// Riwayat absen bulan berjalan (Gunakan List kosong [] sebagai default)
   @JsonKey(name: 'this_month')
   List<AttendanceEntity> get thisMonth;
+  @override
+
+  /// Tips: Tambahkan status server jika diperlukan untuk debugging
+  String? get message;
   @override
   @JsonKey(ignore: true)
   _$$AttendanceModelImplCopyWith<_$AttendanceModelImpl> get copyWith =>

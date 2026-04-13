@@ -6,49 +6,41 @@ import 'package:ibm_presensi_app/core/widget/error_app_widget.dart';
 import 'package:ibm_presensi_app/core/widget/loading_app_widget.dart';
 import 'package:provider/provider.dart';
 
-// ignore: must_be_immutable
 abstract class AppWidget<T extends AppProvider, P1, P2>
     extends StatelessWidget {
   AppWidget({super.key, this.param1, this.param2});
 
-  late T notifier;
   final P1? param1;
   final P2? param2;
-  FilledButton? _alternatifErrorButton;
 
-  set alternatifErrorButton(FilledButton? param) =>
-      _alternatifErrorButton = param;
+  // Menggunakan getter agar tidak perlu late variable yang rawan error
+  late T notifier;
 
   @override
   Widget build(BuildContext context) {
-    // 1. Ambil instance dari GetIt (Singleton/Factory)
+    // 1. Ambil instance dari GetIt
     final instance = sl<T>(param1: param1, param2: param2);
 
-    // 2. Gunakan .value agar Singleton tidak di-dispose oleh Flutter
     return ChangeNotifierProvider<T>.value(
-      value: instance, // Jangan panggil .init() di sini untuk cegah loop
+      value: instance,
       child: Consumer<T>(
         builder: (context, value, child) {
           notifier = value;
 
+          // 2. Lifecycle Handler (Post Frame)
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted && !notifier.isDispose) {
-              // --- PROTEKSI INIT (Mencegah Spam API) ---
-              // Panggil init hanya jika sedang tidak loading dan data masih kosong
-              if (!notifier.isLoading && notifier.errorMessage.isEmpty) {
-                // Kita panggil init secara cerdas di sini jika diperlukan
-                _handleInitialFetch();
-              }
-
-              // Snackbar Handler
+              // --- HANDLER NOTIFIKASI PILL/SNACKBAR ---
               if (notifier.snackbarMessage.isNotEmpty) {
                 DialogHelper.showSnackbar(
                   context: context,
                   text: notifier.snackbarMessage,
+                  backgroundColor: notifier.snackbarColor,
                 );
-                notifier.snackbarMessage = '';
+                notifier.snackbarMessage = ''; // Reset prevent loop
               }
 
+              // Jalankan logika tambahan setelah UI stabil
               checkVariableAfterUi(context);
             }
           });
@@ -59,38 +51,42 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
     );
   }
 
-  // Helper untuk menentukan kapan harus memanggil init()
-  void _handleInitialFetch() {
-    // Logika: Jika notifier belum pernah ambil data (misal: dashboard masih kosong)
-    // panggil init(). Ini mencegah init() dipanggil setiap kali ada rebuild UI kecil.
-    // Kamu bisa menyesuaikan kondisi ini di sub-class jika perlu.
-  }
-
   Widget _layout(BuildContext context) {
+    // Jalankan pengecekan variabel sebelum UI dirender
     checkVariableBeforeUi(context);
+
     return Scaffold(
       appBar: appBarBuild(context),
-      body: _buildBody(context),
+      // Gunakan AnimatedSwitcher agar transisi Loading -> Body lebih halus (IBM Look)
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: _buildBody(context),
+      ),
     );
   }
 
   Widget _buildBody(BuildContext context) {
-    if (notifier.isLoading) return const LoadingAppWidget();
+    // 1. Jika sedang loading berat (API)
+    if (notifier.isLoading) {
+      return const LoadingAppWidget();
+    }
 
+    // 2. Jika terjadi error
     if (notifier.errorMessage.isNotEmpty) {
       return ErrorAppWidget(
         description: notifier.errorMessage,
         onPressDefaultButton: () {
           notifier.errorMessage = '';
-          notifier.init();
+          notifier.init(); // Retry
         },
-        alternatifButton: _alternatifErrorButton,
       );
     }
 
+    // 3. Tampilkan Body Utama
     return bodyBuild(context);
   }
 
+  // Hook functions yang bisa di-override di subclass
   void checkVariableBeforeUi(BuildContext context) {}
   void checkVariableAfterUi(BuildContext context) {}
   AppBar? appBarBuild(BuildContext context) => null;
