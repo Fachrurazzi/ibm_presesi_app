@@ -18,10 +18,8 @@ class LoginNotifier extends AppProvider {
 
   bool _isLogged = false;
   bool get isLogged => _isLogged;
-
   String _onboardingStep = "";
   String get onboardingStep => _onboardingStep;
-
   String loginError = "";
   bool _isShowPassword = false;
   bool get isShowPassword => _isShowPassword;
@@ -53,7 +51,6 @@ class LoginNotifier extends AppProvider {
     }
   }
 
-  /// Proses Login Utama PT IBM
   Future<void> login() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -64,38 +61,27 @@ class LoginNotifier extends AppProvider {
     showLoading();
 
     try {
-      // 1. Bersihkan residu lama
       await SharedPreferencesHelper.logout();
 
-      final param = AuthEntity(
-        email: email,
-        password: password,
-        name: "",
-        positionName: "",
+      final response = await _authLoginUseCase(
+        param: AuthEntity(
+            email: email, password: password, name: "", positionName: ""),
       );
-
-      final response = await _authLoginUseCase(param: param);
 
       if (response.success && response.data != null) {
         final userResult = response.data as AuthEntity;
 
-        debugPrint("🔍 DATA DARI SERVER: ${userResult.name}");
-
-        // 2. Simpan ke Storage secara Sequential (Berurutan)
+        // 1. Simpan Token
         await SharedPreferencesHelper.setString(
             AppPreferences.AUTH_TOKEN, userResult.accessToken ?? "");
 
+        // 2. Simpan Sesi ke Disk (Async)
         await _saveUserSession(userResult);
 
-        // 3. JEDA STORAGE (Krusial untuk HP Android spek lama)
-        await Future.delayed(const Duration(milliseconds: 600));
+        // 3. UPDATE RAM SECARA INSTAN (Sesuai Revisi)
+        _updateAllStatesInstantly(userResult);
 
-        // 4. INJECT DATA KE RAM (Solusi agar tidak perlu refresh)
-        _injectDataToNotifiers(userResult);
-
-        // 5. Reset state notifier lain agar mereka ambil data baru dari Storage
-        await _resetRelatedNotifiers();
-
+        // 4. Navigasi
         _determineNextStep(userResult);
       } else {
         loginError = response.message;
@@ -119,9 +105,7 @@ class LoginNotifier extends AppProvider {
   }
 
   Future<void> _saveUserSession(AuthEntity user) async {
-    // Pastikan joinDate tidak null saat disimpan
     final joinDate = user.joinDate ?? "-";
-
     await SharedPreferencesHelper.setString(
         AppPreferences.USER_NAME, user.name ?? 'User IBM');
     await SharedPreferencesHelper.setString(
@@ -133,29 +117,27 @@ class LoginNotifier extends AppProvider {
         AppPreferences.IS_DEFAULT_PASSWORD, user.isDefaultPassword);
     await SharedPreferencesHelper.setBool(
         AppPreferences.IS_FACE_REGISTERED, user.isFaceRegistered);
-
-    debugPrint("✅ STORAGE_LOCKED: Join Date ($joinDate) berhasil diamankan.");
   }
 
-  /// REVISI UTAMA: Paksa Home & Profile Notifier update RAM sekarang juga
-  void _injectDataToNotifiers(AuthEntity user) {
+  void _updateAllStatesInstantly(AuthEntity user) {
+    // Update Home RAM
     if (sl.isRegistered<HomeNotifier>()) {
       sl<HomeNotifier>().updateUserData(
         newName: user.name,
         newPosition: user.displayPosition,
         newPhoto: user.imageUrl,
       );
+      sl<HomeNotifier>().refreshData();
     }
-    // ProfileNotifier akan terupdate saat memanggil resetState() yang memicu init()
-  }
 
-  Future<void> _resetRelatedNotifiers() async {
+    // UPDATE PROFILE RAM (MENGGUNAKAN METHOD BARU)
     if (sl.isRegistered<ProfileNotifier>()) {
-      sl<ProfileNotifier>().resetState();
-    }
-    if (sl.isRegistered<HomeNotifier>()) {
-      // HomeNotifier biasanya butuh refreshData untuk ambil API Schedule (Join Date asli ada di sana)
-      await sl<HomeNotifier>().refreshData();
+      sl<ProfileNotifier>().updateFromAuth(
+        name: user.name ?? "User IBM",
+        photo: user.imageUrl,
+        joinDate: user.joinDate ?? "-",
+        position: user.displayPosition,
+      );
     }
   }
 

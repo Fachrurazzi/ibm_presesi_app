@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:ibm_presensi_app/app/presentation/home/home_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_screen.dart';
 import 'package:ibm_presensi_app/app/presentation/leave/leave_screen.dart';
+import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/app/presentation/profile/profile_screen.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
+import 'package:provider/provider.dart';
 
 class NavbarScreen extends StatefulWidget {
   const NavbarScreen({super.key});
@@ -20,16 +22,13 @@ class _NavbarScreenState extends State<NavbarScreen> {
   @override
   void initState() {
     super.initState();
-    // Memeriksa status onboarding segera setelah render pertama
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _checkOnboardingStatus());
   }
 
-  // --- LOGIKA ONBOARDING: Memastikan User melewati semua step PT IBM ---
+  /// Menjaga user agar wajib melewati flow ganti password & daftar wajah
   Future<void> _checkOnboardingStatus() async {
-    // Beri jeda agar SharedPreferences benar-benar siap
     await Future.delayed(const Duration(milliseconds: 300));
-
     final bool isDefaultPass =
         SharedPreferencesHelper.getBool(AppPreferences.IS_DEFAULT_PASSWORD) ??
             false;
@@ -38,15 +37,11 @@ class _NavbarScreenState extends State<NavbarScreen> {
             false;
 
     if (!mounted) return;
-
     if (isDefaultPass) {
       Navigator.pushReplacementNamed(context, '/change-password');
     } else if (!isFaceReg) {
-      Navigator.pushReplacementNamed(
-        context,
-        '/face-recognition',
-        arguments: {'isRegistration': true},
-      );
+      Navigator.pushReplacementNamed(context, '/face-recognition',
+          arguments: {'isRegistration': true});
     }
   }
 
@@ -68,6 +63,25 @@ class _NavbarScreenState extends State<NavbarScreen> {
     final theme = Theme.of(context);
     final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
+    // KUNCI: Pantau status keamanan dan status kerja secara real-time
+    final homeNotifier = context.watch<HomeNotifier>();
+
+    // --- 1. LOGIKA PROTEKSI KERAS (BANNED/EMULATOR) ---
+    if (homeNotifier.isEmulator) {
+      return HomeScreen();
+    }
+
+    // --- 2. LOGIKA STATUS CUTI & ABSENSI ---
+    final bool isUserOnLeave = homeNotifier.isLeaves;
+
+    final bool isClockIn = homeNotifier.attendanceToday?.startTime != null &&
+        homeNotifier.attendanceToday?.startTime != "--:--";
+
+    final bool isClockOut = homeNotifier.attendanceToday?.endTime != null &&
+        homeNotifier.attendanceToday?.endTime != "--:--";
+
+    final bool isFullyDone = isClockIn && isClockOut;
+
     return PopScope(
       canPop: _selectedIndex == 0,
       onPopInvoked: (didPop) {
@@ -77,53 +91,82 @@ class _NavbarScreenState extends State<NavbarScreen> {
       child: Scaffold(
         extendBody: true,
         backgroundColor: const Color(0xFFF8F9FA),
+        resizeToAvoidBottomInset: false,
         body: IndexedStack(
           index: _selectedIndex,
           children: _screens,
         ),
 
-        // --- FAB MODERN (Presensi Cepat) ---
-        floatingActionButton: AnimatedScale(
-          scale: isKeyboardOpen ? 0.0 : 1.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutBack,
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.heavyImpact();
-              Navigator.pushNamed(context, '/face-recognition');
-            },
-            child: Container(
-              height: 70,
-              width: 70,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.primaryColor,
-                    theme.primaryColor.withBlue(220)
-                  ],
+        // --- 3. FLOATING ACTION BUTTON (DINAMIS: ABSEN / CUTI) ---
+        floatingActionButton: isUserOnLeave
+            ? _buildLeaveFAB(context) // Tampilkan Icon Cuti jika sedang cuti
+            : AnimatedScale(
+                scale: isKeyboardOpen ? 0.0 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutBack,
+                child: GestureDetector(
+                  onTap: isFullyDone
+                      ? () {
+                          HapticFeedback.vibrate();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text("Absensi hari ini sudah selesai ✅"),
+                                behavior: SnackBarBehavior.floating),
+                          );
+                        }
+                      : () {
+                          HapticFeedback.heavyImpact();
+                          Navigator.pushNamed(context, '/face-recognition');
+                        },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    height: 72,
+                    width: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: isFullyDone
+                          ? LinearGradient(colors: [
+                              Colors.grey.shade400,
+                              Colors.grey.shade600
+                            ])
+                          : LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                theme.primaryColor,
+                                theme.primaryColor.withBlue(220)
+                              ],
+                            ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isFullyDone
+                              ? Colors.transparent
+                              : theme.primaryColor.withOpacity(0.4),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        )
+                      ],
+                      border: Border.all(color: Colors.white, width: 4),
+                    ),
+                    child: Icon(
+                      isFullyDone
+                          ? Icons.check_rounded
+                          : (isClockIn
+                              ? Icons.logout_rounded
+                              : Icons.fingerprint_rounded),
+                      color: Colors.white,
+                      size: 35,
+                    ),
+                  ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.primaryColor.withOpacity(0.4),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  )
-                ],
               ),
-              child: const Icon(Icons.fingerprint_rounded,
-                  color: Colors.white, size: 35),
-            ),
-          ),
-        ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-        // --- BOTTOM BAR: Proteksi Overflow PT IBM ---
+        // --- 4. BOTTOM NAVIGATION BAR ---
         bottomNavigationBar: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          height: isKeyboardOpen ? 0 : 100, // Sedikit lebih rendah agar rapi
+          height: isKeyboardOpen ? 0 : 90,
           child: BottomAppBar(
             padding: EdgeInsets.zero,
             color: Colors.white,
@@ -132,7 +175,6 @@ class _NavbarScreenState extends State<NavbarScreen> {
             elevation: 30,
             child: Row(
               children: [
-                // Kelompok Kiri
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -144,11 +186,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
                     ],
                   ),
                 ),
-
-                // Ruang untuk FAB di tengah
-                const SizedBox(width: 75),
-
-                // Kelompok Kanan
+                const SizedBox(width: 75), // Spacer FAB
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -168,13 +206,13 @@ class _NavbarScreenState extends State<NavbarScreen> {
     );
   }
 
+  // --- HELPER: WIDGET NAVBAR ITEM ---
   Widget _buildNavItem(
       IconData icon, String label, int index, ThemeData theme) {
     final isSelected = _selectedIndex == index;
     final color = isSelected ? theme.primaryColor : Colors.blueGrey.shade200;
 
     return Expanded(
-      // Memastikan membagi ruang secara matematis
       child: GestureDetector(
         onTap: () => _onItemTapped(index),
         behavior: HitTestBehavior.opaque,
@@ -183,10 +221,10 @@ class _NavbarScreenState extends State<NavbarScreen> {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? theme.primaryColor.withOpacity(0.12)
+                    ? theme.primaryColor.withOpacity(0.1)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -206,6 +244,44 @@ class _NavbarScreenState extends State<NavbarScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // --- HELPER: TOMBOL SAAT SEDANG CUTI ---
+  Widget _buildLeaveFAB(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text("Anda sedang dalam masa cuti 🏖️ Selamat beristirahat!"),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.orange,
+          ),
+        );
+      },
+      child: Container(
+        height: 72,
+        width: 72,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.orange.shade50,
+          border: Border.all(color: Colors.white, width: 4),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.orange.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            )
+          ],
+        ),
+        child: const Icon(
+          Icons.beach_access_rounded,
+          color: Colors.orange,
+          size: 32,
         ),
       ),
     );

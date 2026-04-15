@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/module/entity/leave.dart';
 import 'package:ibm_presensi_app/app/module/use_case/leave_get_history.dart';
 import 'package:ibm_presensi_app/app/module/use_case/leave_send.dart';
+import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
+import 'package:ibm_presensi_app/core/di/dependency.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:ibm_presensi_app/core/provider/app_provider.dart';
 import 'package:intl/intl.dart';
@@ -16,7 +18,6 @@ class LeaveNotifier extends AppProvider {
     init();
   }
 
-  // --- UI & Data State ---
   bool _isSuccess = false;
   bool get isSuccess => _isSuccess;
 
@@ -27,38 +28,45 @@ class LeaveNotifier extends AppProvider {
   List<LeaveEntity> _listLeave = [];
   List<LeaveEntity> get listLeave => _listLeave;
 
+  final startDateController = TextEditingController();
+  final endDateController = TextEditingController();
+  final reasonController = TextEditingController();
+
   set isSuccess(bool value) {
     _isSuccess = value;
     notifyListeners();
   }
 
-  // Controllers
-  final startDateController = TextEditingController();
-  final endDateController = TextEditingController();
-  final reasonController = TextEditingController();
-
   @override
   void init() async {
-    // Saat inisialisasi awal, pastikan state bersih
     _isSuccess = false;
     leaveError = "";
 
-    // Load kuota dari local storage agar instan tampil di UI
-    _leaveQuota =
-        SharedPreferencesHelper.getInt(AppPreferences.LEAVE_QUOTA) ?? 0;
+    // 1. Ambil data lokal segera saat inisialisasi
+    _syncQuotaData();
 
+    // 2. Load riwayat
     getHistory();
   }
 
-  /// Reset form input tanpa mematikan status sukses/error untuk notifikasi
-  void clearForm() {
-    startDateController.clear();
-    endDateController.clear();
-    reasonController.clear();
+  /// REVISI: Ambil data dari Storage sebagai prioritas utama
+  void _syncQuotaData() {
+    // Kita prioritaskan ambil dari SharedPreferences karena HomeNotifier pasti sudah menulis ke sana
+    final int? localQuota =
+        SharedPreferencesHelper.getInt(AppPreferences.LEAVE_QUOTA);
+
+    if (localQuota != null) {
+      _leaveQuota = localQuota;
+      debugPrint("📊 [LEAVE_SYNC] Menggunakan data dari Storage: $_leaveQuota");
+    } else if (sl.isRegistered<HomeNotifier>()) {
+      _leaveQuota = sl<HomeNotifier>().leaveQuota;
+      debugPrint(
+          "📊 [LEAVE_SYNC] Menggunakan data dari HomeNotifier: $_leaveQuota");
+    }
+
     notifyListeners();
   }
 
-  /// Sinkronisasi Riwayat Cuti
   Future<void> getHistory() async {
     showLoading();
     final response = await _leaveGetHistoryUseCase();
@@ -71,7 +79,6 @@ class LeaveNotifier extends AppProvider {
     notifyListeners();
   }
 
-  /// Date Picker yang sinkron dengan format Laravel
   Future<void> selectDate(
       BuildContext context, TextEditingController controller) async {
     final picked = await showDatePicker(
@@ -79,6 +86,13 @@ class LeaveNotifier extends AppProvider {
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(DateTime.now().year + 1),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme:
+              ColorScheme.light(primary: Theme.of(context).primaryColor),
+        ),
+        child: child!,
+      ),
     );
 
     if (picked != null) {
@@ -87,33 +101,43 @@ class LeaveNotifier extends AppProvider {
     }
   }
 
-  /// Proses Submit Pengajuan Cuti
   Future<void> send() async {
     final start = startDateController.text;
     final end = endDateController.text;
     final reason = reasonController.text.trim();
 
+    leaveError = "";
     if (!_validate(start, end, reason)) return;
 
     showLoading();
-    leaveError = "";
-    _isSuccess = false; // Reset status sebelum mulai
+    _isSuccess = false;
 
     final param =
         LeaveParamEntity(startDate: start, endDate: end, reason: reason);
     final response = await _leaveSendUseCase(param: param);
 
     if (response.success) {
-      // 1. Bersihkan form field-nya saja
       startDateController.clear();
       endDateController.clear();
       reasonController.clear();
 
-      // 2. Tandai sukses agar UI memunculkan notifikasi
-      _isSuccess = true;
+      // 1. Trigger HomeNotifier untuk tarik data terbaru dari server Laravel
+      if (sl.isRegistered<HomeNotifier>()) {
+        debugPrint(
+            "🔄 [LEAVE_SEND] Memicu refresh data server di HomeNotifier...");
+        await sl<HomeNotifier>().refreshData();
+      }
 
-      // 3. Tarik data riwayat terbaru dari server
+      // 2. Tunggu sebentar agar SharedPreferences selesai menulis data (IO Delay)
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // 3. Update Kuota di halaman ini
+      _syncQuotaData();
+
+      // 4. Update riwayat
       await getHistory();
+
+      _isSuccess = true;
     } else {
       leaveError = response.message;
     }
@@ -122,7 +146,6 @@ class LeaveNotifier extends AppProvider {
     notifyListeners();
   }
 
-  /// Validasi Internal Logic
   bool _validate(String start, String end, String reason) {
     if (start.isEmpty || end.isEmpty || reason.isEmpty) {
       leaveError = "Mohon lengkapi formulir pengajuan";
@@ -147,7 +170,7 @@ class LeaveNotifier extends AppProvider {
         return false;
       }
     } catch (e) {
-      leaveError = "Format tanggal bermasalah";
+      leaveError = "Format tanggal tidak valid";
       notifyListeners();
       return false;
     }

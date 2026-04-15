@@ -13,7 +13,7 @@ class ChangePasswordScreen
 
   @override
   Widget bodyBuild(BuildContext context) {
-    // Gunakan watch agar UI reaktif terhadap perubahan status loading atau visibility password
+    // Gunakan watch agar UI reaktif terhadap status loading atau visibility password
     final prov = context.watch<ChangePasswordNotifier>();
     final screenHeight = MediaQuery.of(context).size.height;
     final colorScheme = GlobalHelper.getColorSchema(context);
@@ -46,7 +46,7 @@ class ChangePasswordScreen
           child: Column(
             children: [
               SizedBox(height: screenHeight * 0.04),
-              // Icon Animasi atau Static yang representatif
+              // Visual Header: Lock Icon
               Center(
                 child: Container(
                   padding: const EdgeInsets.all(20),
@@ -212,7 +212,6 @@ class ChangePasswordScreen
     );
   }
 
-  // --- Helper Notifikasi ---
   void _showNotification(BuildContext context, String title, String message,
       {required bool isError}) {
     final double safeAreaTop = MediaQuery.of(context).padding.top;
@@ -247,17 +246,15 @@ class ChangePasswordScreen
 
   @override
   void checkVariableAfterUi(BuildContext context) {
-    final prov = context.read<ChangePasswordNotifier>();
+    // Gunakan notifier bawaan dari AppWidget
+    if (notifier.errorMessage.isNotEmpty) {
+      final errMsg = notifier.errorMessage;
 
-    if (prov.errorMessage.isNotEmpty) {
-      final errMsg = prov.errorMessage;
-      // Gunakan Future.microtask atau Delay singkat agar tidak mengganggu render UI
-      Future.delayed(Duration.zero, () {
-        HapticFeedback.vibrate();
-        _showNotification(context, "Validasi Gagal", errMsg, isError: true);
-        // Penting: Reset error message di notifier agar tidak trigger berulang kali
-        // prov.clearError(); // Pastikan kamu punya method clearError di Notifier
-      });
+      HapticFeedback.vibrate();
+      _showNotification(context, "Validasi Gagal", errMsg, isError: true);
+
+      // Reset error di notifier agar tidak trigger berulang kali
+      notifier.clearError();
     }
   }
 

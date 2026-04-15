@@ -30,8 +30,9 @@ mixin _$Profile {
   @JsonKey(name: 'join_date')
   String get joinDate => throw _privateConstructorUsedError;
 
-  /// Menampung objek jabatan {id: 1, name: "Driver"}
-  Map<String, dynamic>? get position => throw _privateConstructorUsedError;
+  /// REVISI: Menggunakan PositionEntity agar sinkron dengan struktur JSON
+  /// JSON: "position": { "id": 1, "name": "Admin" }
+  PositionEntity? get position => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(
@@ -40,7 +41,7 @@ mixin _$Profile {
             String email,
             @JsonKey(name: 'image') String? image,
             @JsonKey(name: 'join_date') String joinDate,
-            Map<String, dynamic>? position)
+            PositionEntity? position)
         entity,
   }) =>
       throw _privateConstructorUsedError;
@@ -52,7 +53,7 @@ mixin _$Profile {
             String email,
             @JsonKey(name: 'image') String? image,
             @JsonKey(name: 'join_date') String joinDate,
-            Map<String, dynamic>? position)?
+            PositionEntity? position)?
         entity,
   }) =>
       throw _privateConstructorUsedError;
@@ -64,7 +65,7 @@ mixin _$Profile {
             String email,
             @JsonKey(name: 'image') String? image,
             @JsonKey(name: 'join_date') String joinDate,
-            Map<String, dynamic>? position)?
+            PositionEntity? position)?
         entity,
     required TResult orElse(),
   }) =>
@@ -101,7 +102,9 @@ abstract class $ProfileCopyWith<$Res> {
       String email,
       @JsonKey(name: 'image') String? image,
       @JsonKey(name: 'join_date') String joinDate,
-      Map<String, dynamic>? position});
+      PositionEntity? position});
+
+  $PositionEntityCopyWith<$Res>? get position;
 }
 
 /// @nodoc
@@ -148,8 +151,20 @@ class _$ProfileCopyWithImpl<$Res, $Val extends Profile>
       position: freezed == position
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
+              as PositionEntity?,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $PositionEntityCopyWith<$Res>? get position {
+    if (_value.position == null) {
+      return null;
+    }
+
+    return $PositionEntityCopyWith<$Res>(_value.position!, (value) {
+      return _then(_value.copyWith(position: value) as $Val);
+    });
   }
 }
 
@@ -167,7 +182,10 @@ abstract class _$$ProfileEntityImplCopyWith<$Res>
       String email,
       @JsonKey(name: 'image') String? image,
       @JsonKey(name: 'join_date') String joinDate,
-      Map<String, dynamic>? position});
+      PositionEntity? position});
+
+  @override
+  $PositionEntityCopyWith<$Res>? get position;
 }
 
 /// @nodoc
@@ -210,9 +228,9 @@ class __$$ProfileEntityImplCopyWithImpl<$Res>
           : joinDate // ignore: cast_nullable_to_non_nullable
               as String,
       position: freezed == position
-          ? _value._position
+          ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
+              as PositionEntity?,
     ));
   }
 }
@@ -226,8 +244,7 @@ class _$ProfileEntityImpl implements ProfileEntity {
       this.email = "",
       @JsonKey(name: 'image') this.image,
       @JsonKey(name: 'join_date') this.joinDate = "-",
-      final Map<String, dynamic>? position})
-      : _position = position;
+      this.position});
 
   factory _$ProfileEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$ProfileEntityImplFromJson(json);
@@ -250,18 +267,10 @@ class _$ProfileEntityImpl implements ProfileEntity {
   @JsonKey(name: 'join_date')
   final String joinDate;
 
-  /// Menampung objek jabatan {id: 1, name: "Driver"}
-  final Map<String, dynamic>? _position;
-
-  /// Menampung objek jabatan {id: 1, name: "Driver"}
+  /// REVISI: Menggunakan PositionEntity agar sinkron dengan struktur JSON
+  /// JSON: "position": { "id": 1, "name": "Admin" }
   @override
-  Map<String, dynamic>? get position {
-    final value = _position;
-    if (value == null) return null;
-    if (_position is EqualUnmodifiableMapView) return _position;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(value);
-  }
+  final PositionEntity? position;
 
   @override
   String toString() {
@@ -279,13 +288,14 @@ class _$ProfileEntityImpl implements ProfileEntity {
             (identical(other.image, image) || other.image == image) &&
             (identical(other.joinDate, joinDate) ||
                 other.joinDate == joinDate) &&
-            const DeepCollectionEquality().equals(other._position, _position));
+            (identical(other.position, position) ||
+                other.position == position));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, email, image, joinDate,
-      const DeepCollectionEquality().hash(_position));
+  int get hashCode =>
+      Object.hash(runtimeType, id, name, email, image, joinDate, position);
 
   @JsonKey(ignore: true)
   @override
@@ -302,7 +312,7 @@ class _$ProfileEntityImpl implements ProfileEntity {
             String email,
             @JsonKey(name: 'image') String? image,
             @JsonKey(name: 'join_date') String joinDate,
-            Map<String, dynamic>? position)
+            PositionEntity? position)
         entity,
   }) {
     return entity(id, name, email, image, joinDate, position);
@@ -317,7 +327,7 @@ class _$ProfileEntityImpl implements ProfileEntity {
             String email,
             @JsonKey(name: 'image') String? image,
             @JsonKey(name: 'join_date') String joinDate,
-            Map<String, dynamic>? position)?
+            PositionEntity? position)?
         entity,
   }) {
     return entity?.call(id, name, email, image, joinDate, position);
@@ -332,7 +342,7 @@ class _$ProfileEntityImpl implements ProfileEntity {
             String email,
             @JsonKey(name: 'image') String? image,
             @JsonKey(name: 'join_date') String joinDate,
-            Map<String, dynamic>? position)?
+            PositionEntity? position)?
         entity,
     required TResult orElse(),
   }) {
@@ -385,7 +395,7 @@ abstract class ProfileEntity implements Profile {
       final String email,
       @JsonKey(name: 'image') final String? image,
       @JsonKey(name: 'join_date') final String joinDate,
-      final Map<String, dynamic>? position}) = _$ProfileEntityImpl;
+      final PositionEntity? position}) = _$ProfileEntityImpl;
 
   factory ProfileEntity.fromJson(Map<String, dynamic> json) =
       _$ProfileEntityImpl.fromJson;
@@ -406,8 +416,9 @@ abstract class ProfileEntity implements Profile {
   String get joinDate;
   @override
 
-  /// Menampung objek jabatan {id: 1, name: "Driver"}
-  Map<String, dynamic>? get position;
+  /// REVISI: Menggunakan PositionEntity agar sinkron dengan struktur JSON
+  /// JSON: "position": { "id": 1, "name": "Admin" }
+  PositionEntity? get position;
   @override
   @JsonKey(ignore: true)
   _$$ProfileEntityImplCopyWith<_$ProfileEntityImpl> get copyWith =>

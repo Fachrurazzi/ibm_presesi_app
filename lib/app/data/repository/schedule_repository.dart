@@ -18,15 +18,18 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
         if (json == null) return null;
 
         // 1. Parsing data ke Entity
+        // Field 'is_banned' di JSON Laravel akan otomatis masuk ke data.isBanned
         final data = ScheduleEntity.fromJson(json as Map<String, dynamic>);
 
         // 2. Simpan secara Paralel agar Cepat (WITA Standard)
-        // Kita simpan jam mulai dan jam selesai shift untuk keperluan Notifikasi
+        // REVISI: Tambahkan penyimpanan status Banned ke lokal agar persistensi lebih kuat
         await Future.wait([
           SharedPreferencesHelper.setString(
               AppPreferences.START_SHIFT, data.shift.startTime),
           SharedPreferencesHelper.setString(
               AppPreferences.END_SHIFT, data.shift.endTime),
+          // Simpan status banned ke preference jika diperlukan pengecekan cepat saat app baru buka
+          SharedPreferencesHelper.setBool('user_banned_status', data.isBanned),
         ]);
 
         return data;
@@ -38,7 +41,12 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
   Future<DataState<bool>> banned() {
     return handleResponse(
       apiCall: () => _scheduleApiService.banned(),
-      mapDataSuccess: (json) => true, // Sukses melaporkan status banned
+      mapDataSuccess: (json) {
+        // Jika Use Case banned dipanggil (misal terdeteksi emulator),
+        // kita tandai di lokal juga bahwa user ini sudah kena flag banned.
+        SharedPreferencesHelper.setBool('user_banned_status', true);
+        return true;
+      },
     );
   }
 }

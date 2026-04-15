@@ -3,7 +3,7 @@
 class AppConfig {
   /// Alamat server lokal PT Intiboga Mandiri
   /// Pastikan IP ini sesuai dengan IP Laptop/Server saat pengembangan
-  static const String HOST = 'http://192.168.100.83:8000';
+  static const String HOST = 'http://192.168.8.106:8000';
 
   // Endpoint API Versioning
   static const String BASE_URL = '$HOST/api/v1';

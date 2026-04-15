@@ -2,6 +2,7 @@ import 'package:elegant_notification/elegant_notification.dart';
 import 'package:elegant_notification/resources/arrays.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart'; // Tambahkan package shimmer
 import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/app/presentation/detail_attendance/detail_attendance_notifier.dart';
 import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
@@ -18,8 +19,7 @@ class DetailAttendanceScreen
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFF8F9FA), // Konsisten dengan Home & Profile
+      backgroundColor: const Color(0xFFF8F9FA),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: SafeArea(
@@ -34,6 +34,12 @@ class DetailAttendanceScreen
                     color: Colors.white,
                     borderRadius:
                         BorderRadius.vertical(bottom: Radius.circular(40)),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 20,
+                          offset: Offset(0, 10))
+                    ],
                   ),
                   child: Column(
                     children: [
@@ -47,25 +53,42 @@ class DetailAttendanceScreen
                 ),
               ),
 
-              // --- 2. LIST DATA ---
-              prov.isLoading
-                  ? const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  : prov.listAttendance.isEmpty
-                      ? SliverFillRemaining(child: _buildEmptyState(context))
-                      : SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) => _buildPresenceItem(
-                                  context, prov, prov.listAttendance[index]),
-                              childCount: prov.listAttendance.length,
-                            ),
-                          ),
-                        ),
+              // --- 2. LIST DATA / SHIMMER / EMPTY STATE ---
+              _buildListContent(context, prov),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildListContent(
+      BuildContext context, DetailAttendanceNotifier prov) {
+    if (prov.isLoading) {
+      return SliverPadding(
+        padding: const EdgeInsets.all(24),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _buildShimmerItem(),
+            childCount: 6,
+          ),
+        ),
+      );
+    }
+
+    if (prov.listAttendance.isEmpty) {
+      return SliverFillRemaining(child: _buildEmptyState(context));
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) =>
+              _buildPresenceItem(context, prov, prov.listAttendance[index]),
+          childCount: prov.listAttendance.length,
         ),
       ),
     );
@@ -88,7 +111,7 @@ class DetailAttendanceScreen
               ),
             ),
           ),
-          const SizedBox(width: 48), // Spacer agar title tetap center
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -129,8 +152,7 @@ class DetailAttendanceScreen
                     fontSize: 13,
                     color: dapatCatering
                         ? Colors.blue.shade800
-                        : Colors.green.shade800,
-                    letterSpacing: -0.3),
+                        : Colors.green.shade800),
               ),
             ),
           ],
@@ -220,9 +242,8 @@ class DetailAttendanceScreen
         },
         icon: const Icon(Icons.search_rounded, size: 22),
         style: IconButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16))),
       ),
     );
   }
@@ -239,12 +260,6 @@ class DetailAttendanceScreen
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.01),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
       ),
       child: Row(
         children: [
@@ -291,19 +306,31 @@ class DetailAttendanceScreen
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-        color: theme.primaryColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(15),
-      ),
+          color: theme.primaryColor.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(15)),
       child: Center(
         child: Text(
-          DateTimeHelper.formatString(dateTimeString: date, format: 'dd\nMMM'),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: theme.primaryColor,
-              height: 1.2),
-        ),
+            DateTimeHelper.formatString(
+                dateTimeString: date, format: 'dd\nMMM'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: theme.primaryColor,
+                height: 1.2)),
+      ),
+    );
+  }
+
+  Widget _buildShimmerItem() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        height: 80,
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(20)),
       ),
     );
   }
@@ -340,7 +367,7 @@ class DetailAttendanceScreen
             const Text("Gagal", style: TextStyle(fontWeight: FontWeight.w900)),
         description: Text(msg),
         showProgressIndicator: false,
-        borderRadius: BorderRadius.circular(20), // Konsisten 20px
+        borderRadius: BorderRadius.circular(20),
         displayCloseButton: false,
       ).show(context);
     }
@@ -348,7 +375,6 @@ class DetailAttendanceScreen
 
   @override
   void checkVariableBeforeUi(BuildContext context) {}
-
   @override
   AppBar? appBarBuild(BuildContext context) => null;
 }

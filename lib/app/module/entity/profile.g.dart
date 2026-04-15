@@ -13,7 +13,9 @@ _$ProfileEntityImpl _$$ProfileEntityImplFromJson(Map<String, dynamic> json) =>
       email: json['email'] as String? ?? "",
       image: json['image'] as String?,
       joinDate: json['join_date'] as String? ?? "-",
-      position: json['position'] as Map<String, dynamic>?,
+      position: json['position'] == null
+          ? null
+          : PositionEntity.fromJson(json['position'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$ProfileEntityImplToJson(_$ProfileEntityImpl instance) =>

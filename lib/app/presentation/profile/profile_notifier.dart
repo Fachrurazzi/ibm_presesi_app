@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ibm_presensi_app/app/module/entity/user.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ibm_presensi_app/app/module/entity/profile.dart';
 import 'package:ibm_presensi_app/app/module/use_case/update_profile.dart';
@@ -17,25 +18,28 @@ class ProfileNotifier extends AppProvider {
   }
 
   // --- UI State ---
-  String _name = '';
-  String _position = 'Karyawan IBM';
-  String? _imageUrlServer;
+  ProfileEntity _profile = const ProfileEntity();
   File? _imageFileLocal;
-  String _joinDate = '-'; 
+  String? _imageUrlServer;
   bool _obscureOld = true;
   bool _obscureNew = true;
   bool isUpdateSuccess = false;
 
   // --- Getters ---
-  String get name => _name;
-  String get position => _position;
+  ProfileEntity get profile => _profile;
+  String get name => _profile.name.isEmpty ? "Karyawan IBM" : _profile.name;
+  String get position => _profile.positionName;
   String? get imageUrlServer => _imageUrlServer;
   File? get imageFileLocal => _imageFileLocal;
-  String get joinDate => _joinDate;
+
+  // REVISI: Pastikan getter joinDate mengambil data yang benar
+  String get joinDate => _profile.joinDate.isEmpty || _profile.joinDate == "-"
+      ? (SharedPreferencesHelper.getString(AppPreferences.JOIN_DATE) ?? "-")
+      : _profile.joinDate;
+
   bool get obscureOld => _obscureOld;
   bool get obscureNew => _obscureNew;
 
-  // Controllers
   final nameController = TextEditingController();
   final oldPassController = TextEditingController();
   final newPassController = TextEditingController();
@@ -53,36 +57,48 @@ class ProfileNotifier extends AppProvider {
 
   @override
   Future<void> init() async {
-    debugPrint("🚀 PROFILE_INIT: Mengambil data lokal secara instant...");
+    debugPrint("🚀 PROFILE_INIT: Sinkronisasi data...");
 
-    // 1. Load Data Lokal (Sesuai kode asli)
-    _name = SharedPreferencesHelper.getString(AppPreferences.USER_NAME) ?? 'User IBM';
-    _position = SharedPreferencesHelper.getString(AppPreferences.POSITION_NAME) ?? 'Karyawan IBM';
-    _joinDate = SharedPreferencesHelper.getString(AppPreferences.JOIN_DATE) ?? '-';
+    final sName = SharedPreferencesHelper.getString(AppPreferences.USER_NAME) ??
+        "Karyawan IBM";
+    final sPos =
+        SharedPreferencesHelper.getString(AppPreferences.POSITION_NAME) ??
+            "Anggota IBM";
+    final sJoin =
+        SharedPreferencesHelper.getString(AppPreferences.JOIN_DATE) ?? "-";
+    final sImg = SharedPreferencesHelper.getString(AppPreferences.IMAGE_URL);
 
-    String? savedUrl = SharedPreferencesHelper.getString(AppPreferences.IMAGE_URL);
-    _imageUrlServer = _sanitizeUrl(savedUrl);
+    // REVISI: Update internal state profile dengan JOIN_DATE yang pasti
+    _profile = _profile.copyWith(
+      name: sName,
+      joinDate: sJoin,
+      position: PositionEntity(name: sPos),
+    );
 
-    if (nameController.text.isEmpty) nameController.text = _name;
+    if (sImg != null) _imageUrlServer = _sanitizeUrl(sImg);
+    if (nameController.text.isEmpty) nameController.text = _profile.name;
+
     notifyListeners();
-
-    // 2. LOGIKA TAMBAHAN: Sinkronisasi Otomatis ke Server
-    // Ini agar jika Dimas login, data Arif yang tersisa di storage langsung terhapus
-    _syncDataFromServer();
   }
 
-  /// Sinkronisasi data ke server tanpa mengganggu loading UI utama
-  Future<void> _syncDataFromServer() async {
-    try {
-      // Kita gunakan submitSave dengan param kosong hanya untuk memicu return data terbaru dari server
-      // Jika UseCase kamu mendukung getProfile, gunakan itu. 
-      // Jika tidak, kita biarkan data lokal yang bekerja sampai user klik Save.
-    } catch (e) {
-      debugPrint("🚨 SYNC_PROFILE_SILENT_ERROR: $e");
-    }
+  void updateFromAuth({
+    required String name,
+    required String? photo,
+    required String joinDate,
+    required String position,
+  }) {
+    _profile = _profile.copyWith(
+      name: name,
+      joinDate: joinDate,
+      position: PositionEntity(name: position),
+    );
+
+    if (photo != null) _imageUrlServer = _sanitizeUrl(photo);
+    nameController.text = name;
+
+    notifyListeners();
   }
 
-  /// Sanitizer URL: Menangani Base URL dan Cache Busting
   String? _sanitizeUrl(String? url) {
     if (url == null || url.isEmpty) return null;
     String clean = url.contains('?v=') ? url.split('?v=').first : url;
@@ -95,13 +111,14 @@ class ProfileNotifier extends AppProvider {
 
   Future<void> pickImage(ImageSource source) async {
     try {
-      final pickedFile = await _picker.pickImage(source: source, imageQuality: 50);
+      final pickedFile =
+          await _picker.pickImage(source: source, imageQuality: 50);
       if (pickedFile != null) {
         _imageFileLocal = File(pickedFile.path);
         notifyListeners();
       }
     } catch (e) {
-      errorMessage = "Izin akses galeri/kamera ditolak";
+      errorMessage = "Izin kamera/galeri ditolak";
       notifyListeners();
     }
   }
@@ -122,73 +139,76 @@ class ProfileNotifier extends AppProvider {
         param: ProfileParamUpdate(
           name: inputName,
           image: _imageFileLocal,
-          oldPassword: oldPassController.text.isEmpty ? null : oldPassController.text,
-          newPassword: newPassController.text.isEmpty ? null : newPassController.text,
+          oldPassword:
+              oldPassController.text.isEmpty ? null : oldPassController.text,
+          newPassword:
+              newPassController.text.isEmpty ? null : newPassController.text,
         ),
       );
 
       if (response.success && response.data != null) {
         final userResponse = response.data as ProfileEntity;
 
-        // 1. Update State Lokal & Simpan ke Storage
-        _name = userResponse.name;
-        await SharedPreferencesHelper.setString(AppPreferences.USER_NAME, _name);
+        // KUNCI: Pertahankan Join Date lama jika response API tidak mengirimkannya
+        String currentJoinDate =
+            userResponse.joinDate.isEmpty || userResponse.joinDate == "-"
+                ? _profile.joinDate
+                : userResponse.joinDate;
 
-        // REVISI: Update Join Date
-        if (userResponse.joinDate.isNotEmpty) {
-          _joinDate = userResponse.joinDate;
-          await SharedPreferencesHelper.setString(AppPreferences.JOIN_DATE, _joinDate);
-        }
+        _profile = userResponse.copyWith(joinDate: currentJoinDate);
 
-        // Ambil nama jabatan dari object position
-        if (userResponse.position != null) {
-          _position = userResponse.position!['name']?.toString() ?? _position;
-          await SharedPreferencesHelper.setString(AppPreferences.POSITION_NAME, _position);
-        }
-
-        // 2. Logika Update Foto dengan Cache Busting Timestamp
+        // Logic Foto: Cache Busting
         String? finalPhotoUrl = _imageUrlServer;
         if (userResponse.image != null) {
           String? cleanUrl = _sanitizeUrl(userResponse.image);
           if (cleanUrl != null) {
-            // Tambahkan timestamp agar widget Image refresh
-            finalPhotoUrl = "$cleanUrl?v=${DateTime.now().millisecondsSinceEpoch}";
-            await SharedPreferencesHelper.setString(AppPreferences.IMAGE_URL, finalPhotoUrl);
+            finalPhotoUrl =
+                "$cleanUrl?v=${DateTime.now().millisecondsSinceEpoch}";
             _imageUrlServer = finalPhotoUrl;
           }
         }
 
-        // 3. Sinkronisasi ke HomeNotifier
+        // Simpan ke Storage secara permanen
+        await Future.wait([
+          SharedPreferencesHelper.setString(
+              AppPreferences.USER_NAME, _profile.name),
+          SharedPreferencesHelper.setString(
+              AppPreferences.POSITION_NAME, _profile.positionName),
+          SharedPreferencesHelper.setString(
+              AppPreferences.JOIN_DATE, _profile.joinDate),
+          SharedPreferencesHelper.setString(
+              AppPreferences.IMAGE_URL, finalPhotoUrl ?? ""),
+        ]);
+
+        // Sync ke HomeNotifier
         if (sl.isRegistered<HomeNotifier>()) {
           sl<HomeNotifier>().updateUserData(
-            newName: _name,
-            newPosition: _position,
+            newName: _profile.name,
+            newPosition: _profile.positionName,
             newPhoto: finalPhotoUrl,
           );
         }
 
-        _clearSensitiveFields();
+        _imageFileLocal = null;
+        oldPassController.clear();
+        newPassController.clear();
         isUpdateSuccess = true;
       } else {
         errorMessage = response.message;
       }
     } catch (e) {
-      errorMessage = "Terjadi kesalahan sistem";
-      debugPrint("🚨 UPDATE_PROFILE_ERROR: $e");
+      errorMessage = "Gagal memperbarui profil";
+      debugPrint("🚨 PROFILE_UPDATE_ERROR: $e");
     } finally {
       hideLoading();
       notifyListeners();
     }
   }
 
-  void _clearSensitiveFields() {
+  void resetState() {
     _imageFileLocal = null;
     oldPassController.clear();
     newPassController.clear();
-  }
-
-  void resetState() {
-    _clearSensitiveFields();
     init();
   }
 

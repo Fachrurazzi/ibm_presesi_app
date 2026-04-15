@@ -22,15 +22,20 @@ UserEntity _$UserEntityFromJson(Map<String, dynamic> json) {
 mixin _$UserEntity {
   int? get id => throw _privateConstructorUsedError;
   String? get name => throw _privateConstructorUsedError;
-  String? get email => throw _privateConstructorUsedError;
-  String? get image =>
-      throw _privateConstructorUsedError; // KUNCI SINKRONISASI:
-// Menghubungkan 'leave_quota' dari Laravel ke 'leaveQuota' di Flutter
+  String? get email =>
+      throw _privateConstructorUsedError; // LOG API: Laravel mengirim 'image' berisi path file
+  String? get image => throw _privateConstructorUsedError;
   @JsonKey(name: 'leave_quota')
-  int? get leaveQuota => throw _privateConstructorUsedError;
+  int? get leaveQuota =>
+      throw _privateConstructorUsedError; // LOG API: Laravel mengirim 'join_date' (tadi di log muncul sebagai ISO String)
   @JsonKey(name: 'join_date')
   String? get joinDate =>
-      throw _privateConstructorUsedError; // Relasi ke Jabatan
+      throw _privateConstructorUsedError; // TAMBAHAN PENTING: Sesuai log API kamu tadi
+  @JsonKey(name: 'is_face_registered')
+  bool? get isFaceRegistered => throw _privateConstructorUsedError;
+  @JsonKey(name: 'position_id')
+  int? get positionId =>
+      throw _privateConstructorUsedError; // Relasi ke Jabatan (Nested Object)
   PositionEntity? get position => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -52,6 +57,8 @@ abstract class $UserEntityCopyWith<$Res> {
       String? image,
       @JsonKey(name: 'leave_quota') int? leaveQuota,
       @JsonKey(name: 'join_date') String? joinDate,
+      @JsonKey(name: 'is_face_registered') bool? isFaceRegistered,
+      @JsonKey(name: 'position_id') int? positionId,
       PositionEntity? position});
 
   $PositionEntityCopyWith<$Res>? get position;
@@ -76,6 +83,8 @@ class _$UserEntityCopyWithImpl<$Res, $Val extends UserEntity>
     Object? image = freezed,
     Object? leaveQuota = freezed,
     Object? joinDate = freezed,
+    Object? isFaceRegistered = freezed,
+    Object? positionId = freezed,
     Object? position = freezed,
   }) {
     return _then(_value.copyWith(
@@ -103,6 +112,14 @@ class _$UserEntityCopyWithImpl<$Res, $Val extends UserEntity>
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
               as String?,
+      isFaceRegistered: freezed == isFaceRegistered
+          ? _value.isFaceRegistered
+          : isFaceRegistered // ignore: cast_nullable_to_non_nullable
+              as bool?,
+      positionId: freezed == positionId
+          ? _value.positionId
+          : positionId // ignore: cast_nullable_to_non_nullable
+              as int?,
       position: freezed == position
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
@@ -138,6 +155,8 @@ abstract class _$$UserEntityImplCopyWith<$Res>
       String? image,
       @JsonKey(name: 'leave_quota') int? leaveQuota,
       @JsonKey(name: 'join_date') String? joinDate,
+      @JsonKey(name: 'is_face_registered') bool? isFaceRegistered,
+      @JsonKey(name: 'position_id') int? positionId,
       PositionEntity? position});
 
   @override
@@ -161,6 +180,8 @@ class __$$UserEntityImplCopyWithImpl<$Res>
     Object? image = freezed,
     Object? leaveQuota = freezed,
     Object? joinDate = freezed,
+    Object? isFaceRegistered = freezed,
+    Object? positionId = freezed,
     Object? position = freezed,
   }) {
     return _then(_$UserEntityImpl(
@@ -188,6 +209,14 @@ class __$$UserEntityImplCopyWithImpl<$Res>
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
               as String?,
+      isFaceRegistered: freezed == isFaceRegistered
+          ? _value.isFaceRegistered
+          : isFaceRegistered // ignore: cast_nullable_to_non_nullable
+              as bool?,
+      positionId: freezed == positionId
+          ? _value.positionId
+          : positionId // ignore: cast_nullable_to_non_nullable
+              as int?,
       position: freezed == position
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
@@ -206,6 +235,8 @@ class _$UserEntityImpl implements _UserEntity {
       this.image,
       @JsonKey(name: 'leave_quota') this.leaveQuota,
       @JsonKey(name: 'join_date') this.joinDate,
+      @JsonKey(name: 'is_face_registered') this.isFaceRegistered,
+      @JsonKey(name: 'position_id') this.positionId,
       this.position});
 
   factory _$UserEntityImpl.fromJson(Map<String, dynamic> json) =>
@@ -217,23 +248,30 @@ class _$UserEntityImpl implements _UserEntity {
   final String? name;
   @override
   final String? email;
+// LOG API: Laravel mengirim 'image' berisi path file
   @override
   final String? image;
-// KUNCI SINKRONISASI:
-// Menghubungkan 'leave_quota' dari Laravel ke 'leaveQuota' di Flutter
   @override
   @JsonKey(name: 'leave_quota')
   final int? leaveQuota;
+// LOG API: Laravel mengirim 'join_date' (tadi di log muncul sebagai ISO String)
   @override
   @JsonKey(name: 'join_date')
   final String? joinDate;
-// Relasi ke Jabatan
+// TAMBAHAN PENTING: Sesuai log API kamu tadi
+  @override
+  @JsonKey(name: 'is_face_registered')
+  final bool? isFaceRegistered;
+  @override
+  @JsonKey(name: 'position_id')
+  final int? positionId;
+// Relasi ke Jabatan (Nested Object)
   @override
   final PositionEntity? position;
 
   @override
   String toString() {
-    return 'UserEntity(id: $id, name: $name, email: $email, image: $image, leaveQuota: $leaveQuota, joinDate: $joinDate, position: $position)';
+    return 'UserEntity(id: $id, name: $name, email: $email, image: $image, leaveQuota: $leaveQuota, joinDate: $joinDate, isFaceRegistered: $isFaceRegistered, positionId: $positionId, position: $position)';
   }
 
   @override
@@ -249,14 +287,18 @@ class _$UserEntityImpl implements _UserEntity {
                 other.leaveQuota == leaveQuota) &&
             (identical(other.joinDate, joinDate) ||
                 other.joinDate == joinDate) &&
+            (identical(other.isFaceRegistered, isFaceRegistered) ||
+                other.isFaceRegistered == isFaceRegistered) &&
+            (identical(other.positionId, positionId) ||
+                other.positionId == positionId) &&
             (identical(other.position, position) ||
                 other.position == position));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, name, email, image, leaveQuota, joinDate, position);
+  int get hashCode => Object.hash(runtimeType, id, name, email, image,
+      leaveQuota, joinDate, isFaceRegistered, positionId, position);
 
   @JsonKey(ignore: true)
   @override
@@ -280,6 +322,8 @@ abstract class _UserEntity implements UserEntity {
       final String? image,
       @JsonKey(name: 'leave_quota') final int? leaveQuota,
       @JsonKey(name: 'join_date') final String? joinDate,
+      @JsonKey(name: 'is_face_registered') final bool? isFaceRegistered,
+      @JsonKey(name: 'position_id') final int? positionId,
       final PositionEntity? position}) = _$UserEntityImpl;
 
   factory _UserEntity.fromJson(Map<String, dynamic> json) =
@@ -291,16 +335,21 @@ abstract class _UserEntity implements UserEntity {
   String? get name;
   @override
   String? get email;
-  @override
+  @override // LOG API: Laravel mengirim 'image' berisi path file
   String? get image;
-  @override // KUNCI SINKRONISASI:
-// Menghubungkan 'leave_quota' dari Laravel ke 'leaveQuota' di Flutter
+  @override
   @JsonKey(name: 'leave_quota')
   int? get leaveQuota;
-  @override
+  @override // LOG API: Laravel mengirim 'join_date' (tadi di log muncul sebagai ISO String)
   @JsonKey(name: 'join_date')
   String? get joinDate;
-  @override // Relasi ke Jabatan
+  @override // TAMBAHAN PENTING: Sesuai log API kamu tadi
+  @JsonKey(name: 'is_face_registered')
+  bool? get isFaceRegistered;
+  @override
+  @JsonKey(name: 'position_id')
+  int? get positionId;
+  @override // Relasi ke Jabatan (Nested Object)
   PositionEntity? get position;
   @override
   @JsonKey(ignore: true)

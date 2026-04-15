@@ -13,6 +13,6 @@ abstract class ScheduleApiService {
   Future<HttpResponse<dynamic>> get();
 
   /// Melaporkan status perangkat atau mengecek status banned akun
-  @POST('/banned')
+  @POST('/attendance/banned')
   Future<HttpResponse<dynamic>> banned();
 }

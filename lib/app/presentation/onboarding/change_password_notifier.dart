@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ibm_presensi_app/app/module/use_case/auth_update_password.dart';
 import 'package:ibm_presensi_app/app/presentation/profile/profile_notifier.dart';
-import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart'; // Tambahkan ini
+import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/core/constant/constant.dart';
 import 'package:ibm_presensi_app/core/di/dependency.dart';
 import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
@@ -14,6 +14,7 @@ class ChangePasswordNotifier extends AppProvider {
     init();
   }
 
+  // --- Controllers & State ---
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
@@ -36,14 +37,25 @@ class ChangePasswordNotifier extends AppProvider {
     confirmPasswordController.clear();
   }
 
+  /// Proses Submit Ganti Password
   Future<void> submit(BuildContext context) async {
-    if (passwordController.text.length < 8) {
+    final pass = passwordController.text;
+    final confirm = confirmPasswordController.text;
+
+    // 1. VALIDASI INPUT
+    if (pass.length < 8) {
       _errorMessage = "Password minimal harus 8 karakter";
       notifyListeners();
       return;
     }
 
-    if (passwordController.text != confirmPasswordController.text) {
+    if (!pass.contains(RegExp(r'[0-9]'))) {
+      _errorMessage = "Password harus mengandung setidaknya satu angka";
+      notifyListeners();
+      return;
+    }
+
+    if (pass != confirm) {
       _errorMessage = "Konfirmasi password tidak cocok";
       notifyListeners();
       return;
@@ -53,16 +65,15 @@ class ChangePasswordNotifier extends AppProvider {
     showLoading();
 
     try {
-      final response =
-          await _updatePasswordUseCase(param: passwordController.text);
+      // 2. HIT API LARAVEL
+      final response = await _updatePasswordUseCase(param: pass);
 
       if (response.success) {
-        // 1. UPDATE STATUS PASSWORD (Sudah bukan default)
+        // A. Update Status Lokal: Password sudah bukan default lagi
         await SharedPreferencesHelper.setBool(
             AppPreferences.IS_DEFAULT_PASSWORD, false);
 
-        // 2. SINKRONISASI DATA TERBARU (Sangat Penting!)
-        // Kita panggil init HomeNotifier agar dia menarik data terbaru (termasuk is_face_registered)
+        // B. SINKRONISASI DATA (Penting agar data Face Registration terbaru terambil)
         if (sl.isRegistered<HomeNotifier>()) {
           await sl<HomeNotifier>().refreshData();
         }
@@ -73,15 +84,17 @@ class ChangePasswordNotifier extends AppProvider {
 
         hideLoading();
 
-        // 3. AMBIL STATUS WAJAH TERBARU SETELAH REFRESH
+        // C. CEK STATUS WAJAH TERBARU SETELAH SYNC
         final isFaceReg = SharedPreferencesHelper.getBool(
                 AppPreferences.IS_FACE_REGISTERED) ??
             false;
 
-        // 4. NAVIGASI BERDASARKAN STATUS NYATA
+        // D. NAVIGASI BERDASARKAN KONDISI USER
+        if (!context.mounted) return;
+
         if (!isFaceReg) {
-          debugPrint("🚀 NAVIGASI: User Baru -> Ambil Wajah");
-          if (!context.mounted) return;
+          // User baru yang belum daftar wajah
+          debugPrint("🚀 NAVIGASI: Ke Pendaftaran Wajah");
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/face-recognition',
@@ -89,8 +102,8 @@ class ChangePasswordNotifier extends AppProvider {
             arguments: {'isRegistration': true},
           );
         } else {
-          debugPrint("🏠 NAVIGASI: User Lama -> Dashboard");
-          if (!context.mounted) return;
+          // User lama yang sudah punya data wajah
+          debugPrint("🏠 NAVIGASI: Ke Dashboard Utama");
           Navigator.pushNamedAndRemoveUntil(
               context, '/main-navbar', (route) => false);
         }
@@ -102,9 +115,15 @@ class ChangePasswordNotifier extends AppProvider {
     } catch (e) {
       hideLoading();
       debugPrint("🚨 ERROR_CHANGE_PASS: $e");
-      _errorMessage = "Terjadi kesalahan sistem.";
+      _errorMessage = "Gagal memperbarui password. Cek koneksi Anda.";
       notifyListeners();
     }
+  }
+
+  /// Reset pesan error agar tidak memicu notifikasi berulang di UI
+  void clearError() {
+    _errorMessage = "";
+    notifyListeners();
   }
 
   @override

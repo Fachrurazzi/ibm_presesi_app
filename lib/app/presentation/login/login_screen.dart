@@ -10,7 +10,7 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
 
   @override
   void checkVariableAfterUi(BuildContext context) {
-    // --- LOGIKA PENTING: JANGAN DIUBAH ---
+    // --- LOGIKA NAVIGASI OTOMATIS ---
     if (notifier.onboardingStep.isNotEmpty) {
       HapticFeedback.lightImpact();
       final String route = notifier.onboardingStep;
@@ -18,6 +18,7 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
       Navigator.pushReplacementNamed(context, route);
     }
 
+    // --- LOGIKA ERROR HANDLER ---
     if (notifier.loginError.isNotEmpty) {
       _showErrorNotification(context, notifier.loginError);
       notifier.loginError = "";
@@ -51,16 +52,12 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFFBFBFE), // Background sedikit kebiruan agar modern
+      backgroundColor: const Color(0xFFFBFBFE),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: Stack(
           children: [
-            // 1. Dekorasi Background Modern (Gradient Blobs)
             _buildBackgroundDecorator(size, theme),
-
-            // 2. Konten Utama
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -73,18 +70,16 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
                       children: [
                         _buildHeader(),
                         const SizedBox(height: 48),
-
-                        // Input Email
                         _buildInputField(
                           controller: notifier.emailController,
                           label: "Email Karyawan",
                           icon: Icons.alternate_email_rounded,
                           hint: "nama@intibogamandiri.com",
                           keyboardType: TextInputType.emailAddress,
+                          textInputAction:
+                              TextInputAction.next, // Pindah ke password
                         ),
                         const SizedBox(height: 20),
-
-                        // Input Password
                         _buildInputField(
                           controller: notifier.passwordController,
                           label: "Kata Sandi",
@@ -94,14 +89,15 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
                           obscureText: !notifier.isShowPassword,
                           onToggleVisible: () => notifier.isShowPassword =
                               !notifier.isShowPassword,
-                          onSubmitted: (_) => notifier.login(),
+                          textInputAction:
+                              TextInputAction.done, // Langsung login
+                          onSubmitted: (_) {
+                            FocusScope.of(context).unfocus();
+                            notifier.login();
+                          },
                         ),
-
                         const SizedBox(height: 48),
-
-                        // Tombol Login
-                        _buildLoginButton(theme),
-
+                        _buildLoginButton(context, theme),
                         const SizedBox(height: 32),
                         _buildFooter(theme),
                       ],
@@ -116,7 +112,6 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
     );
   }
 
-  // --- REVISI: DEKORASI BACKGROUND LEBIH HALUS ---
   Widget _buildBackgroundDecorator(Size size, ThemeData theme) {
     return Stack(
       children: [
@@ -206,7 +201,7 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
     );
   }
 
-  Widget _buildLoginButton(ThemeData theme) {
+  Widget _buildLoginButton(BuildContext context, ThemeData theme) {
     return Container(
       width: double.infinity,
       height: 60,
@@ -218,15 +213,21 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
           end: Alignment.bottomRight,
         ),
         boxShadow: [
-          BoxShadow(
-            color: theme.primaryColor.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          )
+          if (!notifier.isLoading)
+            BoxShadow(
+              color: theme.primaryColor.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            )
         ],
       ),
       child: ElevatedButton(
-        onPressed: notifier.isLoading ? null : () => notifier.login(),
+        onPressed: notifier.isLoading
+            ? null
+            : () {
+                FocusScope.of(context).unfocus();
+                notifier.login();
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
@@ -260,6 +261,7 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
     bool obscureText = false,
     VoidCallback? onToggleVisible,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
     Function(String)? onSubmitted,
   }) {
     return Column(
@@ -278,6 +280,7 @@ class LoginScreen extends AppWidget<LoginNotifier, void, void> {
           obscureText: obscureText,
           keyboardType: keyboardType,
           onSubmitted: onSubmitted,
+          textInputAction: textInputAction ?? TextInputAction.done,
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             hintText: hint,

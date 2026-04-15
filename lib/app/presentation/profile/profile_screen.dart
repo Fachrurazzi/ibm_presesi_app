@@ -4,11 +4,12 @@ import 'package:elegant_notification/elegant_notification.dart';
 import 'package:elegant_notification/resources/arrays.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ibm_presensi_app/app/presentation/login/login_screen.dart';
+import 'package:ibm_presensi_app/app/presentation/home/home_notifier.dart';
 import 'package:ibm_presensi_app/core/helper/date_time_helper.dart';
-import 'package:ibm_presensi_app/core/helper/shared_preferences_helper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ibm_presensi_app/app/presentation/profile/profile_notifier.dart';
+// KUNCI: Pastikan mengimport file profile entity agar extension ProfileX terbaca
+import 'package:ibm_presensi_app/app/module/entity/profile.dart';
 import 'package:ibm_presensi_app/core/widget/app_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -17,21 +18,19 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
 
   @override
   Widget bodyBuild(BuildContext context) {
+    // Gunakan watch agar UI me-render ulang saat notifyListeners() dipanggil
     final prov = context.watch<ProfileNotifier>();
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Konsisten dengan HomeScreen
+      backgroundColor: const Color(0xFFF8F9FA),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: SafeArea(
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // --- 1. HEADER PROFILE (Rounded Header) ---
               SliverToBoxAdapter(child: _buildHeader(context, prov, theme)),
-
-              // --- 2. FORM SECTION ---
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 sliver: SliverList(
@@ -70,13 +69,9 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
                       theme: theme,
                     ),
                     const SizedBox(height: 40),
-
-                    // Tombol Simpan (Gradient Style)
                     _buildSaveButton(context, prov, theme),
                     const SizedBox(height: 16),
-
-                    // Tombol Logout
-                    _buildLogoutButton(context),
+                    _buildLogoutButton(context, prov),
                     const SizedBox(height: 100),
                   ]),
                 ),
@@ -105,29 +100,28 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
       ),
       child: Column(
         children: [
-          const Text(
-            "Pengaturan Profil",
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-          ),
+          const Text("Pengaturan Profil",
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
           const SizedBox(height: 24),
           _buildAvatarStack(context, prov, theme),
           const SizedBox(height: 20),
+
+          // PERBAIKAN: Menggunakan extension positionName dari Entity Profile
           Text(
-            prov.position.isNotEmpty ? prov.position : "Karyawan IBM",
+            prov.profile.positionName,
             style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.primaryColor,
-              fontSize: 14,
-            ),
+                fontWeight: FontWeight.bold,
+                color: theme.primaryColor,
+                fontSize: 14),
           ),
+
           const SizedBox(height: 4),
           Text(
             "Sejak: ${DateTimeHelper.formatString(dateTimeString: prov.joinDate, format: 'dd MMM yyyy')}",
             style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+                color: Colors.grey.shade500,
+                fontSize: 12,
+                fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -144,27 +138,18 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: theme.primaryColor.withOpacity(0.1),
-              width: 4,
-            ),
+                color: theme.primaryColor.withOpacity(0.1), width: 4),
           ),
           child: Hero(
-            tag: 'profile_photo_main',
-            child: CircleAvatar(
-              radius: 55,
-              backgroundColor: const Color(0xFFF8F9FA),
-              backgroundImage: prov.imageFileLocal != null
-                  ? FileImage(prov.imageFileLocal!) as ImageProvider
-                  : (prov.imageUrlServer != null &&
-                          prov.imageUrlServer!.isNotEmpty)
-                      ? CachedNetworkImageProvider(prov.imageUrlServer!)
-                      : null,
-              child: (prov.imageFileLocal == null &&
-                      (prov.imageUrlServer == null ||
-                          prov.imageUrlServer!.isEmpty))
-                  ? Icon(Icons.person_rounded,
-                      size: 50, color: Colors.grey.shade300)
-                  : null,
+            // UNIK: Pastikan tag ini sama dengan yang ada di HomeScreen
+            tag: 'avatar_profile_tag',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(60),
+              child: SizedBox(
+                width: 110,
+                height: 110,
+                child: _buildImageContent(prov),
+              ),
             ),
           ),
         ),
@@ -182,6 +167,33 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildImageContent(ProfileNotifier prov) {
+    if (prov.imageFileLocal != null) {
+      return Image.file(prov.imageFileLocal!, fit: BoxFit.cover);
+    }
+
+    if (prov.imageUrlServer != null && prov.imageUrlServer!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: prov.imageUrlServer!,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: Colors.grey.shade100,
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+        errorWidget: (context, url, error) => _buildAvatarError(),
+      );
+    }
+
+    return _buildAvatarError();
+  }
+
+  Widget _buildAvatarError() {
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      child: Icon(Icons.person_rounded, size: 50, color: Colors.grey.shade300),
     );
   }
 
@@ -209,10 +221,9 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color: Colors.grey.shade500,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
+              color: Colors.grey.shade500,
+              fontSize: 12,
+              fontWeight: FontWeight.w600),
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade300, fontSize: 13),
           prefixIcon:
@@ -220,11 +231,10 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
           suffixIcon: isPass
               ? IconButton(
                   icon: Icon(
-                    obscure
-                        ? Icons.visibility_off_rounded
-                        : Icons.visibility_rounded,
-                    size: 18,
-                  ),
+                      obscure
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                      size: 18),
                   onPressed: onToggle,
                 )
               : null,
@@ -235,14 +245,9 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
     );
   }
 
-  Widget _buildSectionLabel(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.w900,
-          fontSize: 14,
-          color: Colors.blueGrey,
-        ),
-      );
+  Widget _buildSectionLabel(String text) => Text(text,
+      style: const TextStyle(
+          fontWeight: FontWeight.w900, fontSize: 14, color: Colors.blueGrey));
 
   Widget _buildSaveButton(
       BuildContext context, ProfileNotifier prov, ThemeData theme) {
@@ -252,59 +257,49 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         gradient: LinearGradient(
-          colors: [theme.primaryColor, theme.primaryColor.withBlue(220)],
-        ),
+            colors: [theme.primaryColor, theme.primaryColor.withBlue(220)]),
         boxShadow: [
           BoxShadow(
-            color: theme.primaryColor.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          )
+              color: theme.primaryColor.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6))
         ],
       ),
       child: ElevatedButton(
         onPressed: prov.isLoading ? null : () => prov.submitSave(),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        ),
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18))),
         child: prov.isLoading
             ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2),
-              )
-            : const Text(
-                "SIMPAN PERUBAHAN",
+                    color: Colors.white, strokeWidth: 2))
+            : const Text("SIMPAN PERUBAHAN",
                 style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1,
-                  color: Colors.white,
-                ),
-              ),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                    color: Colors.white)),
       ),
     );
   }
 
-  Widget _buildLogoutButton(BuildContext context) {
+  Widget _buildLogoutButton(BuildContext context, ProfileNotifier prov) {
     return SizedBox(
       width: double.infinity,
       child: TextButton.icon(
-        onPressed: () => _onPressLogout(context),
+        onPressed: () => _onPressLogout(context, prov),
         icon:
             const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 18),
-        label: const Text(
-          "KELUAR DARI AKUN",
-          style: TextStyle(
-            color: Colors.redAccent,
-            fontWeight: FontWeight.w900,
-            fontSize: 12,
-            letterSpacing: 1,
-          ),
-        ),
+        label: const Text("KELUAR DARI AKUN",
+            style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+                letterSpacing: 1)),
       ),
     );
   }
@@ -314,42 +309,29 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
       builder: (_) => Container(
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(10))),
             const SizedBox(height: 24),
-            const Text(
-              "Ubah Foto Profil",
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-            ),
+            const Text("Ubah Foto Profil",
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
             const SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildOption(
-                  context,
-                  Icons.image_rounded,
-                  "Galeri",
-                  () => prov.pickImage(ImageSource.gallery),
-                ),
-                _buildOption(
-                  context,
-                  Icons.camera_alt_rounded,
-                  "Kamera",
-                  () => prov.pickImage(ImageSource.camera),
-                ),
+                _buildOption(context, Icons.image_rounded, "Galeri",
+                    () => prov.pickImage(ImageSource.gallery)),
+                _buildOption(context, Icons.camera_alt_rounded, "Kamera",
+                    () => prov.pickImage(ImageSource.camera)),
               ],
             )
           ],
@@ -368,13 +350,11 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: Colors.blueGrey),
-          ),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(16)),
+              child: Icon(icon, color: Colors.blueGrey)),
           const SizedBox(height: 8),
           Text(label,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))
@@ -383,7 +363,7 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
     );
   }
 
-  void _onPressLogout(BuildContext context) async {
+  void _onPressLogout(BuildContext context, ProfileNotifier prov) async {
     HapticFeedback.mediumImpact();
     bool? confirm = await showDialog(
       context: context,
@@ -407,62 +387,46 @@ class ProfileScreen extends AppWidget<ProfileNotifier, void, void> {
       ),
     );
 
-    if (confirm == true) {
-      await SharedPreferencesHelper.logout();
-      if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => LoginScreen()),
-          (route) => false,
-        );
-      }
+    if (confirm == true && context.mounted) {
+      prov.resetState();
+      context.read<HomeNotifier>().logout(context);
     }
   }
 
   @override
   void checkVariableAfterUi(BuildContext context) {
-    final safeAreaTop = MediaQuery.of(context).padding.top;
-    final screenWidth = MediaQuery.of(context).size.width;
-
     if (notifier.isUpdateSuccess) {
       notifier.isUpdateSuccess = false;
       HapticFeedback.lightImpact();
       ElegantNotification.success(
-        width: screenWidth * 0.9,
-        notificationMargin: safeAreaTop + 10,
-        position: Alignment.topCenter,
-        animation: AnimationType.fromTop,
-        title: const Text("Berhasil",
-            style: TextStyle(fontWeight: FontWeight.w900)),
-        description: const Text("Profil diperbarui secara lokal & server."),
-        showProgressIndicator: false,
-        displayCloseButton: false,
-        borderRadius: BorderRadius.circular(20),
-      ).show(context);
+              width: MediaQuery.of(context).size.width * 0.9,
+              position: Alignment.topCenter,
+              animation: AnimationType.fromTop,
+              title: const Text("Berhasil",
+                  style: TextStyle(fontWeight: FontWeight.w900)),
+              description:
+                  const Text("Profil diperbarui secara lokal & server."),
+              showProgressIndicator: false)
+          .show(context);
     }
-
     if (notifier.errorMessage.isNotEmpty) {
       final msg = notifier.errorMessage;
       notifier.errorMessage = "";
       HapticFeedback.vibrate();
       ElegantNotification.error(
-        width: screenWidth * 0.9,
-        notificationMargin: safeAreaTop + 10,
-        position: Alignment.topCenter,
-        animation: AnimationType.fromTop,
-        title:
-            const Text("Gagal", style: TextStyle(fontWeight: FontWeight.w900)),
-        description: Text(msg, maxLines: 4, overflow: TextOverflow.ellipsis),
-        showProgressIndicator: false,
-        borderRadius: BorderRadius.circular(20),
-        displayCloseButton: false,
-      ).show(context);
+              width: MediaQuery.of(context).size.width * 0.9,
+              position: Alignment.topCenter,
+              animation: AnimationType.fromTop,
+              title: const Text("Gagal",
+                  style: TextStyle(fontWeight: FontWeight.w900)),
+              description: Text(msg),
+              showProgressIndicator: false)
+          .show(context);
     }
   }
 
   @override
   void checkVariableBeforeUi(BuildContext context) {}
-
   @override
   AppBar? appBarBuild(BuildContext context) => null;
 }

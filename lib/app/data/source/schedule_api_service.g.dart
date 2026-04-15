@@ -62,7 +62,7 @@ class _ScheduleApiService implements ScheduleApiService {
     )
         .compose(
           _dio.options,
-          '/banned',
+          '/attendance/banned',
           queryParameters: queryParameters,
           data: _data,
         )
