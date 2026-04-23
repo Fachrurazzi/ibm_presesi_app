@@ -2,19 +2,24 @@ import 'package:ibm_presensi_app/app/module/entity/attendance.dart';
 import 'package:ibm_presensi_app/core/network/data_state.dart';
 
 abstract class AttendanceRepository {
-  /// Mengambil data presensi hari ini (Check-in & Check-out)
-  /// Mengembalikan null jika karyawan belum melakukan aksi presensi hari ini.
+  /// GET /attendance/today - Get today's attendance
   Future<DataState<AttendanceEntity?>> getToday();
 
-  /// Mengambil daftar riwayat presensi khusus untuk bulan berjalan.
-  Future<DataState<List<AttendanceEntity>>> getThisMonth();
+  /// GET /attendance/history - Get attendance history with pagination
+  Future<DataState<PaginatedAttendance>> getHistory(
+      AttendanceHistoryParams param);
 
-  /// Mengirim data presensi baru (Store).
-  /// [param] berisi koordinat, alamat, dan foto wajah (base64/file).
-  Future<DataState<bool>> sendAttendance(AttendanceParamEntity param);
+  /// GET /attendance/schedule - Get today's schedule for attendance
+  Future<DataState<AttendanceSchedule>> getSchedule();
 
-  /// Mengambil data riwayat berdasarkan filter bulan dan tahun tertentu.
-  /// Digunakan pada fitur rekap absen bulanan.
-  Future<DataState<List<AttendanceEntity>>> getByMonthYear(
-      AttendanceParamGetEntity param);
+  /// GET /attendance/summary - Get monthly attendance summary
+  Future<DataState<AttendanceSummary>> getSummary(
+      AttendanceSummaryParams param);
+
+  /// POST /attendance - Check-in or Check-out
+  Future<DataState<AttendanceEntity>> sendAttendance(
+      AttendanceSendParams param);
+
+  /// POST /attendance/report-suspicious - Report fake GPS/emulator
+  Future<DataState<bool>> reportSuspicious(ReportSuspiciousParams param);
 }

@@ -20,12 +20,11 @@ Auth _$AuthFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Auth {
-  @JsonKey(name: 'id')
-  String? get id => throw _privateConstructorUsedError;
-  String? get email => throw _privateConstructorUsedError;
-  String? get password => throw _privateConstructorUsedError;
-  String? get name => throw _privateConstructorUsedError;
-  Map<String, dynamic>? get position => throw _privateConstructorUsedError;
+  int get id => throw _privateConstructorUsedError;
+  String get email => throw _privateConstructorUsedError;
+  String get name => throw _privateConstructorUsedError;
+  @JsonKey(name: 'position_id')
+  int? get positionId => throw _privateConstructorUsedError;
   @JsonKey(name: 'position_name')
   String? get positionName => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_default_password')
@@ -36,56 +35,88 @@ mixin _$Auth {
   String get imageUrl => throw _privateConstructorUsedError;
   @JsonKey(name: 'join_date')
   String? get joinDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'leave_quota')
+  int get leaveQuota => throw _privateConstructorUsedError;
+  @JsonKey(name: 'remaining_leave')
+  int get remainingLeave => throw _privateConstructorUsedError;
+  @JsonKey(name: 'cashable_leave')
+  int get cashableLeave => throw _privateConstructorUsedError;
+  @JsonKey(name: 'email_verified_at')
+  String? get emailVerifiedAt => throw _privateConstructorUsedError;
   @JsonKey(name: 'access_token')
   String? get accessToken => throw _privateConstructorUsedError;
+  @JsonKey(name: 'token_type')
+  String get tokenType => throw _privateConstructorUsedError;
+  @JsonKey(name: 'roles')
+  List<String> get roles => throw _privateConstructorUsedError;
+  @JsonKey(name: 'permissions')
+  List<String> get permissions => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(
-            @JsonKey(name: 'id') String? id,
-            String? email,
-            String? password,
-            String? name,
-            Map<String, dynamic>? position,
+            int id,
+            String email,
+            String name,
+            @JsonKey(name: 'position_id') int? positionId,
             @JsonKey(name: 'position_name') String? positionName,
             @JsonKey(name: 'is_default_password') bool isDefaultPassword,
             @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
             @JsonKey(name: 'image_url') String imageUrl,
             @JsonKey(name: 'join_date') String? joinDate,
-            @JsonKey(name: 'access_token') String? accessToken)
+            @JsonKey(name: 'leave_quota') int leaveQuota,
+            @JsonKey(name: 'remaining_leave') int remainingLeave,
+            @JsonKey(name: 'cashable_leave') int cashableLeave,
+            @JsonKey(name: 'email_verified_at') String? emailVerifiedAt,
+            @JsonKey(name: 'access_token') String? accessToken,
+            @JsonKey(name: 'token_type') String tokenType,
+            @JsonKey(name: 'roles') List<String> roles,
+            @JsonKey(name: 'permissions') List<String> permissions)
         entity,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(
-            @JsonKey(name: 'id') String? id,
-            String? email,
-            String? password,
-            String? name,
-            Map<String, dynamic>? position,
+            int id,
+            String email,
+            String name,
+            @JsonKey(name: 'position_id') int? positionId,
             @JsonKey(name: 'position_name') String? positionName,
             @JsonKey(name: 'is_default_password') bool isDefaultPassword,
             @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
             @JsonKey(name: 'image_url') String imageUrl,
             @JsonKey(name: 'join_date') String? joinDate,
-            @JsonKey(name: 'access_token') String? accessToken)?
+            @JsonKey(name: 'leave_quota') int leaveQuota,
+            @JsonKey(name: 'remaining_leave') int remainingLeave,
+            @JsonKey(name: 'cashable_leave') int cashableLeave,
+            @JsonKey(name: 'email_verified_at') String? emailVerifiedAt,
+            @JsonKey(name: 'access_token') String? accessToken,
+            @JsonKey(name: 'token_type') String tokenType,
+            @JsonKey(name: 'roles') List<String> roles,
+            @JsonKey(name: 'permissions') List<String> permissions)?
         entity,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(
-            @JsonKey(name: 'id') String? id,
-            String? email,
-            String? password,
-            String? name,
-            Map<String, dynamic>? position,
+            int id,
+            String email,
+            String name,
+            @JsonKey(name: 'position_id') int? positionId,
             @JsonKey(name: 'position_name') String? positionName,
             @JsonKey(name: 'is_default_password') bool isDefaultPassword,
             @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
             @JsonKey(name: 'image_url') String imageUrl,
             @JsonKey(name: 'join_date') String? joinDate,
-            @JsonKey(name: 'access_token') String? accessToken)?
+            @JsonKey(name: 'leave_quota') int leaveQuota,
+            @JsonKey(name: 'remaining_leave') int remainingLeave,
+            @JsonKey(name: 'cashable_leave') int cashableLeave,
+            @JsonKey(name: 'email_verified_at') String? emailVerifiedAt,
+            @JsonKey(name: 'access_token') String? accessToken,
+            @JsonKey(name: 'token_type') String tokenType,
+            @JsonKey(name: 'roles') List<String> roles,
+            @JsonKey(name: 'permissions') List<String> permissions)?
         entity,
     required TResult orElse(),
   }) =>
@@ -117,17 +148,23 @@ abstract class $AuthCopyWith<$Res> {
       _$AuthCopyWithImpl<$Res, Auth>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'id') String? id,
-      String? email,
-      String? password,
-      String? name,
-      Map<String, dynamic>? position,
+      {int id,
+      String email,
+      String name,
+      @JsonKey(name: 'position_id') int? positionId,
       @JsonKey(name: 'position_name') String? positionName,
       @JsonKey(name: 'is_default_password') bool isDefaultPassword,
       @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
       @JsonKey(name: 'image_url') String imageUrl,
       @JsonKey(name: 'join_date') String? joinDate,
-      @JsonKey(name: 'access_token') String? accessToken});
+      @JsonKey(name: 'leave_quota') int leaveQuota,
+      @JsonKey(name: 'remaining_leave') int remainingLeave,
+      @JsonKey(name: 'cashable_leave') int cashableLeave,
+      @JsonKey(name: 'email_verified_at') String? emailVerifiedAt,
+      @JsonKey(name: 'access_token') String? accessToken,
+      @JsonKey(name: 'token_type') String tokenType,
+      @JsonKey(name: 'roles') List<String> roles,
+      @JsonKey(name: 'permissions') List<String> permissions});
 }
 
 /// @nodoc
@@ -143,39 +180,41 @@ class _$AuthCopyWithImpl<$Res, $Val extends Auth>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
-    Object? email = freezed,
-    Object? password = freezed,
-    Object? name = freezed,
-    Object? position = freezed,
+    Object? id = null,
+    Object? email = null,
+    Object? name = null,
+    Object? positionId = freezed,
     Object? positionName = freezed,
     Object? isDefaultPassword = null,
     Object? isFaceRegistered = null,
     Object? imageUrl = null,
     Object? joinDate = freezed,
+    Object? leaveQuota = null,
+    Object? remainingLeave = null,
+    Object? cashableLeave = null,
+    Object? emailVerifiedAt = freezed,
     Object? accessToken = freezed,
+    Object? tokenType = null,
+    Object? roles = null,
+    Object? permissions = null,
   }) {
     return _then(_value.copyWith(
-      id: freezed == id
+      id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as String?,
-      email: freezed == email
+              as int,
+      email: null == email
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
-              as String?,
-      password: freezed == password
-          ? _value.password
-          : password // ignore: cast_nullable_to_non_nullable
-              as String?,
-      name: freezed == name
+              as String,
+      name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String?,
-      position: freezed == position
-          ? _value.position
-          : position // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
+              as String,
+      positionId: freezed == positionId
+          ? _value.positionId
+          : positionId // ignore: cast_nullable_to_non_nullable
+              as int?,
       positionName: freezed == positionName
           ? _value.positionName
           : positionName // ignore: cast_nullable_to_non_nullable
@@ -196,10 +235,38 @@ class _$AuthCopyWithImpl<$Res, $Val extends Auth>
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
               as String?,
+      leaveQuota: null == leaveQuota
+          ? _value.leaveQuota
+          : leaveQuota // ignore: cast_nullable_to_non_nullable
+              as int,
+      remainingLeave: null == remainingLeave
+          ? _value.remainingLeave
+          : remainingLeave // ignore: cast_nullable_to_non_nullable
+              as int,
+      cashableLeave: null == cashableLeave
+          ? _value.cashableLeave
+          : cashableLeave // ignore: cast_nullable_to_non_nullable
+              as int,
+      emailVerifiedAt: freezed == emailVerifiedAt
+          ? _value.emailVerifiedAt
+          : emailVerifiedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
       accessToken: freezed == accessToken
           ? _value.accessToken
           : accessToken // ignore: cast_nullable_to_non_nullable
               as String?,
+      tokenType: null == tokenType
+          ? _value.tokenType
+          : tokenType // ignore: cast_nullable_to_non_nullable
+              as String,
+      roles: null == roles
+          ? _value.roles
+          : roles // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      permissions: null == permissions
+          ? _value.permissions
+          : permissions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ) as $Val);
   }
 }
@@ -212,17 +279,23 @@ abstract class _$$AuthEntityImplCopyWith<$Res> implements $AuthCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'id') String? id,
-      String? email,
-      String? password,
-      String? name,
-      Map<String, dynamic>? position,
+      {int id,
+      String email,
+      String name,
+      @JsonKey(name: 'position_id') int? positionId,
       @JsonKey(name: 'position_name') String? positionName,
       @JsonKey(name: 'is_default_password') bool isDefaultPassword,
       @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
       @JsonKey(name: 'image_url') String imageUrl,
       @JsonKey(name: 'join_date') String? joinDate,
-      @JsonKey(name: 'access_token') String? accessToken});
+      @JsonKey(name: 'leave_quota') int leaveQuota,
+      @JsonKey(name: 'remaining_leave') int remainingLeave,
+      @JsonKey(name: 'cashable_leave') int cashableLeave,
+      @JsonKey(name: 'email_verified_at') String? emailVerifiedAt,
+      @JsonKey(name: 'access_token') String? accessToken,
+      @JsonKey(name: 'token_type') String tokenType,
+      @JsonKey(name: 'roles') List<String> roles,
+      @JsonKey(name: 'permissions') List<String> permissions});
 }
 
 /// @nodoc
@@ -236,39 +309,41 @@ class __$$AuthEntityImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
-    Object? email = freezed,
-    Object? password = freezed,
-    Object? name = freezed,
-    Object? position = freezed,
+    Object? id = null,
+    Object? email = null,
+    Object? name = null,
+    Object? positionId = freezed,
     Object? positionName = freezed,
     Object? isDefaultPassword = null,
     Object? isFaceRegistered = null,
     Object? imageUrl = null,
     Object? joinDate = freezed,
+    Object? leaveQuota = null,
+    Object? remainingLeave = null,
+    Object? cashableLeave = null,
+    Object? emailVerifiedAt = freezed,
     Object? accessToken = freezed,
+    Object? tokenType = null,
+    Object? roles = null,
+    Object? permissions = null,
   }) {
     return _then(_$AuthEntityImpl(
-      id: freezed == id
+      id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as String?,
-      email: freezed == email
+              as int,
+      email: null == email
           ? _value.email
           : email // ignore: cast_nullable_to_non_nullable
-              as String?,
-      password: freezed == password
-          ? _value.password
-          : password // ignore: cast_nullable_to_non_nullable
-              as String?,
-      name: freezed == name
+              as String,
+      name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String?,
-      position: freezed == position
-          ? _value._position
-          : position // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
+              as String,
+      positionId: freezed == positionId
+          ? _value.positionId
+          : positionId // ignore: cast_nullable_to_non_nullable
+              as int?,
       positionName: freezed == positionName
           ? _value.positionName
           : positionName // ignore: cast_nullable_to_non_nullable
@@ -289,10 +364,38 @@ class __$$AuthEntityImplCopyWithImpl<$Res>
           ? _value.joinDate
           : joinDate // ignore: cast_nullable_to_non_nullable
               as String?,
+      leaveQuota: null == leaveQuota
+          ? _value.leaveQuota
+          : leaveQuota // ignore: cast_nullable_to_non_nullable
+              as int,
+      remainingLeave: null == remainingLeave
+          ? _value.remainingLeave
+          : remainingLeave // ignore: cast_nullable_to_non_nullable
+              as int,
+      cashableLeave: null == cashableLeave
+          ? _value.cashableLeave
+          : cashableLeave // ignore: cast_nullable_to_non_nullable
+              as int,
+      emailVerifiedAt: freezed == emailVerifiedAt
+          ? _value.emailVerifiedAt
+          : emailVerifiedAt // ignore: cast_nullable_to_non_nullable
+              as String?,
       accessToken: freezed == accessToken
           ? _value.accessToken
           : accessToken // ignore: cast_nullable_to_non_nullable
               as String?,
+      tokenType: null == tokenType
+          ? _value.tokenType
+          : tokenType // ignore: cast_nullable_to_non_nullable
+              as String,
+      roles: null == roles
+          ? _value._roles
+          : roles // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      permissions: null == permissions
+          ? _value._permissions
+          : permissions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ));
   }
 }
@@ -301,42 +404,39 @@ class __$$AuthEntityImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AuthEntityImpl extends AuthEntity {
   const _$AuthEntityImpl(
-      {@JsonKey(name: 'id') this.id,
+      {required this.id,
       required this.email,
-      required this.password,
-      this.name,
-      final Map<String, dynamic>? position,
+      required this.name,
+      @JsonKey(name: 'position_id') this.positionId,
       @JsonKey(name: 'position_name') this.positionName,
       @JsonKey(name: 'is_default_password') this.isDefaultPassword = false,
       @JsonKey(name: 'is_face_registered') this.isFaceRegistered = false,
       @JsonKey(name: 'image_url') this.imageUrl = '',
       @JsonKey(name: 'join_date') this.joinDate,
-      @JsonKey(name: 'access_token') this.accessToken})
-      : _position = position,
+      @JsonKey(name: 'leave_quota') this.leaveQuota = 12,
+      @JsonKey(name: 'remaining_leave') this.remainingLeave = 12,
+      @JsonKey(name: 'cashable_leave') this.cashableLeave = 0,
+      @JsonKey(name: 'email_verified_at') this.emailVerifiedAt,
+      @JsonKey(name: 'access_token') this.accessToken,
+      @JsonKey(name: 'token_type') this.tokenType = 'Bearer',
+      @JsonKey(name: 'roles') final List<String> roles = const [],
+      @JsonKey(name: 'permissions') final List<String> permissions = const []})
+      : _roles = roles,
+        _permissions = permissions,
         super._();
 
   factory _$AuthEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$AuthEntityImplFromJson(json);
 
   @override
-  @JsonKey(name: 'id')
-  final String? id;
+  final int id;
   @override
-  final String? email;
+  final String email;
   @override
-  final String? password;
+  final String name;
   @override
-  final String? name;
-  final Map<String, dynamic>? _position;
-  @override
-  Map<String, dynamic>? get position {
-    final value = _position;
-    if (value == null) return null;
-    if (_position is EqualUnmodifiableMapView) return _position;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(value);
-  }
-
+  @JsonKey(name: 'position_id')
+  final int? positionId;
   @override
   @JsonKey(name: 'position_name')
   final String? positionName;
@@ -353,12 +453,44 @@ class _$AuthEntityImpl extends AuthEntity {
   @JsonKey(name: 'join_date')
   final String? joinDate;
   @override
+  @JsonKey(name: 'leave_quota')
+  final int leaveQuota;
+  @override
+  @JsonKey(name: 'remaining_leave')
+  final int remainingLeave;
+  @override
+  @JsonKey(name: 'cashable_leave')
+  final int cashableLeave;
+  @override
+  @JsonKey(name: 'email_verified_at')
+  final String? emailVerifiedAt;
+  @override
   @JsonKey(name: 'access_token')
   final String? accessToken;
+  @override
+  @JsonKey(name: 'token_type')
+  final String tokenType;
+  final List<String> _roles;
+  @override
+  @JsonKey(name: 'roles')
+  List<String> get roles {
+    if (_roles is EqualUnmodifiableListView) return _roles;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_roles);
+  }
+
+  final List<String> _permissions;
+  @override
+  @JsonKey(name: 'permissions')
+  List<String> get permissions {
+    if (_permissions is EqualUnmodifiableListView) return _permissions;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_permissions);
+  }
 
   @override
   String toString() {
-    return 'Auth.entity(id: $id, email: $email, password: $password, name: $name, position: $position, positionName: $positionName, isDefaultPassword: $isDefaultPassword, isFaceRegistered: $isFaceRegistered, imageUrl: $imageUrl, joinDate: $joinDate, accessToken: $accessToken)';
+    return 'Auth.entity(id: $id, email: $email, name: $name, positionId: $positionId, positionName: $positionName, isDefaultPassword: $isDefaultPassword, isFaceRegistered: $isFaceRegistered, imageUrl: $imageUrl, joinDate: $joinDate, leaveQuota: $leaveQuota, remainingLeave: $remainingLeave, cashableLeave: $cashableLeave, emailVerifiedAt: $emailVerifiedAt, accessToken: $accessToken, tokenType: $tokenType, roles: $roles, permissions: $permissions)';
   }
 
   @override
@@ -368,10 +500,9 @@ class _$AuthEntityImpl extends AuthEntity {
             other is _$AuthEntityImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.email, email) || other.email == email) &&
-            (identical(other.password, password) ||
-                other.password == password) &&
             (identical(other.name, name) || other.name == name) &&
-            const DeepCollectionEquality().equals(other._position, _position) &&
+            (identical(other.positionId, positionId) ||
+                other.positionId == positionId) &&
             (identical(other.positionName, positionName) ||
                 other.positionName == positionName) &&
             (identical(other.isDefaultPassword, isDefaultPassword) ||
@@ -382,8 +513,21 @@ class _$AuthEntityImpl extends AuthEntity {
                 other.imageUrl == imageUrl) &&
             (identical(other.joinDate, joinDate) ||
                 other.joinDate == joinDate) &&
+            (identical(other.leaveQuota, leaveQuota) ||
+                other.leaveQuota == leaveQuota) &&
+            (identical(other.remainingLeave, remainingLeave) ||
+                other.remainingLeave == remainingLeave) &&
+            (identical(other.cashableLeave, cashableLeave) ||
+                other.cashableLeave == cashableLeave) &&
+            (identical(other.emailVerifiedAt, emailVerifiedAt) ||
+                other.emailVerifiedAt == emailVerifiedAt) &&
             (identical(other.accessToken, accessToken) ||
-                other.accessToken == accessToken));
+                other.accessToken == accessToken) &&
+            (identical(other.tokenType, tokenType) ||
+                other.tokenType == tokenType) &&
+            const DeepCollectionEquality().equals(other._roles, _roles) &&
+            const DeepCollectionEquality()
+                .equals(other._permissions, _permissions));
   }
 
   @JsonKey(ignore: true)
@@ -392,15 +536,21 @@ class _$AuthEntityImpl extends AuthEntity {
       runtimeType,
       id,
       email,
-      password,
       name,
-      const DeepCollectionEquality().hash(_position),
+      positionId,
       positionName,
       isDefaultPassword,
       isFaceRegistered,
       imageUrl,
       joinDate,
-      accessToken);
+      leaveQuota,
+      remainingLeave,
+      cashableLeave,
+      emailVerifiedAt,
+      accessToken,
+      tokenType,
+      const DeepCollectionEquality().hash(_roles),
+      const DeepCollectionEquality().hash(_permissions));
 
   @JsonKey(ignore: true)
   @override
@@ -412,65 +562,131 @@ class _$AuthEntityImpl extends AuthEntity {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(
-            @JsonKey(name: 'id') String? id,
-            String? email,
-            String? password,
-            String? name,
-            Map<String, dynamic>? position,
+            int id,
+            String email,
+            String name,
+            @JsonKey(name: 'position_id') int? positionId,
             @JsonKey(name: 'position_name') String? positionName,
             @JsonKey(name: 'is_default_password') bool isDefaultPassword,
             @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
             @JsonKey(name: 'image_url') String imageUrl,
             @JsonKey(name: 'join_date') String? joinDate,
-            @JsonKey(name: 'access_token') String? accessToken)
+            @JsonKey(name: 'leave_quota') int leaveQuota,
+            @JsonKey(name: 'remaining_leave') int remainingLeave,
+            @JsonKey(name: 'cashable_leave') int cashableLeave,
+            @JsonKey(name: 'email_verified_at') String? emailVerifiedAt,
+            @JsonKey(name: 'access_token') String? accessToken,
+            @JsonKey(name: 'token_type') String tokenType,
+            @JsonKey(name: 'roles') List<String> roles,
+            @JsonKey(name: 'permissions') List<String> permissions)
         entity,
   }) {
-    return entity(id, email, password, name, position, positionName,
-        isDefaultPassword, isFaceRegistered, imageUrl, joinDate, accessToken);
+    return entity(
+        id,
+        email,
+        name,
+        positionId,
+        positionName,
+        isDefaultPassword,
+        isFaceRegistered,
+        imageUrl,
+        joinDate,
+        leaveQuota,
+        remainingLeave,
+        cashableLeave,
+        emailVerifiedAt,
+        accessToken,
+        tokenType,
+        roles,
+        permissions);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(
-            @JsonKey(name: 'id') String? id,
-            String? email,
-            String? password,
-            String? name,
-            Map<String, dynamic>? position,
+            int id,
+            String email,
+            String name,
+            @JsonKey(name: 'position_id') int? positionId,
             @JsonKey(name: 'position_name') String? positionName,
             @JsonKey(name: 'is_default_password') bool isDefaultPassword,
             @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
             @JsonKey(name: 'image_url') String imageUrl,
             @JsonKey(name: 'join_date') String? joinDate,
-            @JsonKey(name: 'access_token') String? accessToken)?
+            @JsonKey(name: 'leave_quota') int leaveQuota,
+            @JsonKey(name: 'remaining_leave') int remainingLeave,
+            @JsonKey(name: 'cashable_leave') int cashableLeave,
+            @JsonKey(name: 'email_verified_at') String? emailVerifiedAt,
+            @JsonKey(name: 'access_token') String? accessToken,
+            @JsonKey(name: 'token_type') String tokenType,
+            @JsonKey(name: 'roles') List<String> roles,
+            @JsonKey(name: 'permissions') List<String> permissions)?
         entity,
   }) {
-    return entity?.call(id, email, password, name, position, positionName,
-        isDefaultPassword, isFaceRegistered, imageUrl, joinDate, accessToken);
+    return entity?.call(
+        id,
+        email,
+        name,
+        positionId,
+        positionName,
+        isDefaultPassword,
+        isFaceRegistered,
+        imageUrl,
+        joinDate,
+        leaveQuota,
+        remainingLeave,
+        cashableLeave,
+        emailVerifiedAt,
+        accessToken,
+        tokenType,
+        roles,
+        permissions);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(
-            @JsonKey(name: 'id') String? id,
-            String? email,
-            String? password,
-            String? name,
-            Map<String, dynamic>? position,
+            int id,
+            String email,
+            String name,
+            @JsonKey(name: 'position_id') int? positionId,
             @JsonKey(name: 'position_name') String? positionName,
             @JsonKey(name: 'is_default_password') bool isDefaultPassword,
             @JsonKey(name: 'is_face_registered') bool isFaceRegistered,
             @JsonKey(name: 'image_url') String imageUrl,
             @JsonKey(name: 'join_date') String? joinDate,
-            @JsonKey(name: 'access_token') String? accessToken)?
+            @JsonKey(name: 'leave_quota') int leaveQuota,
+            @JsonKey(name: 'remaining_leave') int remainingLeave,
+            @JsonKey(name: 'cashable_leave') int cashableLeave,
+            @JsonKey(name: 'email_verified_at') String? emailVerifiedAt,
+            @JsonKey(name: 'access_token') String? accessToken,
+            @JsonKey(name: 'token_type') String tokenType,
+            @JsonKey(name: 'roles') List<String> roles,
+            @JsonKey(name: 'permissions') List<String> permissions)?
         entity,
     required TResult orElse(),
   }) {
     if (entity != null) {
-      return entity(id, email, password, name, position, positionName,
-          isDefaultPassword, isFaceRegistered, imageUrl, joinDate, accessToken);
+      return entity(
+          id,
+          email,
+          name,
+          positionId,
+          positionName,
+          isDefaultPassword,
+          isFaceRegistered,
+          imageUrl,
+          joinDate,
+          leaveQuota,
+          remainingLeave,
+          cashableLeave,
+          emailVerifiedAt,
+          accessToken,
+          tokenType,
+          roles,
+          permissions);
     }
     return orElse();
   }
@@ -513,17 +729,23 @@ class _$AuthEntityImpl extends AuthEntity {
 
 abstract class AuthEntity extends Auth {
   const factory AuthEntity(
-          {@JsonKey(name: 'id') final String? id,
-          required final String? email,
-          required final String? password,
-          final String? name,
-          final Map<String, dynamic>? position,
+          {required final int id,
+          required final String email,
+          required final String name,
+          @JsonKey(name: 'position_id') final int? positionId,
           @JsonKey(name: 'position_name') final String? positionName,
           @JsonKey(name: 'is_default_password') final bool isDefaultPassword,
           @JsonKey(name: 'is_face_registered') final bool isFaceRegistered,
           @JsonKey(name: 'image_url') final String imageUrl,
           @JsonKey(name: 'join_date') final String? joinDate,
-          @JsonKey(name: 'access_token') final String? accessToken}) =
+          @JsonKey(name: 'leave_quota') final int leaveQuota,
+          @JsonKey(name: 'remaining_leave') final int remainingLeave,
+          @JsonKey(name: 'cashable_leave') final int cashableLeave,
+          @JsonKey(name: 'email_verified_at') final String? emailVerifiedAt,
+          @JsonKey(name: 'access_token') final String? accessToken,
+          @JsonKey(name: 'token_type') final String tokenType,
+          @JsonKey(name: 'roles') final List<String> roles,
+          @JsonKey(name: 'permissions') final List<String> permissions}) =
       _$AuthEntityImpl;
   const AuthEntity._() : super._();
 
@@ -531,16 +753,14 @@ abstract class AuthEntity extends Auth {
       _$AuthEntityImpl.fromJson;
 
   @override
-  @JsonKey(name: 'id')
-  String? get id;
+  int get id;
   @override
-  String? get email;
+  String get email;
   @override
-  String? get password;
+  String get name;
   @override
-  String? get name;
-  @override
-  Map<String, dynamic>? get position;
+  @JsonKey(name: 'position_id')
+  int? get positionId;
   @override
   @JsonKey(name: 'position_name')
   String? get positionName;
@@ -557,8 +777,29 @@ abstract class AuthEntity extends Auth {
   @JsonKey(name: 'join_date')
   String? get joinDate;
   @override
+  @JsonKey(name: 'leave_quota')
+  int get leaveQuota;
+  @override
+  @JsonKey(name: 'remaining_leave')
+  int get remainingLeave;
+  @override
+  @JsonKey(name: 'cashable_leave')
+  int get cashableLeave;
+  @override
+  @JsonKey(name: 'email_verified_at')
+  String? get emailVerifiedAt;
+  @override
   @JsonKey(name: 'access_token')
   String? get accessToken;
+  @override
+  @JsonKey(name: 'token_type')
+  String get tokenType;
+  @override
+  @JsonKey(name: 'roles')
+  List<String> get roles;
+  @override
+  @JsonKey(name: 'permissions')
+  List<String> get permissions;
   @override
   @JsonKey(ignore: true)
   _$$AuthEntityImplCopyWith<_$AuthEntityImpl> get copyWith =>

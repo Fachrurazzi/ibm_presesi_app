@@ -4,38 +4,38 @@ import 'package:geolocator/geolocator.dart';
 import 'package:ibm_presensi_app/core/helper/dialog_helper.dart';
 
 class LocationHelper {
-  /// Mengecek apakah izin lokasi sudah diberikan
   static Future<bool> isGrantedLocationPermission() async {
     final permission = await Geolocator.checkPermission();
     return permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse;
   }
 
-  /// Mengecek apakah GPS di HP aktif
   static Future<bool> isEnabledLocationService() async {
     return await Geolocator.isLocationServiceEnabled();
   }
 
-  /// Meminta izin lokasi secara cerdas
-  static Future<bool> showDialogLocationPermission(BuildContext context) async {
-    bool serviceEnabled = await isEnabledLocationService();
+  static Future<bool> checkAndRequestPermission(BuildContext context) async {
+    final serviceEnabled = await isEnabledLocationService();
     if (!serviceEnabled) {
       if (context.mounted) {
         DialogHelper.showSnackbar(
-            context: context,
-            text: 'GPS Anda tidak aktif. Mohon aktifkan GPS.');
+          context: context,
+          text: 'GPS Anda tidak aktif. Mohon aktifkan GPS.',
+        );
       }
       return false;
     }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-
+    var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        if (context.mounted)
+        if (context.mounted) {
           DialogHelper.showSnackbar(
-              context: context, text: 'Izin lokasi dibutuhkan untuk absen.');
+            context: context,
+            text: 'Izin lokasi dibutuhkan untuk absen.',
+          );
+        }
         return false;
       }
     }
@@ -43,8 +43,9 @@ class LocationHelper {
     if (permission == LocationPermission.deniedForever) {
       if (context.mounted) {
         DialogHelper.showSnackbar(
-            context: context,
-            text: 'Izin lokasi ditolak permanen. Silakan ubah di Pengaturan.');
+          context: context,
+          text: 'Izin lokasi ditolak permanen. Silakan ubah di Pengaturan.',
+        );
       }
       await Geolocator.openAppSettings();
       return false;
@@ -53,31 +54,87 @@ class LocationHelper {
     return true;
   }
 
-  /// Mendapatkan lokasi saat ini dengan akurasi tinggi (PENTING untuk Absen)
   static Future<Position?> getCurrentPosition() async {
     try {
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy
-            .high, // Akurasi tinggi agar tidak meleset dari pagar Depo
-        timeLimit:
-            const Duration(seconds: 10), // Cegah aplikasi hang jika GPS lemot
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
       );
     } catch (e) {
       return null;
     }
   }
 
-  /// Menghitung apakah user berada di dalam radius kantor
-  static bool isLocationInCircle(CircleOSM circle, GeoPoint currentLocation) {
-    double distance = Geolocator.distanceBetween(
-      currentLocation.latitude,
-      currentLocation.longitude,
-      circle.centerPoint.latitude,
-      circle.centerPoint.longitude,
-    );
+  static double calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    return Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
+  }
 
-    // Memberikan toleransi 5-10 meter untuk akurasi GPS yang goyang
-    const double tolerance = 5.0;
-    return distance <= (circle.radius + tolerance);
+  static bool isLocationInCircle({
+    required double centerLat,
+    required double centerLng,
+    required double currentLat,
+    required double currentLng,
+    required double radius,
+    double tolerance = 5.0,
+  }) {
+    final distance = calculateDistance(
+      centerLat,
+      centerLng,
+      currentLat,
+      currentLng,
+    );
+    return distance <= (radius + tolerance);
+  }
+
+  static bool isLocationInCircleWithGeoPoint(
+    CircleOSM circle,
+    GeoPoint currentLocation, {
+    double tolerance = 5.0,
+  }) {
+    return isLocationInCircle(
+      centerLat: circle.centerPoint.latitude,
+      centerLng: circle.centerPoint.longitude,
+      currentLat: currentLocation.latitude,
+      currentLng: currentLocation.longitude,
+      radius: circle.radius,
+      tolerance: tolerance,
+    );
+  }
+
+  // Tambahkan method ini
+  static Future<bool> openLocationSettings() async {
+    return await Geolocator.openLocationSettings();
+  }
+
+  static Future<bool> openAppSettings() async {
+    return await Geolocator.openAppSettings();
+  }
+
+  /// Get location with high accuracy and timeout
+  static Future<Position?> getAccuratePosition(
+      {Duration timeout = const Duration(seconds: 15)}) async {
+    try {
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+        timeLimit: timeout,
+      );
+    } catch (e) {
+      debugPrint("📍 LOCATION_ERROR: $e");
+      return null;
+    }
+  }
+
+  /// Get last known position (faster)
+  static Future<Position?> getLastKnownPosition() async {
+    try {
+      return await Geolocator.getLastKnownPosition();
+    } catch (e) {
+      return null;
+    }
   }
 }

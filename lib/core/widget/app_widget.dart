@@ -13,34 +13,33 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
   final P1? param1;
   final P2? param2;
 
-  // Menggunakan getter agar tidak perlu late variable yang rawan error
-  late T notifier;
+  T? _notifier;
+  T get notifier => _notifier!;
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  GlobalKey<ScaffoldState> get scaffoldKey => _scaffoldKey;
 
   @override
   Widget build(BuildContext context) {
-    // 1. Ambil instance dari GetIt
     final instance = sl<T>(param1: param1, param2: param2);
+
+    if (!instance.isInitialized && !instance.isDispose) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!instance.isDispose) {
+          instance.init();
+        }
+      });
+    }
 
     return ChangeNotifierProvider<T>.value(
       value: instance,
       child: Consumer<T>(
         builder: (context, value, child) {
-          notifier = value;
+          _notifier = value;
 
-          // 2. Lifecycle Handler (Post Frame)
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted && !notifier.isDispose) {
-              // --- HANDLER NOTIFIKASI PILL/SNACKBAR ---
-              if (notifier.snackbarMessage.isNotEmpty) {
-                DialogHelper.showSnackbar(
-                  context: context,
-                  text: notifier.snackbarMessage,
-                  backgroundColor: notifier.snackbarColor,
-                );
-                notifier.snackbarMessage = ''; // Reset prevent loop
-              }
-
-              // Jalankan logika tambahan setelah UI stabil
+              _handleSnackbar(context);
               checkVariableAfterUi(context);
             }
           });
@@ -51,44 +50,103 @@ abstract class AppWidget<T extends AppProvider, P1, P2>
     );
   }
 
-  Widget _layout(BuildContext context) {
-    // Jalankan pengecekan variabel sebelum UI dirender
-    checkVariableBeforeUi(context);
+  void _handleSnackbar(BuildContext context) {
+    if (notifier.snackbarMessage.isNotEmpty) {
+      DialogHelper.showSnackbar(
+        context: context,
+        text: notifier.snackbarMessage,
+        backgroundColor: notifier.snackbarColor,
+      );
+      notifier.clearSnackbar();
+    }
+  }
 
-    return Scaffold(
-      appBar: appBarBuild(context),
-      // Gunakan AnimatedSwitcher agar transisi Loading -> Body lebih halus (IBM Look)
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: _buildBody(context),
-      ),
-    );
+  Widget _layout(BuildContext context) {
+    checkVariableBeforeUi(context);
+    final body = _buildBody(context);
+
+    if (useScaffold) {
+      return Scaffold(
+        key: _scaffoldKey,
+        appBar: appBarBuild(context),
+        body: body,
+        bottomNavigationBar: bottomNavigationBarBuild(context),
+        floatingActionButton: floatingActionButtonBuild(context),
+        drawer: drawerBuild(context),
+        endDrawer: endDrawerBuild(context),
+        backgroundColor: scaffoldBackgroundColor(context) ??
+            Theme.of(context).scaffoldBackgroundColor,
+      );
+    }
+
+    return body;
   }
 
   Widget _buildBody(BuildContext context) {
-    // 1. Jika sedang loading berat (API)
-    if (notifier.isLoading) {
-      return const LoadingAppWidget();
+    if (notifier.isLoading && !notifier.isInitialized) {
+      return LoadingAppWidget(
+        key: const ValueKey('loading'),
+        message: loadingMessage,
+      );
     }
 
-    // 2. Jika terjadi error
-    if (notifier.errorMessage.isNotEmpty) {
+    if (notifier.hasError) {
       return ErrorAppWidget(
+        key: const ValueKey('error'),
         description: notifier.errorMessage,
+        errorType: notifier.errorType,
         onPressDefaultButton: () {
-          notifier.errorMessage = '';
-          notifier.init(); // Retry
+          notifier.clearError();
+          notifier.init();
         },
       );
     }
 
-    // 3. Tampilkan Body Utama
-    return bodyBuild(context);
+    if (!notifier.isInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.markInitialized();
+      });
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.05),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            )),
+            child: child,
+          ),
+        );
+      },
+      child: KeyedSubtree(
+        key: const ValueKey('content'),
+        child: bodyBuild(context),
+      ),
+    );
   }
 
-  // Hook functions yang bisa di-override di subclass
+  // ========== HOOKS ==========
   void checkVariableBeforeUi(BuildContext context) {}
   void checkVariableAfterUi(BuildContext context) {}
+
   AppBar? appBarBuild(BuildContext context) => null;
   Widget bodyBuild(BuildContext context);
+
+  Widget? bottomNavigationBarBuild(BuildContext context) => null;
+  Widget? floatingActionButtonBuild(BuildContext context) => null;
+  Widget? drawerBuild(BuildContext context) => null;
+  Widget? endDrawerBuild(BuildContext context) => null;
+  Color? scaffoldBackgroundColor(BuildContext context) => null;
+
+  String get loadingMessage => "Menyiapkan Data...";
+  bool get useScaffold => true;
 }

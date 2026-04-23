@@ -5,68 +5,99 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 class CameraUtils {
-  static final _orientations = {
+  static final Map<DeviceOrientation, int> _orientations = {
     DeviceOrientation.portraitUp: 0,
     DeviceOrientation.landscapeLeft: 90,
     DeviceOrientation.portraitDown: 180,
     DeviceOrientation.landscapeRight: 270,
   };
 
+  /// Konversi CameraImage ke InputImage untuk ML Kit.
   static InputImage? convertCameraImageToInputImage(
-      CameraImage image, CameraDescription camera) {
-    // 1. Hitung Rotasi secara Presisi
-    final sensorOrientation = camera.sensorOrientation;
-    InputImageRotation? rotation;
+    CameraImage image,
+    CameraDescription camera,
+  ) {
+    // 1. Hitung rotasi
+    final rotation = _getRotation(image, camera);
+    if (rotation == null) return null;
 
+    // 2. Validasi format
+    final format = _getInputImageFormat(image);
+    if (format == null) return null;
+
+    // 3. Ekstrak bytes sesuai format
+    final bytes = _extractBytes(image, format);
+    if (bytes == null) return null;
+
+    return InputImage.fromBytes(
+      bytes: bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation,
+        format: format,
+        bytesPerRow: image.planes.first.bytesPerRow,
+      ),
+    );
+  }
+
+  static InputImageRotation? _getRotation(
+    CameraImage image,
+    CameraDescription camera,
+  ) {
     if (Platform.isIOS) {
-      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+      return InputImageRotationValue.fromRawValue(camera.sensorOrientation);
     } else if (Platform.isAndroid) {
       var rotationCompensation = _orientations[DeviceOrientation.portraitUp];
       if (rotationCompensation == null) return null;
 
       if (camera.lensDirection == CameraLensDirection.front) {
-        // Logika khusus kamera depan (Mirroring)
-        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
-      } else {
-        // Logika kamera belakang
         rotationCompensation =
-            (sensorOrientation - rotationCompensation + 360) % 360;
+            (camera.sensorOrientation + rotationCompensation) % 360;
+      } else {
+        rotationCompensation =
+            (camera.sensorOrientation - rotationCompensation + 360) % 360;
       }
-      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+      return InputImageRotationValue.fromRawValue(rotationCompensation);
     }
-
-    if (rotation == null) return null;
-
-    // 2. Validasi Format Gambar (NV21 untuk Android, BGRA8888 untuk iOS)
-    final format = InputImageFormatValue.fromRawValue(image.format.raw);
-
-    // Proteksi: ML Kit butuh format spesifik agar tidak crash
-    if (format == null) return null;
-
-    // 3. Gabungkan Plane Bytes (Khusus Android seringkali punya multiple planes)
-    if (image.planes.isEmpty) return null;
-    final plane = image.planes.first;
-
-    // 4. Return InputImage untuk diproses ML Kit
-    return InputImage.fromBytes(
-      bytes:
-          _concatenatePlanes(image.planes), // Gunakan helper penggabung bytes
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation,
-        format: format,
-        bytesPerRow: plane.bytesPerRow,
-      ),
-    );
+    return null;
   }
 
-  /// Helper untuk menggabungkan semua plane kamera menjadi satu Uint8List
-  /// Penting untuk stabilitas di HP Mediatek/Legacy Camera
-  static Uint8List _concatenatePlanes(List<Plane> planes) {
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in planes) {
-      allBytes.putUint8List(plane.bytes);
+  static InputImageFormat? _getInputImageFormat(CameraImage image) {
+    if (Platform.isAndroid) {
+      return InputImageFormat.nv21; // Android menggunakan NV21
+    } else if (Platform.isIOS) {
+      return InputImageFormat.bgra8888; // iOS menggunakan BGRA
     }
-    return allBytes.done().buffer.asUint8List();
+    return InputImageFormatValue.fromRawValue(image.format.raw);
+  }
+
+  static Uint8List? _extractBytes(CameraImage image, InputImageFormat format) {
+    if (Platform.isAndroid && format == InputImageFormat.nv21) {
+      // Gabungkan Y + UV planes untuk NV21
+      final yPlane = image.planes[0];
+      final uvPlane = image.planes[1];
+      final yBytes = yPlane.bytes;
+      final uvBytes = uvPlane.bytes;
+      final totalBytes = yBytes.length + uvBytes.length;
+      final bytes = Uint8List(totalBytes);
+      bytes.setAll(0, yBytes);
+      bytes.setAll(yBytes.length, uvBytes);
+      return bytes;
+    } else if (Platform.isIOS && format == InputImageFormat.bgra8888) {
+      return image.planes.first.bytes;
+    } else {
+      // Fallback: gabungkan semua plane
+      final totalBytes = image.planes.fold<int>(
+        0,
+        (sum, p) => sum + p.bytes.length,
+      );
+      final bytes = Uint8List(totalBytes);
+      var offset = 0;
+      for (final plane in image.planes) {
+        bytes.setAll(offset, plane.bytes);
+        offset += plane.bytes.length;
+      }
+      return bytes;
+    }
   }
 }

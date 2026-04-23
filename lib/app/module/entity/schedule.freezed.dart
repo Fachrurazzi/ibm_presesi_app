@@ -20,14 +20,24 @@ ScheduleEntity _$ScheduleEntityFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$ScheduleEntity {
+  int get id => throw _privateConstructorUsedError;
+  ScheduleUser get user => throw _privateConstructorUsedError;
+  ShiftInfo get shift => throw _privateConstructorUsedError;
+  OfficeInfo get office => throw _privateConstructorUsedError;
+  @JsonKey(name: 'start_date')
+  String get startDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'end_date')
+  String? get endDate => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_wfa')
   bool get isWfa => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_banned')
-  bool get isBanned =>
-      throw _privateConstructorUsedError; // Tambahkan ini untuk proteksi banned
-  UserEntity? get user => throw _privateConstructorUsedError;
-  OfficeEntity get office => throw _privateConstructorUsedError;
-  ShiftEntity get shift => throw _privateConstructorUsedError;
+  bool get isBanned => throw _privateConstructorUsedError;
+  @JsonKey(name: 'banned_reason')
+  String? get bannedReason => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_active')
+  bool get isActive => throw _privateConstructorUsedError;
+  @JsonKey(name: 'date_range')
+  String? get dateRange => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -42,15 +52,21 @@ abstract class $ScheduleEntityCopyWith<$Res> {
       _$ScheduleEntityCopyWithImpl<$Res, ScheduleEntity>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'is_wfa') bool isWfa,
+      {int id,
+      ScheduleUser user,
+      ShiftInfo shift,
+      OfficeInfo office,
+      @JsonKey(name: 'start_date') String startDate,
+      @JsonKey(name: 'end_date') String? endDate,
+      @JsonKey(name: 'is_wfa') bool isWfa,
       @JsonKey(name: 'is_banned') bool isBanned,
-      UserEntity? user,
-      OfficeEntity office,
-      ShiftEntity shift});
+      @JsonKey(name: 'banned_reason') String? bannedReason,
+      @JsonKey(name: 'is_active') bool isActive,
+      @JsonKey(name: 'date_range') String? dateRange});
 
-  $UserEntityCopyWith<$Res>? get user;
-  $OfficeEntityCopyWith<$Res> get office;
-  $ShiftEntityCopyWith<$Res> get shift;
+  $ScheduleUserCopyWith<$Res> get user;
+  $ShiftInfoCopyWith<$Res> get shift;
+  $OfficeInfoCopyWith<$Res> get office;
 }
 
 /// @nodoc
@@ -66,13 +82,43 @@ class _$ScheduleEntityCopyWithImpl<$Res, $Val extends ScheduleEntity>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = null,
+    Object? user = null,
+    Object? shift = null,
+    Object? office = null,
+    Object? startDate = null,
+    Object? endDate = freezed,
     Object? isWfa = null,
     Object? isBanned = null,
-    Object? user = freezed,
-    Object? office = null,
-    Object? shift = null,
+    Object? bannedReason = freezed,
+    Object? isActive = null,
+    Object? dateRange = freezed,
   }) {
     return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      user: null == user
+          ? _value.user
+          : user // ignore: cast_nullable_to_non_nullable
+              as ScheduleUser,
+      shift: null == shift
+          ? _value.shift
+          : shift // ignore: cast_nullable_to_non_nullable
+              as ShiftInfo,
+      office: null == office
+          ? _value.office
+          : office // ignore: cast_nullable_to_non_nullable
+              as OfficeInfo,
+      startDate: null == startDate
+          ? _value.startDate
+          : startDate // ignore: cast_nullable_to_non_nullable
+              as String,
+      endDate: freezed == endDate
+          ? _value.endDate
+          : endDate // ignore: cast_nullable_to_non_nullable
+              as String?,
       isWfa: null == isWfa
           ? _value.isWfa
           : isWfa // ignore: cast_nullable_to_non_nullable
@@ -81,46 +127,42 @@ class _$ScheduleEntityCopyWithImpl<$Res, $Val extends ScheduleEntity>
           ? _value.isBanned
           : isBanned // ignore: cast_nullable_to_non_nullable
               as bool,
-      user: freezed == user
-          ? _value.user
-          : user // ignore: cast_nullable_to_non_nullable
-              as UserEntity?,
-      office: null == office
-          ? _value.office
-          : office // ignore: cast_nullable_to_non_nullable
-              as OfficeEntity,
-      shift: null == shift
-          ? _value.shift
-          : shift // ignore: cast_nullable_to_non_nullable
-              as ShiftEntity,
+      bannedReason: freezed == bannedReason
+          ? _value.bannedReason
+          : bannedReason // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isActive: null == isActive
+          ? _value.isActive
+          : isActive // ignore: cast_nullable_to_non_nullable
+              as bool,
+      dateRange: freezed == dateRange
+          ? _value.dateRange
+          : dateRange // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 
   @override
   @pragma('vm:prefer-inline')
-  $UserEntityCopyWith<$Res>? get user {
-    if (_value.user == null) {
-      return null;
-    }
-
-    return $UserEntityCopyWith<$Res>(_value.user!, (value) {
+  $ScheduleUserCopyWith<$Res> get user {
+    return $ScheduleUserCopyWith<$Res>(_value.user, (value) {
       return _then(_value.copyWith(user: value) as $Val);
     });
   }
 
   @override
   @pragma('vm:prefer-inline')
-  $OfficeEntityCopyWith<$Res> get office {
-    return $OfficeEntityCopyWith<$Res>(_value.office, (value) {
-      return _then(_value.copyWith(office: value) as $Val);
+  $ShiftInfoCopyWith<$Res> get shift {
+    return $ShiftInfoCopyWith<$Res>(_value.shift, (value) {
+      return _then(_value.copyWith(shift: value) as $Val);
     });
   }
 
   @override
   @pragma('vm:prefer-inline')
-  $ShiftEntityCopyWith<$Res> get shift {
-    return $ShiftEntityCopyWith<$Res>(_value.shift, (value) {
-      return _then(_value.copyWith(shift: value) as $Val);
+  $OfficeInfoCopyWith<$Res> get office {
+    return $OfficeInfoCopyWith<$Res>(_value.office, (value) {
+      return _then(_value.copyWith(office: value) as $Val);
     });
   }
 }
@@ -134,18 +176,24 @@ abstract class _$$ScheduleEntityImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'is_wfa') bool isWfa,
+      {int id,
+      ScheduleUser user,
+      ShiftInfo shift,
+      OfficeInfo office,
+      @JsonKey(name: 'start_date') String startDate,
+      @JsonKey(name: 'end_date') String? endDate,
+      @JsonKey(name: 'is_wfa') bool isWfa,
       @JsonKey(name: 'is_banned') bool isBanned,
-      UserEntity? user,
-      OfficeEntity office,
-      ShiftEntity shift});
+      @JsonKey(name: 'banned_reason') String? bannedReason,
+      @JsonKey(name: 'is_active') bool isActive,
+      @JsonKey(name: 'date_range') String? dateRange});
 
   @override
-  $UserEntityCopyWith<$Res>? get user;
+  $ScheduleUserCopyWith<$Res> get user;
   @override
-  $OfficeEntityCopyWith<$Res> get office;
+  $ShiftInfoCopyWith<$Res> get shift;
   @override
-  $ShiftEntityCopyWith<$Res> get shift;
+  $OfficeInfoCopyWith<$Res> get office;
 }
 
 /// @nodoc
@@ -159,13 +207,43 @@ class __$$ScheduleEntityImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = null,
+    Object? user = null,
+    Object? shift = null,
+    Object? office = null,
+    Object? startDate = null,
+    Object? endDate = freezed,
     Object? isWfa = null,
     Object? isBanned = null,
-    Object? user = freezed,
-    Object? office = null,
-    Object? shift = null,
+    Object? bannedReason = freezed,
+    Object? isActive = null,
+    Object? dateRange = freezed,
   }) {
     return _then(_$ScheduleEntityImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      user: null == user
+          ? _value.user
+          : user // ignore: cast_nullable_to_non_nullable
+              as ScheduleUser,
+      shift: null == shift
+          ? _value.shift
+          : shift // ignore: cast_nullable_to_non_nullable
+              as ShiftInfo,
+      office: null == office
+          ? _value.office
+          : office // ignore: cast_nullable_to_non_nullable
+              as OfficeInfo,
+      startDate: null == startDate
+          ? _value.startDate
+          : startDate // ignore: cast_nullable_to_non_nullable
+              as String,
+      endDate: freezed == endDate
+          ? _value.endDate
+          : endDate // ignore: cast_nullable_to_non_nullable
+              as String?,
       isWfa: null == isWfa
           ? _value.isWfa
           : isWfa // ignore: cast_nullable_to_non_nullable
@@ -174,18 +252,18 @@ class __$$ScheduleEntityImplCopyWithImpl<$Res>
           ? _value.isBanned
           : isBanned // ignore: cast_nullable_to_non_nullable
               as bool,
-      user: freezed == user
-          ? _value.user
-          : user // ignore: cast_nullable_to_non_nullable
-              as UserEntity?,
-      office: null == office
-          ? _value.office
-          : office // ignore: cast_nullable_to_non_nullable
-              as OfficeEntity,
-      shift: null == shift
-          ? _value.shift
-          : shift // ignore: cast_nullable_to_non_nullable
-              as ShiftEntity,
+      bannedReason: freezed == bannedReason
+          ? _value.bannedReason
+          : bannedReason // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isActive: null == isActive
+          ? _value.isActive
+          : isActive // ignore: cast_nullable_to_non_nullable
+              as bool,
+      dateRange: freezed == dateRange
+          ? _value.dateRange
+          : dateRange // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -194,32 +272,54 @@ class __$$ScheduleEntityImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$ScheduleEntityImpl implements _ScheduleEntity {
   const _$ScheduleEntityImpl(
-      {@JsonKey(name: 'is_wfa') this.isWfa = false,
-      @JsonKey(name: 'is_banned') this.isBanned = false,
-      this.user,
+      {required this.id,
+      required this.user,
+      required this.shift,
       required this.office,
-      required this.shift});
+      @JsonKey(name: 'start_date') required this.startDate,
+      @JsonKey(name: 'end_date') this.endDate,
+      @JsonKey(name: 'is_wfa') this.isWfa = false,
+      @JsonKey(name: 'is_banned') this.isBanned = false,
+      @JsonKey(name: 'banned_reason') this.bannedReason,
+      @JsonKey(name: 'is_active') this.isActive = false,
+      @JsonKey(name: 'date_range') this.dateRange});
 
   factory _$ScheduleEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$ScheduleEntityImplFromJson(json);
 
+  @override
+  final int id;
+  @override
+  final ScheduleUser user;
+  @override
+  final ShiftInfo shift;
+  @override
+  final OfficeInfo office;
+  @override
+  @JsonKey(name: 'start_date')
+  final String startDate;
+  @override
+  @JsonKey(name: 'end_date')
+  final String? endDate;
   @override
   @JsonKey(name: 'is_wfa')
   final bool isWfa;
   @override
   @JsonKey(name: 'is_banned')
   final bool isBanned;
-// Tambahkan ini untuk proteksi banned
   @override
-  final UserEntity? user;
+  @JsonKey(name: 'banned_reason')
+  final String? bannedReason;
   @override
-  final OfficeEntity office;
+  @JsonKey(name: 'is_active')
+  final bool isActive;
   @override
-  final ShiftEntity shift;
+  @JsonKey(name: 'date_range')
+  final String? dateRange;
 
   @override
   String toString() {
-    return 'ScheduleEntity(isWfa: $isWfa, isBanned: $isBanned, user: $user, office: $office, shift: $shift)';
+    return 'ScheduleEntity(id: $id, user: $user, shift: $shift, office: $office, startDate: $startDate, endDate: $endDate, isWfa: $isWfa, isBanned: $isBanned, bannedReason: $bannedReason, isActive: $isActive, dateRange: $dateRange)';
   }
 
   @override
@@ -227,18 +327,28 @@ class _$ScheduleEntityImpl implements _ScheduleEntity {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ScheduleEntityImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.user, user) || other.user == user) &&
+            (identical(other.shift, shift) || other.shift == shift) &&
+            (identical(other.office, office) || other.office == office) &&
+            (identical(other.startDate, startDate) ||
+                other.startDate == startDate) &&
+            (identical(other.endDate, endDate) || other.endDate == endDate) &&
             (identical(other.isWfa, isWfa) || other.isWfa == isWfa) &&
             (identical(other.isBanned, isBanned) ||
                 other.isBanned == isBanned) &&
-            (identical(other.user, user) || other.user == user) &&
-            (identical(other.office, office) || other.office == office) &&
-            (identical(other.shift, shift) || other.shift == shift));
+            (identical(other.bannedReason, bannedReason) ||
+                other.bannedReason == bannedReason) &&
+            (identical(other.isActive, isActive) ||
+                other.isActive == isActive) &&
+            (identical(other.dateRange, dateRange) ||
+                other.dateRange == dateRange));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, isWfa, isBanned, user, office, shift);
+  int get hashCode => Object.hash(runtimeType, id, user, shift, office,
+      startDate, endDate, isWfa, isBanned, bannedReason, isActive, dateRange);
 
   @JsonKey(ignore: true)
   @override
@@ -257,63 +367,86 @@ class _$ScheduleEntityImpl implements _ScheduleEntity {
 
 abstract class _ScheduleEntity implements ScheduleEntity {
   const factory _ScheduleEntity(
-      {@JsonKey(name: 'is_wfa') final bool isWfa,
-      @JsonKey(name: 'is_banned') final bool isBanned,
-      final UserEntity? user,
-      required final OfficeEntity office,
-      required final ShiftEntity shift}) = _$ScheduleEntityImpl;
+          {required final int id,
+          required final ScheduleUser user,
+          required final ShiftInfo shift,
+          required final OfficeInfo office,
+          @JsonKey(name: 'start_date') required final String startDate,
+          @JsonKey(name: 'end_date') final String? endDate,
+          @JsonKey(name: 'is_wfa') final bool isWfa,
+          @JsonKey(name: 'is_banned') final bool isBanned,
+          @JsonKey(name: 'banned_reason') final String? bannedReason,
+          @JsonKey(name: 'is_active') final bool isActive,
+          @JsonKey(name: 'date_range') final String? dateRange}) =
+      _$ScheduleEntityImpl;
 
   factory _ScheduleEntity.fromJson(Map<String, dynamic> json) =
       _$ScheduleEntityImpl.fromJson;
 
+  @override
+  int get id;
+  @override
+  ScheduleUser get user;
+  @override
+  ShiftInfo get shift;
+  @override
+  OfficeInfo get office;
+  @override
+  @JsonKey(name: 'start_date')
+  String get startDate;
+  @override
+  @JsonKey(name: 'end_date')
+  String? get endDate;
   @override
   @JsonKey(name: 'is_wfa')
   bool get isWfa;
   @override
   @JsonKey(name: 'is_banned')
   bool get isBanned;
-  @override // Tambahkan ini untuk proteksi banned
-  UserEntity? get user;
   @override
-  OfficeEntity get office;
+  @JsonKey(name: 'banned_reason')
+  String? get bannedReason;
   @override
-  ShiftEntity get shift;
+  @JsonKey(name: 'is_active')
+  bool get isActive;
+  @override
+  @JsonKey(name: 'date_range')
+  String? get dateRange;
   @override
   @JsonKey(ignore: true)
   _$$ScheduleEntityImplCopyWith<_$ScheduleEntityImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
-OfficeEntity _$OfficeEntityFromJson(Map<String, dynamic> json) {
-  return _OfficeEntity.fromJson(json);
+ScheduleUser _$ScheduleUserFromJson(Map<String, dynamic> json) {
+  return _ScheduleUser.fromJson(json);
 }
 
 /// @nodoc
-mixin _$OfficeEntity {
+mixin _$ScheduleUser {
+  int get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
-  double get latitude => throw _privateConstructorUsedError;
-  double get longitude => throw _privateConstructorUsedError;
-  double get radius => throw _privateConstructorUsedError;
+  String? get position => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $OfficeEntityCopyWith<OfficeEntity> get copyWith =>
+  $ScheduleUserCopyWith<ScheduleUser> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $OfficeEntityCopyWith<$Res> {
-  factory $OfficeEntityCopyWith(
-          OfficeEntity value, $Res Function(OfficeEntity) then) =
-      _$OfficeEntityCopyWithImpl<$Res, OfficeEntity>;
+abstract class $ScheduleUserCopyWith<$Res> {
+  factory $ScheduleUserCopyWith(
+          ScheduleUser value, $Res Function(ScheduleUser) then) =
+      _$ScheduleUserCopyWithImpl<$Res, ScheduleUser>;
   @useResult
-  $Res call({String name, double latitude, double longitude, double radius});
+  $Res call({int id, String name, String? position});
 }
 
 /// @nodoc
-class _$OfficeEntityCopyWithImpl<$Res, $Val extends OfficeEntity>
-    implements $OfficeEntityCopyWith<$Res> {
-  _$OfficeEntityCopyWithImpl(this._value, this._then);
+class _$ScheduleUserCopyWithImpl<$Res, $Val extends ScheduleUser>
+    implements $ScheduleUserCopyWith<$Res> {
+  _$ScheduleUserCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -323,348 +456,534 @@ class _$OfficeEntityCopyWithImpl<$Res, $Val extends OfficeEntity>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = null,
     Object? name = null,
-    Object? latitude = null,
-    Object? longitude = null,
-    Object? radius = null,
+    Object? position = freezed,
   }) {
     return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
-      latitude: null == latitude
-          ? _value.latitude
-          : latitude // ignore: cast_nullable_to_non_nullable
-              as double,
-      longitude: null == longitude
-          ? _value.longitude
-          : longitude // ignore: cast_nullable_to_non_nullable
-              as double,
-      radius: null == radius
-          ? _value.radius
-          : radius // ignore: cast_nullable_to_non_nullable
-              as double,
+      position: freezed == position
+          ? _value.position
+          : position // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
 
 /// @nodoc
-abstract class _$$OfficeEntityImplCopyWith<$Res>
-    implements $OfficeEntityCopyWith<$Res> {
-  factory _$$OfficeEntityImplCopyWith(
-          _$OfficeEntityImpl value, $Res Function(_$OfficeEntityImpl) then) =
-      __$$OfficeEntityImplCopyWithImpl<$Res>;
+abstract class _$$ScheduleUserImplCopyWith<$Res>
+    implements $ScheduleUserCopyWith<$Res> {
+  factory _$$ScheduleUserImplCopyWith(
+          _$ScheduleUserImpl value, $Res Function(_$ScheduleUserImpl) then) =
+      __$$ScheduleUserImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String name, double latitude, double longitude, double radius});
+  $Res call({int id, String name, String? position});
 }
 
 /// @nodoc
-class __$$OfficeEntityImplCopyWithImpl<$Res>
-    extends _$OfficeEntityCopyWithImpl<$Res, _$OfficeEntityImpl>
-    implements _$$OfficeEntityImplCopyWith<$Res> {
-  __$$OfficeEntityImplCopyWithImpl(
-      _$OfficeEntityImpl _value, $Res Function(_$OfficeEntityImpl) _then)
+class __$$ScheduleUserImplCopyWithImpl<$Res>
+    extends _$ScheduleUserCopyWithImpl<$Res, _$ScheduleUserImpl>
+    implements _$$ScheduleUserImplCopyWith<$Res> {
+  __$$ScheduleUserImplCopyWithImpl(
+      _$ScheduleUserImpl _value, $Res Function(_$ScheduleUserImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = null,
     Object? name = null,
-    Object? latitude = null,
-    Object? longitude = null,
-    Object? radius = null,
+    Object? position = freezed,
   }) {
-    return _then(_$OfficeEntityImpl(
+    return _then(_$ScheduleUserImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
-      latitude: null == latitude
-          ? _value.latitude
-          : latitude // ignore: cast_nullable_to_non_nullable
-              as double,
-      longitude: null == longitude
-          ? _value.longitude
-          : longitude // ignore: cast_nullable_to_non_nullable
-              as double,
-      radius: null == radius
-          ? _value.radius
-          : radius // ignore: cast_nullable_to_non_nullable
-              as double,
+      position: freezed == position
+          ? _value.position
+          : position // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$OfficeEntityImpl implements _OfficeEntity {
-  const _$OfficeEntityImpl(
-      {this.name = "Kantor IBM",
-      required this.latitude,
-      required this.longitude,
-      this.radius = 100.0});
+class _$ScheduleUserImpl implements _ScheduleUser {
+  const _$ScheduleUserImpl(
+      {required this.id, required this.name, this.position});
 
-  factory _$OfficeEntityImpl.fromJson(Map<String, dynamic> json) =>
-      _$$OfficeEntityImplFromJson(json);
+  factory _$ScheduleUserImpl.fromJson(Map<String, dynamic> json) =>
+      _$$ScheduleUserImplFromJson(json);
 
   @override
-  @JsonKey()
+  final int id;
+  @override
   final String name;
   @override
-  final double latitude;
-  @override
-  final double longitude;
-  @override
-  @JsonKey()
-  final double radius;
+  final String? position;
 
   @override
   String toString() {
-    return 'OfficeEntity(name: $name, latitude: $latitude, longitude: $longitude, radius: $radius)';
+    return 'ScheduleUser(id: $id, name: $name, position: $position)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$OfficeEntityImpl &&
+            other is _$ScheduleUserImpl &&
+            (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
-            (identical(other.latitude, latitude) ||
-                other.latitude == latitude) &&
-            (identical(other.longitude, longitude) ||
-                other.longitude == longitude) &&
-            (identical(other.radius, radius) || other.radius == radius));
+            (identical(other.position, position) ||
+                other.position == position));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, name, position);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ScheduleUserImplCopyWith<_$ScheduleUserImpl> get copyWith =>
+      __$$ScheduleUserImplCopyWithImpl<_$ScheduleUserImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$ScheduleUserImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _ScheduleUser implements ScheduleUser {
+  const factory _ScheduleUser(
+      {required final int id,
+      required final String name,
+      final String? position}) = _$ScheduleUserImpl;
+
+  factory _ScheduleUser.fromJson(Map<String, dynamic> json) =
+      _$ScheduleUserImpl.fromJson;
+
+  @override
+  int get id;
+  @override
+  String get name;
+  @override
+  String? get position;
+  @override
+  @JsonKey(ignore: true)
+  _$$ScheduleUserImplCopyWith<_$ScheduleUserImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+PaginatedSchedule _$PaginatedScheduleFromJson(Map<String, dynamic> json) {
+  return _PaginatedSchedule.fromJson(json);
+}
+
+/// @nodoc
+mixin _$PaginatedSchedule {
+  List<ScheduleEntity> get data => throw _privateConstructorUsedError;
+  SchedulePaginationMeta get meta => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $PaginatedScheduleCopyWith<PaginatedSchedule> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $PaginatedScheduleCopyWith<$Res> {
+  factory $PaginatedScheduleCopyWith(
+          PaginatedSchedule value, $Res Function(PaginatedSchedule) then) =
+      _$PaginatedScheduleCopyWithImpl<$Res, PaginatedSchedule>;
+  @useResult
+  $Res call({List<ScheduleEntity> data, SchedulePaginationMeta meta});
+
+  $SchedulePaginationMetaCopyWith<$Res> get meta;
+}
+
+/// @nodoc
+class _$PaginatedScheduleCopyWithImpl<$Res, $Val extends PaginatedSchedule>
+    implements $PaginatedScheduleCopyWith<$Res> {
+  _$PaginatedScheduleCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+    Object? meta = null,
+  }) {
+    return _then(_value.copyWith(
+      data: null == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as List<ScheduleEntity>,
+      meta: null == meta
+          ? _value.meta
+          : meta // ignore: cast_nullable_to_non_nullable
+              as SchedulePaginationMeta,
+    ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $SchedulePaginationMetaCopyWith<$Res> get meta {
+    return $SchedulePaginationMetaCopyWith<$Res>(_value.meta, (value) {
+      return _then(_value.copyWith(meta: value) as $Val);
+    });
+  }
+}
+
+/// @nodoc
+abstract class _$$PaginatedScheduleImplCopyWith<$Res>
+    implements $PaginatedScheduleCopyWith<$Res> {
+  factory _$$PaginatedScheduleImplCopyWith(_$PaginatedScheduleImpl value,
+          $Res Function(_$PaginatedScheduleImpl) then) =
+      __$$PaginatedScheduleImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({List<ScheduleEntity> data, SchedulePaginationMeta meta});
+
+  @override
+  $SchedulePaginationMetaCopyWith<$Res> get meta;
+}
+
+/// @nodoc
+class __$$PaginatedScheduleImplCopyWithImpl<$Res>
+    extends _$PaginatedScheduleCopyWithImpl<$Res, _$PaginatedScheduleImpl>
+    implements _$$PaginatedScheduleImplCopyWith<$Res> {
+  __$$PaginatedScheduleImplCopyWithImpl(_$PaginatedScheduleImpl _value,
+      $Res Function(_$PaginatedScheduleImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+    Object? meta = null,
+  }) {
+    return _then(_$PaginatedScheduleImpl(
+      data: null == data
+          ? _value._data
+          : data // ignore: cast_nullable_to_non_nullable
+              as List<ScheduleEntity>,
+      meta: null == meta
+          ? _value.meta
+          : meta // ignore: cast_nullable_to_non_nullable
+              as SchedulePaginationMeta,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$PaginatedScheduleImpl implements _PaginatedSchedule {
+  const _$PaginatedScheduleImpl(
+      {required final List<ScheduleEntity> data, required this.meta})
+      : _data = data;
+
+  factory _$PaginatedScheduleImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PaginatedScheduleImplFromJson(json);
+
+  final List<ScheduleEntity> _data;
+  @override
+  List<ScheduleEntity> get data {
+    if (_data is EqualUnmodifiableListView) return _data;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_data);
+  }
+
+  @override
+  final SchedulePaginationMeta meta;
+
+  @override
+  String toString() {
+    return 'PaginatedSchedule(data: $data, meta: $meta)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaginatedScheduleImpl &&
+            const DeepCollectionEquality().equals(other._data, _data) &&
+            (identical(other.meta, meta) || other.meta == meta));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, const DeepCollectionEquality().hash(_data), meta);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaginatedScheduleImplCopyWith<_$PaginatedScheduleImpl> get copyWith =>
+      __$$PaginatedScheduleImplCopyWithImpl<_$PaginatedScheduleImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$PaginatedScheduleImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _PaginatedSchedule implements PaginatedSchedule {
+  const factory _PaginatedSchedule(
+      {required final List<ScheduleEntity> data,
+      required final SchedulePaginationMeta meta}) = _$PaginatedScheduleImpl;
+
+  factory _PaginatedSchedule.fromJson(Map<String, dynamic> json) =
+      _$PaginatedScheduleImpl.fromJson;
+
+  @override
+  List<ScheduleEntity> get data;
+  @override
+  SchedulePaginationMeta get meta;
+  @override
+  @JsonKey(ignore: true)
+  _$$PaginatedScheduleImplCopyWith<_$PaginatedScheduleImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+SchedulePaginationMeta _$SchedulePaginationMetaFromJson(
+    Map<String, dynamic> json) {
+  return _SchedulePaginationMeta.fromJson(json);
+}
+
+/// @nodoc
+mixin _$SchedulePaginationMeta {
+  @JsonKey(name: 'current_page')
+  int get currentPage => throw _privateConstructorUsedError;
+  @JsonKey(name: 'per_page')
+  int get perPage => throw _privateConstructorUsedError;
+  int get total => throw _privateConstructorUsedError;
+  @JsonKey(name: 'last_page')
+  int get lastPage => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $SchedulePaginationMetaCopyWith<SchedulePaginationMeta> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $SchedulePaginationMetaCopyWith<$Res> {
+  factory $SchedulePaginationMetaCopyWith(SchedulePaginationMeta value,
+          $Res Function(SchedulePaginationMeta) then) =
+      _$SchedulePaginationMetaCopyWithImpl<$Res, SchedulePaginationMeta>;
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'current_page') int currentPage,
+      @JsonKey(name: 'per_page') int perPage,
+      int total,
+      @JsonKey(name: 'last_page') int lastPage});
+}
+
+/// @nodoc
+class _$SchedulePaginationMetaCopyWithImpl<$Res,
+        $Val extends SchedulePaginationMeta>
+    implements $SchedulePaginationMetaCopyWith<$Res> {
+  _$SchedulePaginationMetaCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? currentPage = null,
+    Object? perPage = null,
+    Object? total = null,
+    Object? lastPage = null,
+  }) {
+    return _then(_value.copyWith(
+      currentPage: null == currentPage
+          ? _value.currentPage
+          : currentPage // ignore: cast_nullable_to_non_nullable
+              as int,
+      perPage: null == perPage
+          ? _value.perPage
+          : perPage // ignore: cast_nullable_to_non_nullable
+              as int,
+      total: null == total
+          ? _value.total
+          : total // ignore: cast_nullable_to_non_nullable
+              as int,
+      lastPage: null == lastPage
+          ? _value.lastPage
+          : lastPage // ignore: cast_nullable_to_non_nullable
+              as int,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$SchedulePaginationMetaImplCopyWith<$Res>
+    implements $SchedulePaginationMetaCopyWith<$Res> {
+  factory _$$SchedulePaginationMetaImplCopyWith(
+          _$SchedulePaginationMetaImpl value,
+          $Res Function(_$SchedulePaginationMetaImpl) then) =
+      __$$SchedulePaginationMetaImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'current_page') int currentPage,
+      @JsonKey(name: 'per_page') int perPage,
+      int total,
+      @JsonKey(name: 'last_page') int lastPage});
+}
+
+/// @nodoc
+class __$$SchedulePaginationMetaImplCopyWithImpl<$Res>
+    extends _$SchedulePaginationMetaCopyWithImpl<$Res,
+        _$SchedulePaginationMetaImpl>
+    implements _$$SchedulePaginationMetaImplCopyWith<$Res> {
+  __$$SchedulePaginationMetaImplCopyWithImpl(
+      _$SchedulePaginationMetaImpl _value,
+      $Res Function(_$SchedulePaginationMetaImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? currentPage = null,
+    Object? perPage = null,
+    Object? total = null,
+    Object? lastPage = null,
+  }) {
+    return _then(_$SchedulePaginationMetaImpl(
+      currentPage: null == currentPage
+          ? _value.currentPage
+          : currentPage // ignore: cast_nullable_to_non_nullable
+              as int,
+      perPage: null == perPage
+          ? _value.perPage
+          : perPage // ignore: cast_nullable_to_non_nullable
+              as int,
+      total: null == total
+          ? _value.total
+          : total // ignore: cast_nullable_to_non_nullable
+              as int,
+      lastPage: null == lastPage
+          ? _value.lastPage
+          : lastPage // ignore: cast_nullable_to_non_nullable
+              as int,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$SchedulePaginationMetaImpl implements _SchedulePaginationMeta {
+  const _$SchedulePaginationMetaImpl(
+      {@JsonKey(name: 'current_page') this.currentPage = 1,
+      @JsonKey(name: 'per_page') this.perPage = 10,
+      this.total = 0,
+      @JsonKey(name: 'last_page') this.lastPage = 1});
+
+  factory _$SchedulePaginationMetaImpl.fromJson(Map<String, dynamic> json) =>
+      _$$SchedulePaginationMetaImplFromJson(json);
+
+  @override
+  @JsonKey(name: 'current_page')
+  final int currentPage;
+  @override
+  @JsonKey(name: 'per_page')
+  final int perPage;
+  @override
+  @JsonKey()
+  final int total;
+  @override
+  @JsonKey(name: 'last_page')
+  final int lastPage;
+
+  @override
+  String toString() {
+    return 'SchedulePaginationMeta(currentPage: $currentPage, perPage: $perPage, total: $total, lastPage: $lastPage)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SchedulePaginationMetaImpl &&
+            (identical(other.currentPage, currentPage) ||
+                other.currentPage == currentPage) &&
+            (identical(other.perPage, perPage) || other.perPage == perPage) &&
+            (identical(other.total, total) || other.total == total) &&
+            (identical(other.lastPage, lastPage) ||
+                other.lastPage == lastPage));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, name, latitude, longitude, radius);
+      Object.hash(runtimeType, currentPage, perPage, total, lastPage);
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$OfficeEntityImplCopyWith<_$OfficeEntityImpl> get copyWith =>
-      __$$OfficeEntityImplCopyWithImpl<_$OfficeEntityImpl>(this, _$identity);
+  _$$SchedulePaginationMetaImplCopyWith<_$SchedulePaginationMetaImpl>
+      get copyWith => __$$SchedulePaginationMetaImplCopyWithImpl<
+          _$SchedulePaginationMetaImpl>(this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$OfficeEntityImplToJson(
+    return _$$SchedulePaginationMetaImplToJson(
       this,
     );
   }
 }
 
-abstract class _OfficeEntity implements OfficeEntity {
-  const factory _OfficeEntity(
-      {final String name,
-      required final double latitude,
-      required final double longitude,
-      final double radius}) = _$OfficeEntityImpl;
+abstract class _SchedulePaginationMeta implements SchedulePaginationMeta {
+  const factory _SchedulePaginationMeta(
+          {@JsonKey(name: 'current_page') final int currentPage,
+          @JsonKey(name: 'per_page') final int perPage,
+          final int total,
+          @JsonKey(name: 'last_page') final int lastPage}) =
+      _$SchedulePaginationMetaImpl;
 
-  factory _OfficeEntity.fromJson(Map<String, dynamic> json) =
-      _$OfficeEntityImpl.fromJson;
-
-  @override
-  String get name;
-  @override
-  double get latitude;
-  @override
-  double get longitude;
-  @override
-  double get radius;
-  @override
-  @JsonKey(ignore: true)
-  _$$OfficeEntityImplCopyWith<_$OfficeEntityImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-ShiftEntity _$ShiftEntityFromJson(Map<String, dynamic> json) {
-  return _ShiftEntity.fromJson(json);
-}
-
-/// @nodoc
-mixin _$ShiftEntity {
-  String get name => throw _privateConstructorUsedError;
-  @JsonKey(name: 'start_time')
-  String get startTime => throw _privateConstructorUsedError;
-  @JsonKey(name: 'end_time')
-  String get endTime => throw _privateConstructorUsedError;
-
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
-  $ShiftEntityCopyWith<ShiftEntity> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $ShiftEntityCopyWith<$Res> {
-  factory $ShiftEntityCopyWith(
-          ShiftEntity value, $Res Function(ShiftEntity) then) =
-      _$ShiftEntityCopyWithImpl<$Res, ShiftEntity>;
-  @useResult
-  $Res call(
-      {String name,
-      @JsonKey(name: 'start_time') String startTime,
-      @JsonKey(name: 'end_time') String endTime});
-}
-
-/// @nodoc
-class _$ShiftEntityCopyWithImpl<$Res, $Val extends ShiftEntity>
-    implements $ShiftEntityCopyWith<$Res> {
-  _$ShiftEntityCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? name = null,
-    Object? startTime = null,
-    Object? endTime = null,
-  }) {
-    return _then(_value.copyWith(
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      startTime: null == startTime
-          ? _value.startTime
-          : startTime // ignore: cast_nullable_to_non_nullable
-              as String,
-      endTime: null == endTime
-          ? _value.endTime
-          : endTime // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
-  }
-}
-
-/// @nodoc
-abstract class _$$ShiftEntityImplCopyWith<$Res>
-    implements $ShiftEntityCopyWith<$Res> {
-  factory _$$ShiftEntityImplCopyWith(
-          _$ShiftEntityImpl value, $Res Function(_$ShiftEntityImpl) then) =
-      __$$ShiftEntityImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {String name,
-      @JsonKey(name: 'start_time') String startTime,
-      @JsonKey(name: 'end_time') String endTime});
-}
-
-/// @nodoc
-class __$$ShiftEntityImplCopyWithImpl<$Res>
-    extends _$ShiftEntityCopyWithImpl<$Res, _$ShiftEntityImpl>
-    implements _$$ShiftEntityImplCopyWith<$Res> {
-  __$$ShiftEntityImplCopyWithImpl(
-      _$ShiftEntityImpl _value, $Res Function(_$ShiftEntityImpl) _then)
-      : super(_value, _then);
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? name = null,
-    Object? startTime = null,
-    Object? endTime = null,
-  }) {
-    return _then(_$ShiftEntityImpl(
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      startTime: null == startTime
-          ? _value.startTime
-          : startTime // ignore: cast_nullable_to_non_nullable
-              as String,
-      endTime: null == endTime
-          ? _value.endTime
-          : endTime // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$ShiftEntityImpl implements _ShiftEntity {
-  const _$ShiftEntityImpl(
-      {this.name = "Shift Normal",
-      @JsonKey(name: 'start_time') this.startTime = "08:30",
-      @JsonKey(name: 'end_time') this.endTime = "17:30"});
-
-  factory _$ShiftEntityImpl.fromJson(Map<String, dynamic> json) =>
-      _$$ShiftEntityImplFromJson(json);
+  factory _SchedulePaginationMeta.fromJson(Map<String, dynamic> json) =
+      _$SchedulePaginationMetaImpl.fromJson;
 
   @override
-  @JsonKey()
-  final String name;
+  @JsonKey(name: 'current_page')
+  int get currentPage;
   @override
-  @JsonKey(name: 'start_time')
-  final String startTime;
+  @JsonKey(name: 'per_page')
+  int get perPage;
   @override
-  @JsonKey(name: 'end_time')
-  final String endTime;
-
+  int get total;
   @override
-  String toString() {
-    return 'ShiftEntity(name: $name, startTime: $startTime, endTime: $endTime)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$ShiftEntityImpl &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.startTime, startTime) ||
-                other.startTime == startTime) &&
-            (identical(other.endTime, endTime) || other.endTime == endTime));
-  }
-
-  @JsonKey(ignore: true)
-  @override
-  int get hashCode => Object.hash(runtimeType, name, startTime, endTime);
-
-  @JsonKey(ignore: true)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$ShiftEntityImplCopyWith<_$ShiftEntityImpl> get copyWith =>
-      __$$ShiftEntityImplCopyWithImpl<_$ShiftEntityImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$ShiftEntityImplToJson(
-      this,
-    );
-  }
-}
-
-abstract class _ShiftEntity implements ShiftEntity {
-  const factory _ShiftEntity(
-      {final String name,
-      @JsonKey(name: 'start_time') final String startTime,
-      @JsonKey(name: 'end_time') final String endTime}) = _$ShiftEntityImpl;
-
-  factory _ShiftEntity.fromJson(Map<String, dynamic> json) =
-      _$ShiftEntityImpl.fromJson;
-
-  @override
-  String get name;
-  @override
-  @JsonKey(name: 'start_time')
-  String get startTime;
-  @override
-  @JsonKey(name: 'end_time')
-  String get endTime;
+  @JsonKey(name: 'last_page')
+  int get lastPage;
   @override
   @JsonKey(ignore: true)
-  _$$ShiftEntityImplCopyWith<_$ShiftEntityImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$SchedulePaginationMetaImplCopyWith<_$SchedulePaginationMetaImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }

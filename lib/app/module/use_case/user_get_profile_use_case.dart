@@ -1,0 +1,16 @@
+import 'package:ibm_presensi_app/app/module/entity/user.dart';
+import 'package:ibm_presensi_app/app/module/repository/user_repository.dart';
+import 'package:ibm_presensi_app/core/network/data_state.dart';
+import 'package:ibm_presensi_app/core/use_case/app_use_case.dart';
+
+class UserGetProfileUseCase
+    extends AppUseCase<DataState<UserEntity>, NoParams> {
+  final UserRepository _repository;
+
+  UserGetProfileUseCase(this._repository);
+
+  @override
+  Future<DataState<UserEntity>> call(NoParams params) {
+    return _repository.getProfile();
+  }
+}
